@@ -1,6 +1,6 @@
 <?php
 
-namespace symphograph\bicycle;
+namespace Symphograph\Bicycle;
 
 class TestRel
 {
