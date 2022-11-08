@@ -1,0 +1,23 @@
+{
+  "name": "symphograph/bicycle",
+  "description": "My First Lib",
+  "type": "library",
+  "authors": [
+    {
+      "name": "symphograph",
+      "email": "roman.chubich@gmail.com"
+    }
+  ],
+  "minimum-stability": "dev",
+  "require": {
+    "php": ">=8.1",
+    "ext-json": "*",
+    "ext-mysqli": "*",
+    "ext-iconv": "*",
+    "ext-gmp": "*",
+    "ext-curl": "*",
+    "ext-bcmath": "*",
+    "ext-imagick": "*",
+    "ext-pdo": "*"
+  }
+}
