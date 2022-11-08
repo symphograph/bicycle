@@ -19,5 +19,10 @@
     "ext-bcmath": "*",
     "ext-imagick": "*",
     "ext-pdo": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Symphograph\\Bicycle\\": "src/"
+    }
   }
 }
