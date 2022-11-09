@@ -17,7 +17,6 @@
     "ext-gmp": "*",
     "ext-curl": "*",
     "ext-bcmath": "*",
-    "ext-imagick": "*",
     "ext-pdo": "*",
     "ext-calendar" : "*"
   },
