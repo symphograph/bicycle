@@ -1,5 +1,5 @@
 <?php
-
+namespace Symphograph\Bicycle;
 
 class DB
 {
