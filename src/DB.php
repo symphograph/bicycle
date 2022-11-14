@@ -1,6 +1,8 @@
 <?php
 namespace Symphograph\Bicycle;
 
+use PDO;
+
 class DB
 {
     public PDO|null $pdo;
