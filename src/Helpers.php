@@ -4,7 +4,7 @@ namespace Symphograph\Bicycle;
 
 class Helpers
 {
-    public static function dateToFirstDayOfMonth(string $date)
+    public static function dateToFirstDayOfMonth(string $date): bool|string
     {
         if(!self::isDate($date)){
             return false;
