@@ -2,6 +2,8 @@
 namespace Symphograph\Bicycle;
 
 use PDO;
+use PDOException;
+use PDOStatement;
 
 class DB
 {
