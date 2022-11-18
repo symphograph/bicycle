@@ -10,9 +10,10 @@ class Telegram
 
     public function __construct()
     {
-        $cfg = require dirname($_SERVER['DOCUMENT_ROOT']) . '/includs/ip.php';
-        $this->token = $cfg->telegram[$_SERVER['SERVER_NAME']]['token'] ?? '';
-        $this->bot_name = $cfg->telegram[$_SERVER['SERVER_NAME']]['bot_name'] ?? '';
+        global $env;
+        $env = require dirname($_SERVER['DOCUMENT_ROOT']) . '/includs/ip.php';
+        $this->token = $env->telegram[$_SERVER['SERVER_NAME']]['token'] ?? '';
+        $this->bot_name = $env->telegram[$_SERVER['SERVER_NAME']]['bot_name'] ?? '';
     }
 
     public static function auth() : TeleUser|bool
