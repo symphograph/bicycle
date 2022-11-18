@@ -104,7 +104,7 @@ class Telegram
         return setcookie('tg_user', $auth_data_json);
     }
 
-    public function anonymous()
+    public function anonymous(string $authPath)
     {
         $server = $_SERVER['SERVER_NAME'];
         return <<<HTML
@@ -113,7 +113,7 @@ class Telegram
                     src="https://telegram.org/js/telegram-widget.js?15" 
                     data-telegram-login="{$this->bot_name}" 
                     data-size="large" 
-                    data-auth-url="https://{$_SERVER['SERVER_NAME']}/teleauth.php" 
+                    data-auth-url="https://{$_SERVER['SERVER_NAME']}/$authPath" 
                     data-request-access="write">
                 </script>
             </div>
