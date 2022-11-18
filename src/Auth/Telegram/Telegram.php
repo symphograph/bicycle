@@ -11,7 +11,6 @@ class Telegram
     public function __construct()
     {
         global $env;
-        $env = require dirname($_SERVER['DOCUMENT_ROOT']) . '/includs/ip.php';
         $this->token = $env->telegram[$_SERVER['SERVER_NAME']]['token'] ?? '';
         $this->bot_name = $env->telegram[$_SERVER['SERVER_NAME']]['bot_name'] ?? '';
     }
