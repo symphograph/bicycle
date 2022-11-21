@@ -151,4 +151,46 @@ class DB
         }
         return '(' . implode(', ', $arr) . ')';
     }
+
+    public static function replaceData(string $tableName, array $params): object
+    {
+        return (object) [
+            'sql' => self::getReplaceByUpdateQueryStr($tableName, $params),
+            'params' => self::phParamsForUpd($params)
+        ];
+    }
+
+    private static function getReplaceByUpdateQueryStr(string $tableName, array $params): string
+    {
+        $parNames = array_keys($params);
+        $parNamesStr = ' (' . implode(',',$parNames) . ') ';
+        $phNames = [];
+        foreach ($parNames as $name){
+            $phNames[] = ':' . $name;
+        }
+        $phNamesStr = ' (' . implode(',', $phNames) . ') ';
+        $paramsForUpdate = [];
+        foreach ($parNames as $name){
+            $paramsForUpdate[] = $name . '=:' . $name . '_upd';
+        }
+        $paramsForUpdateStr = implode(',',$paramsForUpdate);
+
+        return "
+            insert into $tableName 
+            $parNamesStr
+                VALUES 
+            $phNamesStr
+            on duplicate key update 
+                 $paramsForUpdateStr";
+    }
+
+    private static function phParamsForUpd(array $params): array
+    {
+        $arr = [];
+        foreach ($params as $k => $v)
+        {
+            $arr[$k . '_upd'] = $v;
+        }
+        return array_merge($params, $arr);
+    }
 }
