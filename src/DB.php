@@ -16,7 +16,7 @@ class DB
         string $connectName = '',
         string $charset = 'utf8mb4',
         bool $flat = false,
-        object $env = null
+        /*object $env = null*/
     )
     {
         if($flat) return;
@@ -24,6 +24,9 @@ class DB
         if (empty($connectName)) {
             $connectName = 0;
         }
+        //printr($env);
+        //var_dump($env);
+        global $env;
         $con = (object)$env->connects[$_SERVER['SERVER_NAME']][$connectName];
 
         $dsn = "mysql:host=$con->Host;dbname=$con->Name;charset=$charset";
@@ -90,9 +93,9 @@ class DB
 
     private static function connect(): void
     {
-        global $DB, $env;
+        global $DB;
         if(!isset($DB)){
-            $DB = new DB(env: $env);
+            $DB = new DB();
         }
     }
 
@@ -233,8 +236,9 @@ class DB
     {
 
         $sql = "SELECT max(id) + 1 as id FROM $tableName where $keyColName";
+        global $DB;
         self::connect();
-        global /** @var DB $DB */ $DB;
+
         $qwe = $DB->qwe($sql);
         if(!$qwe or !$qwe->rowCount()){
             return 1;
