@@ -79,6 +79,17 @@ class DB
         return $result ?? false;
     }
 
+    public static function replace(string $tableName, array $params): bool
+    {
+        global $DB, $env;
+        if(!isset($DB)){
+            $DB = new DB(env: $env);
+        }
+
+        $rd = self::replaceData($tableName,$params);
+        return $DB->qwe($rd->sql,$rd->params);
+    }
+
     public static function pHolders(array $list): string
     {
         //return rtrim(str_repeat('?, ', count($list)), ', ') ;
@@ -160,14 +171,12 @@ class DB
         ];
     }
 
-
-
     private static function getReplaceByUpdateQueryStr(string $tableName, array $params): string
     {
 
         $parNamesStr = self::colNamesStr($params);
         $phNamesStr = self::valuesPhNamesStr($params);
-        $paramsForUpdateStr = self::paramsForUpdateStr();
+        $paramsForUpdateStr = self::paramsForUpdateStr($params);
 
         return "
             insert into $tableName 
