@@ -228,4 +228,19 @@ class DB
         }
         return implode(',',$paramsForUpdate);
     }
+
+    public static function createNewID(string $tableName, string $keyColName) : int
+    {
+
+        $sql = "SELECT max(id) + 1 as id FROM $tableName where $keyColName";
+        self::connect();
+        global /** @var DB $DB */ $DB;
+        $qwe = $DB->qwe($sql);
+        if(!$qwe or !$qwe->rowCount()){
+            return 1;
+        }
+        $q = $qwe->fetchObject(self::class);
+
+        return $q->id ?? 1;
+    }
 }
