@@ -160,20 +160,14 @@ class DB
         ];
     }
 
+
+
     private static function getReplaceByUpdateQueryStr(string $tableName, array $params): string
     {
-        $parNames = array_keys($params);
-        $parNamesStr = ' (' . implode(',',$parNames) . ') ';
-        $phNames = [];
-        foreach ($parNames as $name){
-            $phNames[] = ':' . $name;
-        }
-        $phNamesStr = ' (' . implode(',', $phNames) . ') ';
-        $paramsForUpdate = [];
-        foreach ($parNames as $name){
-            $paramsForUpdate[] = $name . '=:' . $name . '_upd';
-        }
-        $paramsForUpdateStr = implode(',',$paramsForUpdate);
+
+        $parNamesStr = self::colNamesStr($params);
+        $phNamesStr = self::valuesPhNamesStr($params);
+        $paramsForUpdateStr = self::paramsForUpdateStr();
 
         return "
             insert into $tableName 
@@ -184,6 +178,22 @@ class DB
                  $paramsForUpdateStr";
     }
 
+    private static function colNamesStr(array $params): string
+    {
+        $parNames = array_keys($params);
+        return ' (' . implode(',',$parNames) . ') ';
+    }
+
+    private static function valuesPhNamesStr(array $params): string
+    {
+        $parNames = array_keys($params);
+        $phNames = [];
+        foreach ($parNames as $name){
+            $phNames[] = ':' . $name;
+        }
+        return ' (' . implode(',', $phNames) . ') ';
+    }
+
     private static function phParamsForUpd(array $params): array
     {
         $arr = [];
@@ -192,5 +202,15 @@ class DB
             $arr[$k . '_upd'] = $v;
         }
         return array_merge($params, $arr);
+    }
+
+    private static function paramsForUpdateStr(array $params): string
+    {
+        $parNames = array_keys($params);
+        $paramsForUpdate = [];
+        foreach ($parNames as $name){
+            $paramsForUpdate[] = $name . '=:' . $name . '_upd';
+        }
+        return implode(',',$paramsForUpdate);
     }
 }
