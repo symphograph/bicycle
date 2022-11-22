@@ -81,13 +81,19 @@ class DB
 
     public static function replace(string $tableName, array $params): bool
     {
+        global $DB;
+        self::connect();
+
+        $rd = self::replaceData($tableName,$params);
+        return $DB->qwe($rd->sql,$rd->params);
+    }
+
+    private static function connect(): void
+    {
         global $DB, $env;
         if(!isset($DB)){
             $DB = new DB(env: $env);
         }
-
-        $rd = self::replaceData($tableName,$params);
-        return $DB->qwe($rd->sql,$rd->params);
     }
 
     public static function pHolders(array $list): string
