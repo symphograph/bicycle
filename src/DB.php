@@ -88,7 +88,7 @@ class DB
         self::connect();
 
         $rd = self::replaceData($tableName,$params);
-        return $DB->qwe($rd->sql,$rd->params);
+        return boolval($DB->qwe($rd->sql,$rd->params));
     }
 
     private static function connect(): void
