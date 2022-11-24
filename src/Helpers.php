@@ -89,4 +89,38 @@ class Helpers
         return $arr;
     }
 
+    /**
+     * @throws \Exception
+     */
+    public static function NickGenerator(int $locale = 0): string
+    {
+        $locale = 0;
+        $keySpaces =
+            [
+                ['aeiou','bcdfghjklmnpqrstvwxyz','ABCDEFGHIJKLMNOPQRSTUVWXYZ'],
+                ['аеиоуыэюя','бвгджзклмнпрстфхчшщц','АБВГДЕЖЗИКЛМНОПРСТУФХЧШЩЦЫЭЮЯ']
+            ];
+        $nick = self::randomString(1,$keySpaces[$locale][2]);
+        $r = random_int(3,19);
+        for($i=0;$i<=$r;$i++)
+        {
+            $k = intval($i % 2 === 0);
+            $nick .= self::randomString(1,$keySpaces[$locale][$k]);
+        }
+        return $nick;
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public static function randomString($length, $keySpace = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'): string
+    {
+        $str = '';
+        $max = mb_strlen($keySpace, '8bit') - 1;
+        for ($i = 0; $i < $length; ++$i) {
+            $str .= $keySpace[random_int(0, $max)];
+        }
+        return $str;
+    }
+
 }
