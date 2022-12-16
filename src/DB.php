@@ -7,10 +7,10 @@ use PDOStatement;
 
 class DB
 {
-    public PDO|null $pdo;
-    private array   $opt;
-    public string|null $pHolders;
-    public array|null $parArr;
+    public ?PDO $pdo;
+    private ?array    $opt;
+    public ?string $pHolders;
+    public ?array  $parArr;
 
     public function __construct(
         string $connectName = '',
