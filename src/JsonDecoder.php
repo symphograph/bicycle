@@ -25,7 +25,7 @@ class JsonDecoder
                     continue;
                 }
 
-                $Recipient->$propName = self::cloneFromAny($propValue, $propName);
+                $Recipient->$propName = self::cloneFromAny($propValue, $typeInClass);
                 continue;
             }
 
