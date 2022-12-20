@@ -44,7 +44,7 @@ class FileHelper
      * @param string $dir
      * @param $data
      */
-    public static function fileForceContents(string $dir,$data)
+    public static function fileForceContents(string $dir,$data): false|int
     {
         //Сохраняет файл. Если нет дириктории, создаёт её.
         $parts = explode('/', $dir);
@@ -63,7 +63,7 @@ class FileHelper
                 $dir .= "/$part";
             if(!is_dir($dir)) mkdir($dir, 0775, true);
         }
-        file_put_contents("$dir/$file", $data);
+        return file_put_contents("$dir/$file", $data);
     }
 
     public static function moveUploaded(string $from, string $to) : bool
