@@ -54,6 +54,9 @@ class FileHelper
         $i=0;
         foreach($parts as $part)
         {$i++;
+            if(empty($part))
+                continue;
+
             if($i==1)
                 $dir = $part;
             else
