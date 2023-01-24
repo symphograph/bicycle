@@ -235,7 +235,7 @@ class DB
     public static function createNewID(string $tableName, string $keyColName) : int
     {
 
-        $sql = "SELECT max(id) + 1 as id FROM $tableName where $keyColName";
+        $sql = "select max(id) + 1 as id from $tableName where $keyColName";
         global $DB;
         self::connect();
 
@@ -243,7 +243,7 @@ class DB
         if(!$qwe or !$qwe->rowCount()){
             return 1;
         }
-        $q = $qwe->fetchObject(self::class);
+        $q = $qwe->fetchObject();
 
         return $q->id ?? 1;
     }
