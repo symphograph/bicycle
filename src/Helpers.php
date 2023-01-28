@@ -154,7 +154,7 @@ class Helpers
 
     public static function isIntInRange($value, int $min, int $max): bool
     {
-        return is_int($value) && ($min <= $value) && ($value <= $max);
+        return is_numeric($value) && ($min <= $value) && ($value <= $max);
     }
 
 }
