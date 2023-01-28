@@ -151,4 +151,10 @@ class Helpers
         }
         return true;
     }
+
+    public static function isIntInRange($value, int $min, int $max): bool
+    {
+        return is_int($value) && ($min <= $value) && ($value <= $max);
+    }
+
 }
