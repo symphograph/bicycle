@@ -1,6 +1,7 @@
 <?php
 namespace Symphograph\Bicycle;
 
+
 use PDO;
 use PDOException;
 use PDOStatement;
@@ -15,21 +16,14 @@ class DB
     public function __construct(
         string $connectName = '',
         string $charset = 'utf8mb4',
-        bool $flat = false,
-        /*object $env = null*/
+        bool $flat = false
     )
     {
         if($flat) return;
 
-        if (empty($connectName)) {
-            $connectName = 0;
-        }
-        //printr($env);
-        //var_dump($env);
-        global $env;
-        $con = (object)$env->connects[$_SERVER['SERVER_NAME']][$connectName];
+        $con = ConnectDB::byName($connectName);
 
-        $dsn = "mysql:host=$con->Host;dbname=$con->Name;charset=$charset";
+        $dsn = "mysql:host=$con->host;dbname=$con->name;charset=$charset";
         $this->opt = [
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
@@ -37,7 +31,7 @@ class DB
         ];
 
         try {
-            $this->pdo = new PDO($dsn, $con->User, $con->Pass, $this->opt);
+            $this->pdo = new PDO($dsn, $con->user, $con->pass, $this->opt);
         } catch (PDOException $ex) {
             die('dbError');
         }

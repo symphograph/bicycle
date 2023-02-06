@@ -135,14 +135,13 @@ class FileHelper
         return rmdir($dir);
     }
 
-    public static function delete(string $file)
+    public static function delete(string $file): bool
     {
         $file = self::addRoot($file);
         if(file_exists($file) && !is_dir($file)){
-            @unlink($file);
-            //echo 'да: ' . $file.'<br>';
+          return @unlink($file);
         }
-        //echo 'нет: ' . $file.'<br>';
+        return false;
     }
 
     public static function delAllExtensions(string $fileName, array $exts = ['.jpg', '.png', '.jpeg', '.svg'])
