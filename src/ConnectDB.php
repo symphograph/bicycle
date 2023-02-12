@@ -19,7 +19,7 @@ class ConnectDB
         if(empty($connectName)){
             $connectName = array_key_first($env->connects);
         }
-        $con = $env->connects->$connectName;
+        $con = $env->connects[$connectName];
         return new self(
             host: $con->host, name: $con->name, user: $con->user, pass: $con->pass
         );
