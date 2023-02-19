@@ -48,7 +48,12 @@ class MyErrors extends Exception
         if (!count(self::getTrace())) {
             return $_SERVER['SCRIPT_NAME'] . "({$this->getLine()})";
         }
-        return json_encode(self::getTrace());
+        $trace = self::getTrace();
+        $arr = [];
+        foreach ($trace as $key => $item){
+            $arr['tr'.$key] = $item;
+        }
+        return json_encode($arr);
     }
 
     public function getPubMsg(): string
