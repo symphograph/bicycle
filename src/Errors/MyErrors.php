@@ -53,6 +53,7 @@ class MyErrors extends Exception
         foreach ($trace as $key => $item){
             $arr['tr'.$key] = $item;
         }
+        print_r($arr);
         return json_encode($arr);
     }
 
