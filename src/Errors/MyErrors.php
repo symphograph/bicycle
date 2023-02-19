@@ -43,12 +43,12 @@ class MyErrors extends Exception
         fclose($log);
     }
 
-    private function prepTrace(): object
+    private function prepTrace(): array
     {
         if (!count(self::getTrace())) {
-            return (object) [$_SERVER['SCRIPT_NAME'] . "({$this->getLine()})"];
+            return [$_SERVER['SCRIPT_NAME'] . "({$this->getLine()})"];
         }
-        $trace = (object) self::getTrace();
+        $trace = self::getTrace();
         return $trace;
     }
 
