@@ -54,8 +54,8 @@ class DB
 
         } catch (PDOException $ex) {
 
-            $log_text = self::prepLog($ex->getTraceAsString(), $sql, $ex->getMessage());
-            self::writelog('sql_error', $log_text);
+            $logText = self::prepLog($ex->getTraceAsString(), $sql, $ex->getMessage());
+            self::writeLog($logText);
             return false;
         }
         return $stmt ?? false;
@@ -68,8 +68,8 @@ class DB
 
         } catch (PDOException $ex) {
 
-            $log_text = self::prepLog($ex->getTraceAsString(), $sql, $ex->getMessage());
-            self::writelog('sql_error', $log_text);
+            $logText = self::prepLog($ex->getTraceAsString(), $sql, $ex->getMessage());
+            self::writeLog($logText);
             return false;
 
         }
@@ -117,11 +117,20 @@ class DB
         return date("Y-m-d H:i:s") . "\t" . $error . "\t" . $trace . "\r\n" . $sql . "\r\n";
     }
 
-    private function writelog($typelog, $log_text): void
+    private function writeLog($logText): void
     {
-        $log = fopen(dirname($_SERVER['DOCUMENT_ROOT']) . '/logs/' . $typelog . '.txt', 'a+');
-        fwrite($log, "$log_text\r\n");
+        $file = self::getLogFilename();
+        if(!file_exists($file)){
+            FileHelper::fileForceContents($file, '');
+        }
+        $log = fopen($file, 'a+');
+        fwrite($log, "$logText\r\n");
         fclose($log);
+    }
+
+    private static function getLogFilename(): string
+    {
+        return dirname($_SERVER['DOCUMENT_ROOT']). '/logs/sqlErrors/' . date('Y-m-d') . '.log';
     }
 
     public function __destruct()
