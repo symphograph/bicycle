@@ -48,7 +48,7 @@ class MyErrors extends Exception
         if (!count(self::getTrace())) {
             return $_SERVER['SCRIPT_NAME'] . "({$this->getLine()})";
         }
-        $trace = self::getTrace();
+        $trace = (object) self::getTrace();
         return json_encode($trace);
     }
 
