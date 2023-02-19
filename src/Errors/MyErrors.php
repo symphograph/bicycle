@@ -28,7 +28,7 @@ class MyErrors extends Exception
             'type' => $this->type,
             'level' => 'error',
             'msg' => $this->getMessage(),
-            'trace' => self::prepTrace(),
+            'trace' => (object) self::prepTrace(),
             'ip' => $_SERVER['REMOTE_ADDR'],
             'agent' => get_browser()
         ];
