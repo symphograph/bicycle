@@ -28,7 +28,7 @@ class MyErrors extends Exception
             'type' => $this->type,
             'level' => 'error',
             'msg' => $this->getMessage(),
-            'trace' => (object) self::prepTrace(),
+            'trace' => self::prepTrace(),
             'ip' => $_SERVER['REMOTE_ADDR'],
             'agent' => get_browser()
         ];
@@ -42,12 +42,12 @@ class MyErrors extends Exception
         fclose($log);
     }
 
-    private function prepTrace(): array
+    private function prepTrace(): string
     {
         if (!count(self::getTrace())) {
-            return [$_SERVER['SCRIPT_NAME'] . "({$this->getLine()})"];
+            return $_SERVER['SCRIPT_NAME'] . "({$this->getLine()})";
         }
-        return self::getTrace();
+        return json_encode(self::getTrace());
     }
 
     public function getPubMsg(): string
