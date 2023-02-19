@@ -42,12 +42,12 @@ class MyErrors extends Exception
         fclose($log);
     }
 
-    private function prepTrace(): string
+    private function prepTrace(): array
     {
-        if(!count(self::getTrace())){
-            return $_SERVER['SCRIPT_NAME'] . "({$this->getLine()})";
+        if (!count(self::getTrace())) {
+            return [$_SERVER['SCRIPT_NAME'] . "({$this->getLine()})"];
         }
-        return self::getTraceAsString();
+        return self::getTrace();
     }
 
     public function getPubMsg(): string
