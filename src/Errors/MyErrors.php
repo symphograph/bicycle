@@ -49,12 +49,7 @@ class MyErrors extends Exception
             return $_SERVER['SCRIPT_NAME'] . "({$this->getLine()})";
         }
         $trace = self::getTrace();
-        $arr = [];
-        foreach ($trace as $key => $item){
-            $arr['tr'.$key] = $item;
-        }
-        print_r($arr);
-        return json_encode($arr);
+        return json_encode($trace);
     }
 
     public function getPubMsg(): string
