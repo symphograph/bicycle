@@ -46,10 +46,9 @@ class MyErrors extends Exception
     private function prepTrace(): array
     {
         if (!count(self::getTrace())) {
-            return ['file' => $_SERVER['SCRIPT_NAME'] . "({$this->getLine()})"];
+            return [['file' => $_SERVER['SCRIPT_NAME'] . "({$this->getLine()})"]];
         }
-        $trace = self::getTrace();
-        return $trace;
+        return self::getTrace();
     }
 
     public function getPubMsg(): string
