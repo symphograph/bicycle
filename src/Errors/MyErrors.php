@@ -28,8 +28,11 @@ class MyErrors extends Exception
             'type'     => $this->type,
             'level'    => 'error',
             'msg'      => $this->getMessage(),
-            'line'     => $_SERVER['SCRIPT_NAME'] . "({$this->getLine()})",
+            'script'   => $_SERVER['SCRIPT_NAME'],
+            'file'     => self::getFile(),
+            'line'     => self::getLine(),
             'trace'    => self::getTrace(),
+            'code'     => self::getCode(),
             'ip'       => $_SERVER['REMOTE_ADDR'],
             'agent'    => get_browser()
         ];
