@@ -70,7 +70,7 @@ readonly class Env
     public static function getMailruSecrets(): MailruSecrets
     {
         $Env = self::getMyEnv();
-        return new MailruSecrets($Env->mailruSecrets->app_id, $Env->telegram->app_secret);
+        return new MailruSecrets($Env->mailruSecrets->app_id, $Env->mailruSecrets->app_secret);
     }
 
     public static function getDiscordSecrets(): DiscordSecrets
