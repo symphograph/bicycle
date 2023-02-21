@@ -2,6 +2,7 @@
 
 namespace Symphograph\Bicycle\Errors;
 
+use App\Logs\ErrorLog;
 use Exception;
 use Symphograph\Bicycle\Env\Env;
 use Symphograph\Bicycle\FileHelper;
@@ -15,7 +16,8 @@ class MyErrors extends Exception
     {
         parent::__construct($message);
         if ($this->loggable) {
-            self::writLog();
+            ErrorLog::writeToLog($this);
+            //self::writLog();
         }
 
     }
@@ -36,8 +38,8 @@ class MyErrors extends Exception
             'ip'       => $_SERVER['REMOTE_ADDR'],
             'agent'    => get_browser()
         ];
-        $data = json_encode($data);
 
+        $data = json_encode($data);
         $file = self::getLogFilename();
         if (!file_exists($file)) {
             FileHelper::fileForceContents($file, '');
