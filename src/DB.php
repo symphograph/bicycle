@@ -5,6 +5,9 @@ namespace Symphograph\Bicycle;
 use PDO;
 use PDOException;
 use PDOStatement;
+use Symphograph\Bicycle\Api\Response;
+use Symphograph\Bicycle\Errors\DatabaseErr;
+use Symphograph\Bicycle\Errors\MyErrors;
 
 class DB
 {
@@ -29,13 +32,7 @@ class DB
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES   => FALSE
         ];
-
-        try {
-            $this->pdo = new PDO($dsn, $con->user, $con->pass, $this->opt);
-        } catch (PDOException $ex) {
-            die('dbError');
-        }
-
+        $this->pdo = new PDO($dsn, $con->user, $con->pass, $this->opt);
     }
 
     public function qwe($sql, $args = NULL): bool|PDOStatement
@@ -46,34 +43,16 @@ class DB
         return self::execute($sql, $args);
     }
 
-    private function execute(string $sql, array $args): bool|PDOStatement
+    private function execute(string $sql, array $args): PDOStatement
     {
-        try {
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute($args);
-
-        } catch (PDOException $ex) {
-
-            $logText = self::prepLog($ex->getTraceAsString(), $sql, $ex->getMessage());
-            self::writeLog($logText);
-            return false;
-        }
-        return $stmt ?? false;
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($args);
+        return $stmt;
     }
 
-    private function query($sql): bool|PDOStatement
+    private function query($sql): PDOStatement
     {
-        try {
-            $result = $this->pdo->query($sql);
-
-        } catch (PDOException $ex) {
-
-            $logText = self::prepLog($ex->getTraceAsString(), $sql, $ex->getMessage());
-            self::writeLog($logText);
-            return false;
-
-        }
-        return $result ?? false;
+        return $this->pdo->query($sql);
     }
 
     public static function replace(string $tableName, array $params): bool

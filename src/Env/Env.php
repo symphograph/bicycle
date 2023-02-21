@@ -11,6 +11,7 @@ readonly class Env
     private object $telegram;
     private object $mailruSecrets;
     private object $discordSecrets;
+    private array $debugOnlyFolders;
 
 
     public function __construct()
@@ -79,6 +80,10 @@ readonly class Env
         return new DiscordSecrets($Env->discordSecrets->clientId, $Env->discordSecrets->clientSecret);
     }
 
-
+    public static function getDebugOnlyFolders(): array
+    {
+        $Env = self::getMyEnv();
+        return $Env->debugOnlyFolders;
+    }
 
 }

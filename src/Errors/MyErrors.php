@@ -17,36 +17,13 @@ class MyErrors extends Exception
         parent::__construct($message);
         if ($this->loggable) {
             ErrorLog::writeToLog($this);
-            //self::writLog();
         }
 
     }
 
-    private function writLog(): void
+    public function getType(): string
     {
-        //$logText = self::prepLog();
-        $data = [
-            'datetime' => date('Y-m-d H:i:s'),
-            'type'     => $this->type,
-            'level'    => 'error',
-            'msg'      => $this->getMessage(),
-            'script'   => $_SERVER['SCRIPT_NAME'],
-            'file'     => self::getFile(),
-            'line'     => self::getLine(),
-            'trace'    => self::getTrace(),
-            'code'     => self::getCode(),
-            'ip'       => $_SERVER['REMOTE_ADDR'],
-            'agent'    => get_browser()
-        ];
-
-        $data = json_encode($data);
-        $file = self::getLogFilename();
-        if (!file_exists($file)) {
-            FileHelper::fileForceContents($file, '');
-        }
-        $log = fopen($file, 'a+');
-        fwrite($log, "$data\r\n");
-        fclose($log);
+        return $this->type;
     }
 
     public function getPubMsg(): string
@@ -68,4 +45,5 @@ class MyErrors extends Exception
     {
         return dirname($_SERVER['DOCUMENT_ROOT']) . '/logs/errors/' . date('Y-m-d') . '.log';
     }
+
 }
