@@ -116,12 +116,12 @@ class Config
         ini_set("error_log", Log::createLogPath('/logs/phpErrors/'));
         error_log($err);
 
+        $httpStatus = self::getHttpStatus($err);
         ErrorLog::writeToLog($err);
         if(self::isApi()){
-            Response::error(self::getErrorMsg($err));
+            Response::error(self::getErrorMsg($err),$httpStatus);
         }
 
-        $httpStatus = self::getHttpStatus($err);
         http_response_code($httpStatus);
         if (ini_get('display_errors')) {
             echo $err;

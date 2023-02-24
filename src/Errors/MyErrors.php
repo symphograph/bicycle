@@ -36,7 +36,6 @@ class MyErrors extends Exception
 
     public function getHttpStatus(): int
     {
-        echo 'getHttpStatus ' . $this->httpStatus;
         return $this->httpStatus ?? 500;
     }
 
