@@ -2,10 +2,9 @@
 
 namespace Symphograph\Bicycle\Errors;
 
-use App\Logs\ErrorLog;
+use Symphograph\Bicycle\Logs\ErrorLog;
 use Exception;
 use Symphograph\Bicycle\Env\Env;
-use Symphograph\Bicycle\FileHelper;
 
 class MyErrors extends Exception
 {
