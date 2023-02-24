@@ -13,7 +13,6 @@ class MyErrors extends Exception
 
     public function __construct(string $message, private string $pubMsg = '', protected int $httpStatus = 500)
     {
-        echo 'MyErrors ' . $this->httpStatus;
         parent::__construct($message);
         if ($this->loggable) {
             ErrorLog::writeToLog($this);
@@ -37,6 +36,7 @@ class MyErrors extends Exception
 
     public function getHttpStatus(): int
     {
+        echo 'getHttpStatus ' . $this->httpStatus;
         return $this->httpStatus ?? 500;
     }
 
