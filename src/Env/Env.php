@@ -11,7 +11,7 @@ readonly class Env
     private object $telegram;
     private object $mailruSecrets;
     private object $discordSecrets;
-    private array $debugOnlyFolders;
+    private array  $debugOnlyFolders;
 
 
     public function __construct()
