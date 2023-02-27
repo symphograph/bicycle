@@ -29,7 +29,7 @@ readonly class Env
         }
     }
 
-    private static function getMyEnv(): self
+    protected static function getMyEnv(): self
     {
         global $Env;
         if(!isset($Env)){
