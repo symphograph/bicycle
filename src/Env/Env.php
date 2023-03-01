@@ -12,6 +12,7 @@ readonly class Env
     private object $mailruSecrets;
     private object $discordSecrets;
     private array  $debugOnlyFolders;
+    private string $apiKey;
 
 
     public function __construct()
@@ -60,6 +61,12 @@ readonly class Env
     {
         $Env = self::getMyEnv();
         return $Env->frontendDomain;
+    }
+
+    public static function getApiKey(): string
+    {
+        $Env = self::getMyEnv();
+        return $Env->apiKey;
     }
 
     public static function getTelegramSecrets(): TelegramSecrets
