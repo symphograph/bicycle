@@ -62,7 +62,7 @@ class Config
             $_POST = json_decode(file_get_contents('php://input'), true)['params'] ?? [];
         }
         if (empty($_POST['token'])  && empty($_SERVER['HTTP_AUTHORIZATION'])) {
-            throw new ConfigErr('emptyToken', 'emptyToken', 405);
+            throw new ConfigErr('emptyToken', 'emptyToken', 401);
         }
 
     }
