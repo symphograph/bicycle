@@ -1,5 +1,7 @@
 <?php
 namespace Symphograph\Bicycle\Auth\Telegram;
+use Symphograph\Bicycle\Env\Env;
+
 class Telegram
 {
 
@@ -10,9 +12,9 @@ class Telegram
 
     public function __construct()
     {
-        global $env;
-        $this->token = $env->telegram[$_SERVER['SERVER_NAME']]['token'] ?? '';
-        $this->bot_name = $env->telegram[$_SERVER['SERVER_NAME']]['bot_name'] ?? '';
+        $Secrets = Env::getTelegramSecrets();
+        $this->token = $Secrets->token ?? '';
+        $this->bot_name = $Secrets->bot_name ?? '';
     }
 
     public static function auth() : TeleUser|bool
