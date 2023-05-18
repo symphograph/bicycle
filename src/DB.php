@@ -162,6 +162,17 @@ class DB
         ];
     }
 
+    public static function initParams(object $object): array
+    {
+        $params = [];
+        foreach ($object as $k => $v){
+            if($v === null) continue;
+            $v = is_bool($object->$k) ? intval($v) : $v;
+            $params[$k] = $v;
+        }
+        return $params;
+    }
+
     private static function getReplaceByUpdateQueryStr(string $tableName, array $params): string
     {
 
