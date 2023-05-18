@@ -5,9 +5,9 @@ use Symphograph\Bicycle\Env\Env;
 class Telegram
 {
 
-    private string $token = '';
-    private string $bot_name = '';
-    public string $err = '';
+    private string  $token    = '';
+    private string  $bot_name = '';
+    public string   $err      = '';
     public TeleUser $TeleUser;
 
     public function __construct()
