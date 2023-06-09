@@ -78,10 +78,15 @@ class Config
             throw new ConfigErr('emptyOrigin', 'emptyOrigin', 401);
         }
 
-        $adr = 'https://' . Env::getFrontendDomain();
-        if($_SERVER['HTTP_ORIGIN'] !== $adr){
-            throw new ConfigErr('Unknown domain', 'Unknown domain', 401);
+        $clientDomains = Env::getClientDomains();
+        foreach ($clientDomains as $clientDomain){
+            $adr = 'https://' . $clientDomain;
+            if($adr === $_SERVER['HTTP_ORIGIN']){
+                return;
+            }
         }
+
+        throw new ConfigErr('Unknown domain', 'Unknown domain', 401);
     }
 
     public static function regHandlers(): void

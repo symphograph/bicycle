@@ -15,6 +15,7 @@ readonly class Env
     private string $apiKey;
     private string $tokenSecret;
     private object $jwt;
+    private array $clientDomains;
 
 
     public function __construct()
@@ -105,6 +106,12 @@ readonly class Env
     {
         $Env = self::getMyEnv();
         return $Env->jwt;
+    }
+
+    public static function getClientDomains(): array
+    {
+        $Env = self::getMyEnv();
+        return $Env->clientDomains;
     }
 
 }
