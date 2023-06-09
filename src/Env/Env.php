@@ -14,6 +14,7 @@ readonly class Env
     private array  $debugOnlyFolders;
     private string $apiKey;
     private string $tokenSecret;
+    private object $jwt;
 
 
     public function __construct()
@@ -98,6 +99,12 @@ readonly class Env
     {
         $Env = self::getMyEnv();
         return $Env->debugOnlyFolders;
+    }
+
+    public static function getJWT()
+    {
+        $Env = self::getMyEnv();
+        return $Env->jwt;
     }
 
 }
