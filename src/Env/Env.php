@@ -15,7 +15,7 @@ readonly class Env
     private string $apiKey;
     private string $tokenSecret;
     private object $jwt;
-    private array $clientDomains;
+    private array  $clientDomains;
 
 
     public function __construct()
@@ -27,8 +27,8 @@ readonly class Env
     {
         $env = require dirname($_SERVER['DOCUMENT_ROOT']) . '/includes/env.php';
         $vars = (object)get_class_vars(self::class);
-        foreach ($vars as $k => $v){
-            if(!isset($env->$k)) continue;
+        foreach ($vars as $k => $v) {
+            if (!isset($env->$k)) continue;
             $this->$k = $env->$k;
         }
     }
@@ -36,7 +36,7 @@ readonly class Env
     protected static function getMyEnv(): self
     {
         global $Env;
-        if(!isset($Env)){
+        if (!isset($Env)) {
             $Env = new self();
         }
         return $Env;
@@ -108,10 +108,16 @@ readonly class Env
         return $Env->jwt;
     }
 
-    public static function getClientDomains(): array
+    public static function getClientDomains(?string $protocol): array
     {
         $Env = self::getMyEnv();
-        return $Env->clientDomains;
+        if (empty($protocol)) {
+            return $Env->clientDomains;
+        }
+        return array_map(
+            fn($var) => $protocol . $var,
+            $Env->clientDomains
+        );
     }
 
 }
