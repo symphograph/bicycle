@@ -13,7 +13,7 @@ class Config
 {
     public static function redirectFromWWW(): void
     {
-        if (!preg_match('/www./', $_SERVER['SERVER_NAME'])){
+        if (!preg_match('/www./', $_SERVER['SERVER_NAME'])) {
             return;
         }
         $server_name = str_replace('www.', '', $_SERVER['SERVER_NAME']);
@@ -35,12 +35,12 @@ class Config
 
     public static function checkPermission(): void
     {
-        if(Env::isDebugMode()){
+        if (Env::isDebugMode()) {
             return;
         }
         $folders = Env::getDebugOnlyFolders();
-        foreach ($folders as $folder){
-            if(str_starts_with($_SERVER['SCRIPT_NAME'], '/' . $folder . '/')){
+        foreach ($folders as $folder) {
+            if (str_starts_with($_SERVER['SCRIPT_NAME'], '/' . $folder . '/')) {
                 throw new ConfigErr('debugOnlyFolders permits', 'Недостаточно прав', 403);
             }
         }
@@ -52,7 +52,7 @@ class Config
             return;
         }
 
-        if (!in_array($_SERVER['REQUEST_METHOD'], ['POST', 'OPTIONS'])){
+        if (!in_array($_SERVER['REQUEST_METHOD'], ['POST', 'OPTIONS'])) {
             throw new ConfigErr('invalid method', 'invalid method', 405);
         }
 
@@ -61,7 +61,7 @@ class Config
         if (empty($_POST)) {
             $_POST = json_decode(file_get_contents('php://input'), true)['params'] ?? [];
         }
-        if (empty($_POST['token'])  && empty($_SERVER['HTTP_AUTHORIZATION'])) {
+        if (empty($_POST['token']) && empty($_SERVER['HTTP_AUTHORIZATION'])) {
             throw new ConfigErr('emptyToken', 'emptyToken', 401);
         }
 
@@ -74,27 +74,19 @@ class Config
 
     private static function checkOrigin(): void
     {
-        if (empty($_SERVER['HTTP_ORIGIN'])){
+        if (empty($_SERVER['HTTP_ORIGIN'])) {
             throw new ConfigErr('emptyOrigin', 'emptyOrigin', 401);
         }
-
-        $clientDomains = Env::getClientDomains();
-        foreach ($clientDomains as $clientDomain){
-            $adr = 'https://' . $clientDomain;
-            if($adr === $_SERVER['HTTP_ORIGIN']){
-                return;
-            }
-        }
-
-        throw new ConfigErr('Unknown domain', 'Unknown domain', 401);
+        in_array($_SERVER['HTTP_ORIGIN'], Env::getClientDomains('https://'))
+        or throw new ConfigErr('Unknown domain', 'Unknown domain', 401);
     }
 
     public static function regHandlers(): void
     {
         $selfClass = new self();
-        set_error_handler([$selfClass,'myErrorHandler']);
-        set_exception_handler([$selfClass,'myExceptionHandler']);
-        register_shutdown_function([$selfClass,'myShutdownHandler']);
+        set_error_handler([$selfClass, 'myErrorHandler']);
+        set_exception_handler([$selfClass, 'myExceptionHandler']);
+        register_shutdown_function([$selfClass, 'myShutdownHandler']);
     }
 
     public function myShutdownHandler(): void
@@ -123,8 +115,8 @@ class Config
 
         $httpStatus = self::getHttpStatus($err);
         ErrorLog::writeToLog($err);
-        if(self::isApi()){
-            Response::error(self::getErrorMsg($err),$httpStatus);
+        if (self::isApi()) {
+            Response::error(self::getErrorMsg($err), $httpStatus);
         }
 
         http_response_code($httpStatus);
@@ -138,11 +130,11 @@ class Config
 
     private static function getErrorMsg(Throwable $err): string
     {
-        if(ini_get('display_errors')){
+        if (ini_get('display_errors')) {
             return $err->getMessage();
         }
         $reflectClass = new ReflectionClass($err::class);
-        if($reflectClass->hasMethod('getResponseMsg')){
+        if ($reflectClass->hasMethod('getResponseMsg')) {
             return $err->getResponseMsg();
         }
         return '';
@@ -151,7 +143,7 @@ class Config
     private static function getHttpStatus(Throwable $err): int
     {
         $reflectClass = new ReflectionClass($err::class);
-        if($reflectClass->hasMethod('getHttpStatus')){
+        if ($reflectClass->hasMethod('getHttpStatus')) {
             return $err->getHttpStatus();
         }
         return 500;

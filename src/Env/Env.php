@@ -108,7 +108,7 @@ readonly class Env
         return $Env->jwt;
     }
 
-    public static function getClientDomains(?string $protocol): array
+    public static function getClientDomains(?string $protocol = null): array
     {
         $Env = self::getMyEnv();
         if (empty($protocol)) {
