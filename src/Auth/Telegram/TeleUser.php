@@ -1,14 +1,17 @@
 <?php
 namespace Symphograph\Bicycle\Auth\Telegram;
+use Symphograph\Bicycle\DB;
+
 class TeleUser
 {
-    public int $id = 0;
+    public int    $id         = 0;
+    public int    $accountId  = 0;
     public string $first_name = '';
-    public string $last_name = '';
-    public string $username = '';
-    public string $photo_url = '';
-    public string $auth_date = '';
-    public string $hash = '';
+    public string $last_name  = '';
+    public string $username   = '';
+    public string $photo_url  = '';
+    public string $auth_date  = '';
+    public string $hash       = '';
 
     public function byCook()
     {
@@ -26,7 +29,7 @@ class TeleUser
         return false;
     }
 
-    public static function byData(array|object $auth_data) : TeleUser
+    public static function byData(array|object $auth_data) : self
     {
         $TeleUser = new TeleUser();
         $auth_data = (object) $auth_data;
@@ -36,6 +39,21 @@ class TeleUser
             }
         }
         return $TeleUser;
+    }
+
+    public function putToDB(): bool
+    {
+        $params = [
+            'id'         => $this->id,
+            'accountId'  => $this->accountId,
+            'first_name' => $this->first_name,
+            'last_name'  => $this->last_name,
+            'username'   => $this->username,
+            'photo_url'  => $this->photo_url,
+            'auth_date'  => $this->auth_date
+        ];
+        return DB::replace('user_telegram', $params);
+
     }
 
 }
