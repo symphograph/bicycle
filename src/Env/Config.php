@@ -77,7 +77,4 @@ class Config
         or throw new ConfigErr('Unknown domain', 'Unknown domain', 401);
     }
 
-
-
-
 }
