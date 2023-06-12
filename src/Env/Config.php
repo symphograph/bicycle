@@ -67,12 +67,12 @@ class Config
 
     }
 
-    private static function isApi(): bool
+    protected static function isApi(): bool
     {
         return str_starts_with($_SERVER['SCRIPT_NAME'], '/api/');
     }
 
-    private static function checkOrigin(): void
+    protected static function checkOrigin(): void
     {
         if (empty($_SERVER['HTTP_ORIGIN'])) {
             throw new ConfigErr('emptyOrigin', 'emptyOrigin', 401);
@@ -128,7 +128,7 @@ class Config
           Мы уже работаем над её исправлением.<br>";
     }
 
-    private static function getErrorMsg(Throwable $err): string
+    protected static function getErrorMsg(Throwable $err): string
     {
         if (ini_get('display_errors')) {
             return $err->getMessage();
@@ -140,7 +140,7 @@ class Config
         return '';
     }
 
-    private static function getHttpStatus(Throwable $err): int
+    protected static function getHttpStatus(Throwable $err): int
     {
         $reflectClass = new ReflectionClass($err::class);
         if ($reflectClass->hasMethod('getHttpStatus')) {
