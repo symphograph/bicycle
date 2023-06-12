@@ -42,25 +42,27 @@ class Config
         }
     }
 
-    public static function initApiSettings(): void
+    protected static function initEndPoint(string $path, array $allowedMethods, array $requiredHeaders = []): void
     {
-        if (!self::isApi()) {
+        if(!str_starts_with($_SERVER['SCRIPT_NAME'], $path)){
             return;
         }
 
-        if (!in_array($_SERVER['REQUEST_METHOD'], ['POST', 'OPTIONS'])) {
+        if (!in_array($_SERVER['REQUEST_METHOD'], $allowedMethods)) {
             throw new ConfigErr('invalid method', 'invalid method', 405);
         }
 
-        self::checkOrigin();
+        self::checkRequiredHeaders($requiredHeaders);
+    }
 
-        if (empty($_POST)) {
-            $_POST = json_decode(file_get_contents('php://input'), true)['params'] ?? [];
+    protected static function checkRequiredHeaders(array $requiredHeaders): void
+    {
+        foreach ($requiredHeaders as $requiredHeader){
+            if(empty($_SERVER[$requiredHeader])){
+                $msg = $requiredHeader . ' is empty';
+                throw new ConfigErr($msg, $msg, 401);
+            }
         }
-        if (empty($_POST['token']) && empty($_SERVER['HTTP_AUTHORIZATION'])) {
-            throw new ConfigErr('emptyToken', 'emptyToken', 401);
-        }
-
     }
 
     public static function isApi(): bool
@@ -70,11 +72,21 @@ class Config
 
     protected static function checkOrigin(): void
     {
+        if(!self::isApi()){
+            return;
+        }
         if (empty($_SERVER['HTTP_ORIGIN'])) {
             throw new ConfigErr('emptyOrigin', 'emptyOrigin', 401);
         }
         in_array($_SERVER['HTTP_ORIGIN'], Env::getClientDomains('https://'))
         or throw new ConfigErr('Unknown domain', 'Unknown domain', 401);
+    }
+
+    public static function postHandler(): void
+    {
+        if (empty($_POST)) {
+            $_POST = json_decode(file_get_contents('php://input'), true)['params'] ?? [];
+        }
     }
 
 }
