@@ -23,6 +23,8 @@ class Response
         self::jsonResponse($data);
     }
 
+    
+
     #[NoReturn] private static function jsonResponse(array|object $data, $statusCode = 200): void
     {
         header_remove();

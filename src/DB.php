@@ -3,11 +3,8 @@ namespace Symphograph\Bicycle;
 
 
 use PDO;
-use PDOException;
 use PDOStatement;
-use Symphograph\Bicycle\Api\Response;
-use Symphograph\Bicycle\Errors\DatabaseErr;
-use Symphograph\Bicycle\Errors\MyErrors;
+
 
 class DB
 {
