@@ -151,7 +151,7 @@ class DB
         return '(' . implode(', ', $arr) . ')';
     }
 
-    public static function replaceData(string $tableName, array $params): object
+    private static function replaceData(string $tableName, array $params): object
     {
         return (object) [
             'sql' => self::getReplaceByUpdateQueryStr($tableName, $params),

@@ -75,11 +75,17 @@ class Config
         if(!self::isApi()){
             return;
         }
+
+        self::isClientOrigin()
+        or throw new ConfigErr('Unknown domain', 'Unknown domain', 401);
+    }
+
+    public static function isClientOrigin(): bool
+    {
         if (empty($_SERVER['HTTP_ORIGIN'])) {
             throw new ConfigErr('emptyOrigin', 'emptyOrigin', 401);
         }
-        in_array($_SERVER['HTTP_ORIGIN'], Env::getClientDomains('https://'))
-        or throw new ConfigErr('Unknown domain', 'Unknown domain', 401);
+        return in_array($_SERVER['HTTP_ORIGIN'] ?? '', Env::getClientDomains('https://'));
     }
 
     public static function postHandler(): void
@@ -87,6 +93,41 @@ class Config
         if (empty($_POST)) {
             $_POST = json_decode(file_get_contents('php://input'), true)['params'] ?? [];
         }
+    }
+
+    public static function cookOpts(
+        int         $expires = 0,
+        string      $path = '/',
+        string|null $domain = null,
+        bool        $secure = true,
+        bool        $httponly = true,
+        string      $samesite = 'Strict', // None || Lax  || Strict
+        bool        $debug = false
+    ) : array
+    {
+        if(!$expires){
+            $expires = time() + 60*60*24*30;
+        }
+        //$domain = $domain ?? $_SERVER['SERVER_NAME'];
+
+        if($debug){
+            return [
+                'expires'  => $expires,
+                'path'     => '/',
+                'domain'   => null,
+                'secure'   => true,
+                'httponly' => true,
+                'samesite' => 'None'
+            ];
+        }
+        return [
+            'expires'  => $expires,
+            'path'     => $path,
+            'domain'   => $domain,
+            'secure'   => $secure,
+            'httponly' => $httponly,
+            'samesite' => $samesite // None || Lax  || Strict
+        ];
     }
 
 }

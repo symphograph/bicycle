@@ -16,19 +16,21 @@ use Symphograph\Bicycle\Errors\AuthErr;
 
 class Token
 {
-    public string $iss; // (issuer) издатель токена
+    public string             $jwt;
+    public string             $iss; // (issuer) издатель токена
     private DateTimeImmutable $iat; // (issued at) время создания токена
     private DateTimeImmutable $exp; // (expire time) срок действия токена
     private DateTimeImmutable $nbf; // (not before) срок, до которого токен не действителен
-    public string $jwt;
 
     public function __construct(
         public string  $jti, // (JWT id) идентификатор токена
         public ?string $sub = 'auth', // (subject) "тема", назначение токена
+        public ?int    $uid = null,
         public ?array  $aud = [], // (audience) аудитория, получатели токена
         public string  $createdAt = 'now',
         public string  $expireDuration = '+1 hour',
-        public array   $powers = []
+        public array   $powers = [],
+        public string  $authType = 'default'
     )
     {
         try {
@@ -36,7 +38,7 @@ class Token
             self::buildDatetime();
             self::initJWT();
             //self::validation($this->jvt, ignoreExpire: true);
-        } catch (\Throwable $e){
+        } catch (\Throwable $e) {
             throw new AuthErr($e->getMessage(), 'Ошибка генерации токена', 500);
         }
 
@@ -46,7 +48,7 @@ class Token
     {
         $tokenBuilder = (new Builder(new JoseEncoder(), ChainedFormatter::default()));
 
-        $accessToken = $tokenBuilder
+        $Token = $tokenBuilder
             ->issuedBy($_SERVER['SERVER_NAME']) // iss (issuer) издатель токена
             ->permittedFor(...$this->aud) // aud (audience) аудитория, получатели токена
             ->identifiedBy($this->jti) // jti (JWT id) идентификатор токена
@@ -54,13 +56,14 @@ class Token
             ->issuedAt($this->iat) // iat (issued at) время создания токена
             ->canOnlyBeUsedAfter($this->nbf) // nbf (not before) срок, до которого токен не действителен
             ->expiresAt($this->exp) // exp (expire time) срок действия токена
-            ->withClaim('uid', 1)
+            ->withClaim('uid', $this->uid)
             ->withClaim('powers', $this->powers)
+            ->withClaim('authType', $this->authType)
             ->withHeader('foo', 'bar')
             ->getToken(new Sha256(), self::getKey());
 
 
-        $this->jwt = $accessToken->toString();
+        $this->jwt = $Token->toString();
     }
 
     public static function toArray(string $jvt): array
@@ -78,10 +81,10 @@ class Token
     }
 
     public static function validation(
-        string $jwt,
-        array $needPowers = [],
+        string  $jwt,
+        array   $needPowers = [],
         ?string $expectedSubject = null,
-        bool $ignoreExpire = false
+        bool    $ignoreExpire = false
     ): void
     {
         $token = self::parse($jwt);
@@ -90,17 +93,23 @@ class Token
 
         match (false) {
             $validator->validate($token, new SignedWith(new Sha256(), self::getKey()))
-                => throw new AuthErr('Invalid token key'),
+            => throw new AuthErr('Invalid token key'),
+
             $validator->validate($token, new RelatedTo($expectedSubject ?? 'auth'))
-                => throw new AuthErr('Invalid token subject'),
+            => throw new AuthErr('Invalid token subject'),
+
             !self::isExpired($token, $ignoreExpire),
-                => throw new AuthErr('Token is Expired'),
+            => throw new AuthErr('Token is Expired'),
+
             $token->hasBeenIssuedBy(Env::getJWT()->issuer)
-                => throw new AuthErr('Token has unexpected Issuer'),
+            => throw new AuthErr('Token has unexpected Issuer'),
+
             $validator->validate($token, new PermittedFor($_SERVER['SERVER_NAME']))
-                => throw new AuthErr('Invalid token audience'),
+            => throw new AuthErr('Invalid token audience'),
+
             self::validatePowers($tokenArray['powers'], $needPowers)
-                => throw new AuthErr('powers', 'Нет доступа', 403),
+            => throw new AuthErr('powers', 'Нет доступа', 403),
+
             default => true
         };
     }
@@ -121,15 +130,21 @@ class Token
     private static function isExpired(UnencryptedToken $token, bool $ignoreExpire): bool
     {
         $token->claims();
-
+        //printr($token->claims());
+        //var_dump($token->isExpired(new DateTimeImmutable()));
         return $token->isExpired(new DateTimeImmutable()) && !$ignoreExpire;
     }
 
     private static function validatePowers(array $tokenPowers, array $needPowers = []): bool
     {
-        if(empty($needPowers)) return true;
-        $intersect = array_intersect($needPowers,$tokenPowers);
+        if (empty($needPowers)) return true;
+        $intersect = array_intersect($needPowers, $tokenPowers);
         return !!count($intersect);
+    }
+    
+    private static function getPowers(string $jwt)
+    {
+        return self::toArray($jwt)['powers'] ?? [];
     }
 
 }

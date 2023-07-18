@@ -6,16 +6,24 @@ use Symphograph\Bicycle\Env\Env;
 
 class AccessToken
 {
-    public static function create(array $powers = [], string $createdAt = 'now'): string
+    public static function create(
+        int    $uid,
+        array  $powers = [],
+        string $createdAt = 'now',
+        string $authType = 'default'
+    ): string
     {
         $audience = Env::getJWT()->audience;
+
         $audience[] = $_SERVER['SERVER_NAME'];
         $Token = new Token(
             jti: 'any',
+            uid: $uid,
             aud: $audience,
             createdAt: $createdAt,
-            expireDuration: '+1 hour',
-            powers: $powers
+            expireDuration: '+1 day',
+            powers: $powers,
+            authType: $authType
         );
         return $Token->jwt;
     }

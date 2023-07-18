@@ -55,6 +55,10 @@ class Handler
             echo $err;
             return;
         }
+        if(!empty($msg = self::getErrorMsg($err))){
+            echo $msg;
+            return;
+        }
         echo "<h1>Произошла чудовищная ошибка сервера</h1>
           Мы уже работаем над её исправлением.<br>";
     }

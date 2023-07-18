@@ -41,6 +41,12 @@ class TeleUser
         return $TeleUser;
     }
 
+    public static function byId($id): self|bool
+    {
+        $qwe = qwe("select * from user_telegram where id = :id", ['id' => $id]);
+        return $qwe->fetchObject(self::class);
+    }
+
     public function putToDB(): bool
     {
         $params = [
@@ -50,8 +56,9 @@ class TeleUser
             'last_name'  => $this->last_name,
             'username'   => $this->username,
             'photo_url'  => $this->photo_url,
-            'auth_date'  => $this->auth_date
+            'auth_date'  => date('Y-m-d H:i:s',$this->auth_date)
         ];
+
         return DB::replace('user_telegram', $params);
 
     }

@@ -1,6 +1,7 @@
 <?php
 namespace Symphograph\Bicycle\Auth\Telegram;
 use Symphograph\Bicycle\Env\Env;
+use Symphograph\Bicycle\Errors\AuthErr;
 
 class Telegram
 {
@@ -52,7 +53,7 @@ class Telegram
         unset($auth_data['hash']);
 
         if(!self::checkHash($auth_data,$check_hash)){
-            return false;
+            throw new AuthErr('Telegram hash is invalid');
         }
 
         if(!self::checkDate($auth_data)){
@@ -106,16 +107,32 @@ class Telegram
         return setcookie('tg_user', $auth_data_json);
     }
 
-    public function anonymous(string $authPath)
+    public static function widgetPage(string $title, string $callbackUrl): string
     {
-        $server = $_SERVER['SERVER_NAME'];
+        $script = self::widgetScript($callbackUrl);
+        return <<<HTML
+            <!DOCTYPE html>
+            <html lang="ru">
+              <head>
+                <meta charset="utf-8">
+                <title>$title</title>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              </head>
+              <body><center>$script</center></body>
+            </html>
+        HTML;
+    }
+
+    public static function widgetScript(string $callbackUrl): string
+    {
+        $botName = Env::getTelegramSecrets()->bot_name;
         return <<<HTML
             <div style="padding: 3em">
-                <script async 
+                <script type="text/javascript" async 
                     src="https://telegram.org/js/telegram-widget.js?15" 
-                    data-telegram-login="{$this->bot_name}" 
+                    data-telegram-login="$botName" 
                     data-size="large" 
-                    data-auth-url="https://{$_SERVER['SERVER_NAME']}/$authPath" 
+                    data-auth-url="https://{$_SERVER['SERVER_NAME']}/$callbackUrl" 
                     data-request-access="write">
                 </script>
             </div>
