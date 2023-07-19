@@ -11,7 +11,8 @@ class MyErrors extends Exception
     protected string $type     = 'Err';
     protected bool   $loggable = true;
 
-    public function __construct(string $message, private string $pubMsg = '', protected int $httpStatus = 500)
+
+    public function __construct(string $message = '', private string $pubMsg = '', protected int $httpStatus = 500)
     {
         parent::__construct($message);
         if ($this->loggable) {
