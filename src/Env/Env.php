@@ -16,6 +16,7 @@ readonly class Env
     private string $tokenSecret;
     private object $jwt;
     private array  $clientDomains;
+    private array  $apiDomains;
 
 
     public function __construct()
@@ -117,6 +118,18 @@ readonly class Env
         return array_map(
             fn($var) => $protocol . $var,
             $Env->clientDomains
+        );
+    }
+
+    public static function getAPIDomains(?string $protocol = null): array
+    {
+        $Env = self::getMyEnv();
+        if (empty($protocol)) {
+            return $Env->apiDomains;
+        }
+        return array_map(
+            fn($var) => $protocol . $var,
+            $Env->apiDomains
         );
     }
 

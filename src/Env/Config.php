@@ -42,7 +42,7 @@ class Config
         }
     }
 
-    protected static function initEndPoint(string $path, array $allowedMethods, array $requiredHeaders = []): void
+    protected static function initEndPoint(string $path, array $allowedMethods, array $expectedHeaders = []): void
     {
         if(!str_starts_with($_SERVER['SCRIPT_NAME'], $path)){
             return;
@@ -52,22 +52,29 @@ class Config
             throw new ConfigErr('invalid method', 'invalid method', 405);
         }
 
-        self::checkRequiredHeaders($requiredHeaders);
+        self::checkExpectedHeaders($expectedHeaders);
     }
 
-    protected static function checkRequiredHeaders(array $requiredHeaders): void
+    protected static function checkExpectedHeaders(array $expectedHeaders): void
     {
-        foreach ($requiredHeaders as $requiredHeader){
-            if(empty($_SERVER[$requiredHeader])){
-                $msg = $requiredHeader . ' is empty';
-                throw new ConfigErr($msg, $msg, 401);
+
+        foreach ($expectedHeaders as $expectedHeader => $expectedValue){
+            if(empty($_SERVER[$expectedHeader])){
+                throw new ConfigErr($expectedHeader . ' is empty', '', 401);
+            }
+
+            if(empty($expectedValue)) continue;
+
+            if($_SERVER[$expectedHeader] !== $expectedValue){
+                throw new ConfigErr('invalid ' . $expectedHeader, '', 403);
             }
         }
     }
 
     public static function isApi(): bool
     {
-        return str_starts_with($_SERVER['SCRIPT_NAME'], '/api/');
+        return str_starts_with($_SERVER['SCRIPT_NAME'], '/api/')
+            || str_starts_with($_SERVER['SCRIPT_NAME'], '/curl/');
     }
 
     protected static function checkOrigin(): void

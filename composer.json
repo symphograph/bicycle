@@ -19,7 +19,8 @@
     "ext-bcmath": "*",
     "ext-pdo": "*",
     "ext-calendar" : "*",
-    "lcobucci/jwt": "^5.0"
+    "lcobucci/jwt": "^5.0",
+    "php-curl-class/php-curl-class": "dev-master"
   },
   "autoload": {
     "psr-4": {

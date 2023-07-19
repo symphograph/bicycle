@@ -40,4 +40,10 @@ class ErrorLog extends Log
         $this->trace = $err->getTrace();
         $this->code = $err->getCode();
     }
+
+    public static function writeToPHP(Throwable $err)
+    {
+        ini_set("error_log", Log::createLogPath('/logs/phpErrors/'));
+        error_log($err);
+    }
 }
