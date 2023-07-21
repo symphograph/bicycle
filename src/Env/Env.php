@@ -127,6 +127,7 @@ readonly class Env
         if (empty($protocol)) {
             return $Env->apiDomains;
         }
+
         return array_map(
             fn($var) => $protocol . $var,
             $Env->apiDomains

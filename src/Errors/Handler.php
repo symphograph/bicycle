@@ -46,7 +46,7 @@ class Handler
 
         $httpStatus = self::getHttpStatus($err);
         ErrorLog::writeToLog($err);
-        if (Config::isApi()) {
+        if (Config::isApi() || Config::isCurl()) {
             Response::error(self::getErrorMsg($err), $httpStatus);
         }
 

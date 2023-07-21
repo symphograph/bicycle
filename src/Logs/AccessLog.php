@@ -12,6 +12,7 @@ class AccessLog extends Log
         $data->writeToFile();
     }
 
+
     private function initData()
     {
         $this->datetime = date('Y-m-d H:i:s');

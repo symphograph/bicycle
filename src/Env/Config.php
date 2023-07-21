@@ -58,6 +58,7 @@ class Config
     protected static function checkExpectedHeaders(array $expectedHeaders): void
     {
 
+        //printr($expectedHeaders);
         foreach ($expectedHeaders as $expectedHeader => $expectedValue){
             if(empty($_SERVER[$expectedHeader])){
                 throw new ConfigErr($expectedHeader . ' is empty', '', 401);
@@ -73,13 +74,17 @@ class Config
 
     public static function isApi(): bool
     {
-        return str_starts_with($_SERVER['SCRIPT_NAME'], '/api/')
-            || str_starts_with($_SERVER['SCRIPT_NAME'], '/curl/');
+        return str_starts_with($_SERVER['SCRIPT_NAME'], '/api/');
+    }
+
+    public static function isCurl(): bool
+    {
+        return str_starts_with($_SERVER['SCRIPT_NAME'], '/curl/');
     }
 
     protected static function checkOrigin(): void
     {
-        if(!self::isApi()){
+        if(!self::isApi() || !self::isCurl()){
             return;
         }
 
@@ -92,7 +97,8 @@ class Config
         if (empty($_SERVER['HTTP_ORIGIN'])) {
             throw new ConfigErr('emptyOrigin', 'emptyOrigin', 401);
         }
-        return in_array($_SERVER['HTTP_ORIGIN'] ?? '', Env::getClientDomains('https://'));
+        return in_array($_SERVER['HTTP_ORIGIN'] ?? '', Env::getClientDomains('https://'))
+            || in_array($_SERVER['HTTP_ORIGIN'] ?? '', Env::getAPIDomains('https://'));
     }
 
     public static function postHandler(): void

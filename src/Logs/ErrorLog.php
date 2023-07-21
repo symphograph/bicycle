@@ -22,7 +22,7 @@ class ErrorLog extends Log
         $data->writeToFile();
     }
 
-    private function initData(Throwable $err)
+    private function initData(Throwable $err): void
     {
         $this->datetime = date('Y-m-d H:i:s');
         $this->ip = $_SERVER['REMOTE_ADDR'];
@@ -41,7 +41,7 @@ class ErrorLog extends Log
         $this->code = $err->getCode();
     }
 
-    public static function writeToPHP(Throwable $err)
+    public static function writeToPHP(Throwable $err): void
     {
         ini_set("error_log", Log::createLogPath('/logs/phpErrors/'));
         error_log($err);

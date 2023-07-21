@@ -2,6 +2,7 @@
 
 namespace Symphograph\Bicycle\Errors;
 
+use Symphograph\Bicycle\Env\Config;
 use Symphograph\Bicycle\Logs\ErrorLog;
 use Exception;
 use Symphograph\Bicycle\Env\Env;
@@ -32,7 +33,9 @@ class MyErrors extends Exception
 
     public function getResponseMsg(): string
     {
-        return Env::isDebugMode() ? $this->getMessage() : $this->getPubMsg();
+        return (Env::isDebugMode() || Config::isCurl())
+            ? $this->getMessage()
+            : $this->getPubMsg();
     }
 
     public function getHttpStatus(): int

@@ -118,10 +118,10 @@ class DB
     {
         $parNames = array_keys($params);
         $phArr = [];
-        foreach ($params as $parName => $parms){
+        foreach ($params as $parName => $param){
             $i = 0;
             $phArr = [];
-            foreach ($parms as $p){
+            foreach ($param as $p){
                 $phArr[] = self::paramNamer($parNames,$i);
                 $i++;
             }
@@ -164,6 +164,9 @@ class DB
         $params = [];
         foreach ($object as $k => $v){
             if($v === null) continue;
+            if (is_array($v) || is_object($v)) {
+                continue;
+            }
             $v = is_bool($object->$k) ? intval($v) : $v;
             $params[$k] = $v;
         }

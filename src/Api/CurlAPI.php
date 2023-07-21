@@ -6,6 +6,7 @@ use Curl\Curl;
 use Symphograph\Bicycle\Env\Env;
 use Symphograph\Bicycle\Errors\CurlErr;
 use Symphograph\Bicycle\Logs\ErrorLog;
+use Throwable;
 
 class CurlAPI
 {
@@ -18,7 +19,7 @@ class CurlAPI
 
     }
 
-    public function post()
+    public function post(): object|false
     {
         try{
             $curl = new Curl();
@@ -35,15 +36,13 @@ class CurlAPI
             if ($curl->error) {
                 throw new CurlErr('Error: ' . $curl->errorMessage);
             }
-        } catch (\Throwable $err) {
-
+            if(!is_object($curl->response)){
+                throw new CurlErr('Empty Response ');
+            }
+        } catch (Throwable $err) {
             ErrorLog::writeToPHP($err);
-
             return false;
         }
-
-
-
         return $curl->response;
     }
 }
