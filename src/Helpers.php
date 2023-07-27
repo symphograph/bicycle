@@ -28,10 +28,23 @@ class Helpers
     public static function isMyClassExist(string $className): bool
     {
         $fileName = str_replace('\\', '/', $className) . '.php';
-        if(!file_exists(dirname($_SERVER['DOCUMENT_ROOT']) . '/classes/' . $fileName)){
+        if(!file_exists(dirname($_SERVER['DOCUMENT_ROOT']) . '/' . $fileName)){
             return false;
         }
         return class_exists($className);
+    }
+
+    /**
+     * Get the class "basename" of the given object / class.
+     *
+     * @param  string|object  $class
+     * @return string
+     */
+    public static function classBasename($class): string
+    {
+        $class = is_object($class) ? get_class($class) : $class;
+
+        return basename(str_replace('\\', '/', $class));
     }
 
     /**
@@ -150,6 +163,11 @@ class Helpers
                 return false;
         }
         return true;
+    }
+
+    public static function isMultiArray(array $array): bool
+    {
+        return !!(count($array) - count($array, COUNT_RECURSIVE));
     }
 
     public static function isIntInRange($value, int $min, int $max): bool

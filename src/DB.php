@@ -12,6 +12,7 @@ class DB
     private ?array    $opt;
     public ?string $pHolders;
     public ?array  $parArr;
+    private ConnectDB $connect;
 
     public function __construct(
         string $connectName = '',
@@ -21,7 +22,7 @@ class DB
     {
         if($flat) return;
 
-        $con = ConnectDB::byName($connectName);
+        $con = $this->connect = ConnectDB::byName($connectName);
 
         $dsn = "mysql:host=$con->host;dbname=$con->name;charset=$charset";
         $this->opt = [
@@ -164,9 +165,13 @@ class DB
         $params = [];
         foreach ($object as $k => $v){
             if($v === null) continue;
+
             if (is_array($v) || is_object($v)) {
-                continue;
+                $v = json_encode($v);
+                //continue;
+                //ававыаваыавы
             }
+
             $v = is_bool($object->$k) ? intval($v) : $v;
             $params[$k] = $v;
         }
@@ -180,13 +185,7 @@ class DB
         $phNamesStr = self::valuesPhNamesStr($params);
         $paramsForUpdateStr = self::paramsForUpdateStr($params);
 
-        return "
-            insert into $tableName 
-            $parNamesStr
-                VALUES 
-            $phNamesStr
-            on duplicate key update 
-                 $paramsForUpdateStr";
+        return "insert into $tableName $parNamesStr VALUES $phNamesStr on duplicate key update $paramsForUpdateStr";
     }
 
     private static function colNamesStr(array $params): string
@@ -240,4 +239,5 @@ class DB
 
         return $q->id ?? 1;
     }
+
 }

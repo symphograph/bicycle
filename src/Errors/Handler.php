@@ -18,6 +18,10 @@ class Handler
         set_error_handler([$selfClass, 'myErrorHandler']);
         set_exception_handler([$selfClass, 'myExceptionHandler']);
         register_shutdown_function([$selfClass, 'myShutdownHandler']);
+
+        if(Config::isApi() || Config::isCurl()){
+            ob_start();
+        }
     }
 
     public function myShutdownHandler(): void
@@ -47,7 +51,16 @@ class Handler
         $httpStatus = self::getHttpStatus($err);
         ErrorLog::writeToLog($err);
         if (Config::isApi() || Config::isCurl()) {
-            Response::error(self::getErrorMsg($err), $httpStatus);
+            $trace = [];
+            if (ini_get('display_errors')) {
+                $trace = $err->getTrace() ?? [];
+                array_unshift($trace, [
+                    'msg'  => $err->getMessage(),
+                    'file' => $err->getFile(),
+                    'line' => $err->getLine()
+                ]);
+            }
+            Response::error(self::getErrorMsg($err), $httpStatus, $trace);
         }
 
         http_response_code($httpStatus);
@@ -55,7 +68,7 @@ class Handler
             echo $err;
             return;
         }
-        if(!empty($msg = self::getErrorMsg($err))){
+        if (!empty($msg = self::getErrorMsg($err))) {
             echo $msg;
             return;
         }
@@ -67,6 +80,7 @@ class Handler
     {
         if (ini_get('display_errors')) {
             return $err->getMessage();
+            //return $err->getMessage() . PHP_EOL . $err->getFile() . '(' . $err->getLine() . ')';
         }
         $reflectClass = new ReflectionClass($err::class);
         if ($reflectClass->hasMethod('getResponseMsg')) {
@@ -83,4 +97,5 @@ class Handler
         }
         return 500;
     }
+
 }

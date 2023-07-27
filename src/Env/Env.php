@@ -82,7 +82,7 @@ readonly class Env
     public static function getTelegramSecrets(): TelegramSecrets
     {
         $Env = self::getMyEnv();
-        return new TelegramSecrets($Env->telegram->token, $Env->telegram->bot_name);
+        return new TelegramSecrets($Env->telegram->token, $Env->telegram->bot_name, $Env->telegram->loginPageTitle ?? 'Вход');
     }
 
     public static function getMailruSecrets(): MailruSecrets

@@ -3,27 +3,34 @@
 namespace Symphograph\Bicycle;
 
 use ReflectionProperty;
+use Symphograph\Bicycle\Errors\AppErr;
 
 class JsonDecoder
 {
     public static function cloneFromAny(array|object $Inductor, string $className): object
     {
         $Recipient = new $className;
-        $classVars = (object)get_class_vars($className);
+        $classVars = (object) get_class_vars($className);
 
         foreach ($Inductor as $propName => $propValue) {
 
-            if (!property_exists($classVars, $propName))
+
+            if (!property_exists($classVars, $propName)){
                 continue;
+            }
+
 
             if (is_object($propValue) || is_array($propValue)) {
 
                 $typeInClass = self::getTypeInClass($className, $propName);
-
-                if ($typeInClass === 'array') {
+                if ($typeInClass === 'array' || $typeInClass === 'object') {
+                    if($propName === 'structure'){
+                        //var_dump($propValue);
+                    }
                     $Recipient->$propName = $propValue;
                     continue;
                 }
+
 
                 $Recipient->$propName = self::cloneFromAny($propValue, $typeInClass);
                 continue;
@@ -44,14 +51,36 @@ class JsonDecoder
 
         if ($Reflection::class === 'ReflectionUnionType') {
             $types = $Reflection->getTypes();
-            $arr = [];
-            foreach ($types as $type){
-                $countVars = count(get_class_vars($type->getName()));
-                $arr[$countVars] = $type->getName();
+
+            $type = self::chooseBetweenTypes($types);
+            if(!$type){
+                throw new AppErr('JsonDecoder: Type of ' . $propName . ' is invalid for '. $className);
             }
-            ksort($arr);
-            return array_pop($arr);
+
+            return $type;
         }
+
         return 'mixed';
+    }
+
+    private static function chooseBetweenTypes($types): string|false
+    {
+        $arr = [];
+        foreach ($types as $type){
+            if (Helpers::isMyClassExist($type->getName())){
+                $countVars = count(get_class_vars($type->getName()));
+                $arr[$type->getName()] = $countVars;
+                continue;
+            }
+            if(!in_array($type->getName(),['array', 'object'])){
+                continue;
+            }
+            $arr[$type->getName()] = 0;
+        }
+        if(empty($arr)){
+            return false;
+        }
+        asort($arr);
+        return array_key_last($arr);
     }
 }
