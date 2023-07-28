@@ -39,6 +39,13 @@ class FileHelper
         return($folders);
     }
 
+    public static function fileExists(string $dir): bool
+    {
+        $dir = self::addRoot($dir);
+        $dir = self::removeDoubleSeparators($dir);
+        return file_exists($dir) && !is_dir($dir);
+    }
+
     /**
      * Сохраняет файл. Если нет дириктории, создаёт её.
      * @param string $dir
@@ -120,7 +127,12 @@ class FileHelper
     public static function delDir($dir): bool
     {
         $dir = self::addRoot($dir);
-        $d = @opendir($dir);
+        try {
+            $d = opendir($dir);
+        } catch (\Throwable) {
+            return false;
+        }
+
         if(!$d) return false;
         while (($entry = readdir($d)) !== false) {
             if ($entry != "." && $entry != "..") {
