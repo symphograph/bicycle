@@ -14,6 +14,7 @@ class CurlAPI
         protected string $apiName,
         protected string $url,
         protected array $params,
+        protected string $assessToken = ''
     )
     {
 
@@ -30,6 +31,7 @@ class CurlAPI
             $curl->setHeader('Accept', 'application/json');
             $curl->setHeader('Origin', 'https://' . $_SERVER['SERVER_NAME']);
             $curl->setHeader('Authorization', Env::getApiKey());
+            $curl->setHeader('Accesstoken', $this->assessToken);
             //$curl->setCookie('key', 'value');
             $domain = ENV::getAPIDomains()['ussoStaff'];
             $curl->post("https://$domain$this->url", $this->params);
