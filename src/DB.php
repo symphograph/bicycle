@@ -168,8 +168,7 @@ class DB
 
             if (is_array($v) || is_object($v)) {
                 $v = json_encode($v);
-                //continue;
-                //ававыаваыавы
+
             }
 
             $v = is_bool($object->$k) ? intval($v) : $v;
