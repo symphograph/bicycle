@@ -41,9 +41,15 @@ class TeleUser
         return $TeleUser;
     }
 
-    public static function byId($id): self|bool
+    public static function byId(int $id): self|bool
     {
         $qwe = qwe("select * from user_telegram where id = :id", ['id' => $id]);
+        return $qwe->fetchObject(self::class);
+    }
+
+    public static function byAccountId(int $accountId): self|bool
+    {
+        $qwe = qwe("select * from user_telegram where accountId = :accountId", ['accountId' => $accountId]);
         return $qwe->fetchObject(self::class);
     }
 
