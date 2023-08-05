@@ -17,7 +17,7 @@ readonly class Env
     private object $jwt;
     private array  $clientDomains;
     private array  $apiDomains;
-
+    private int    $timeZone;
 
     public function __construct()
     {
@@ -132,6 +132,12 @@ readonly class Env
             fn($var) => $protocol . $var,
             $Env->apiDomains
         );
+    }
+
+    public static function getTimeZone(): string
+    {
+        $Env = self::getMyEnv();
+        return $Env->timeZone;
     }
 
 }
