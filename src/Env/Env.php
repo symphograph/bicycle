@@ -134,10 +134,10 @@ readonly class Env
         );
     }
 
-    public static function getTimeZone(): string
+    public static function getTimeZone(): int
     {
         $Env = self::getMyEnv();
-        return $Env->timeZone;
+        return $Env->timeZone ?? 0;
     }
 
 }
