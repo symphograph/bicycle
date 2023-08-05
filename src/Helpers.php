@@ -2,6 +2,8 @@
 
 namespace Symphograph\Bicycle;
 
+use Symphograph\Bicycle\Env\Env;
+
 class Helpers
 {
     public static function dateToFirstDayOfMonth(string $date): bool|string
@@ -175,4 +177,8 @@ class Helpers
         return is_numeric($value) && ($min <= $value) && ($value <= $max);
     }
 
+    public static function isExpired(string $datetime): bool
+    {
+        return strtotime($datetime) < (time() + 3600 * Env::getTimeZone());
+    }
 }
