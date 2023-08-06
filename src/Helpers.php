@@ -177,8 +177,11 @@ class Helpers
         return is_numeric($value) && ($min <= $value) && ($value <= $max);
     }
 
-    public static function isExpired(string $datetime): bool
+    public static function isExpired(string $datetime, ?int $timeZone = null): bool
     {
-        return strtotime($datetime) < (time() + 3600 * Env::getTimeZone());
+        if($timeZone === null){
+            $timeZone = Env::getTimeZone();
+        }
+        return strtotime($datetime) < (time() + 3600 * $timeZone);
     }
 }

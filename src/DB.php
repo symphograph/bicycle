@@ -164,7 +164,7 @@ class DB
     {
         $params = [];
         foreach ($object as $k => $v){
-            if($v === null) continue;
+            //if($v === null) continue;
 
             if (is_array($v) || is_object($v)) {
                 $v = json_encode($v);

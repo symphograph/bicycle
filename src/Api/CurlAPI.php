@@ -22,6 +22,7 @@ class CurlAPI
 
     public function post(): object|false
     {
+
         try{
             $curl = new Curl();
             //$curl->setBasicAuthentication('username', 'password');
@@ -33,7 +34,7 @@ class CurlAPI
             $curl->setHeader('Authorization', Env::getApiKey());
             $curl->setHeader('Accesstoken', $this->assessToken);
             //$curl->setCookie('key', 'value');
-            $domain = ENV::getAPIDomains()['ussoStaff'];
+            $domain = ENV::getAPIDomains()[$this->apiName];
             $curl->post("https://$domain$this->url", $this->params);
             if ($curl->error) {
                 throw new CurlErr('Error: ' . $curl->errorMessage);
