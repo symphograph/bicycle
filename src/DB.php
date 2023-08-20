@@ -223,7 +223,7 @@ class DB
         return implode(',',$paramsForUpdate);
     }
 
-    public static function createNewID(string $tableName, string $keyColName) : int
+    public static function createNewID(string $tableName, string $keyColName = 'id') : int
     {
 
         $sql = "select max(id) + 1 as id from $tableName where $keyColName";
