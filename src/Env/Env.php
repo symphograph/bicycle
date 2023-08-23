@@ -10,6 +10,8 @@ readonly class Env
     private string $frontendDomain;
     private object $telegram;
     private object $mailruSecrets;
+    private object $vkSecrets;
+    private object $yandexSecrets;
     private object $discordSecrets;
     private array  $debugOnlyFolders;
     private string $apiKey;
@@ -82,7 +84,35 @@ readonly class Env
     public static function getTelegramSecrets(): TelegramSecrets
     {
         $Env = self::getMyEnv();
-        return new TelegramSecrets($Env->telegram->token, $Env->telegram->bot_name, $Env->telegram->loginPageTitle ?? 'Вход');
+        return new TelegramSecrets(
+            $Env->telegram->token,
+            $Env->telegram->bot_name,
+            $Env->telegram->callback,
+            $Env->telegram->loginPageTitle ?? 'Вход'
+        );
+    }
+
+    public static function getVKSecrets(): VKSecrets
+    {
+        $Env = self::getMyEnv();
+        return new VKSecrets(
+            $Env->vkSecrets->appId,
+            $Env->vkSecrets->privateKey,
+            $Env->vkSecrets->serviceKey,
+            $Env->telegram->callback,
+            $Env->vkSecrets->loginPageTitle ?? 'Вход'
+        );
+    }
+
+    public static function getYandexSecrets(): YandexSecrets
+    {
+        $Env = self::getMyEnv();
+        return new YandexSecrets(
+            $Env->yandexSecrets->clientId,
+            $Env->yandexSecrets->clientSecret,
+            $Env->yandexSecrets->callback,
+            $Env->vkSecrets->loginPageTitle ?? 'Вход'
+        );
     }
 
     public static function getMailruSecrets(): MailruSecrets

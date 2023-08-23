@@ -2,11 +2,11 @@
 
 namespace Symphograph\Bicycle\Env;
 
-readonly class TelegramSecrets
+readonly class YandexSecrets
 {
     public function __construct(
-        public string $token,
-        public string $bot_name,
+        public string $clientId,
+        public string $clientSecret,
         public string $callback,
         public string $loginPageTitle
     )

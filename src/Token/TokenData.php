@@ -12,9 +12,9 @@ class TokenData
     public DateTimeImmutable $createdAt;
     public DateTimeImmutable $expireAt;
 
-    public function __construct()
+    public function __construct(string $jwt)
     {
-        $jwtArr = Token::toArray($_SERVER['HTTP_ACCESSTOKEN']);
+        $jwtArr = Token::toArray($jwt);
         $this->issuer = $jwtArr['iss'];
         $this->audience = $jwtArr['aud'];
         $this->subject = $jwtArr['sub'];
