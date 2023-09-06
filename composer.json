@@ -20,7 +20,9 @@
     "ext-pdo": "*",
     "ext-calendar" : "*",
     "lcobucci/jwt": "^5.0",
-    "php-curl-class/php-curl-class": "^9.17"
+    "php-curl-class/php-curl-class": "^9.17",
+    "ext-exif" : "*",
+    "nilportugues/sql-query-builder": "^1.8"
   },
   "autoload": {
     "psr-4": {
