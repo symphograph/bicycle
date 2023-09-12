@@ -4,7 +4,9 @@ namespace Symphograph\Bicycle\Env;
 
 readonly class Env
 {
+    const envPath = '/includes/env.php';
     private array  $debugIPs;
+    private array  $serverIPs;
     private bool   $debugMode;
     private int    $adminAccountId;
     private string $frontendDomain;
@@ -18,6 +20,7 @@ readonly class Env
     private string $tokenSecret;
     private object $jwt;
     private array  $clientDomains;
+    private array  $clientGroups;
     private array  $apiDomains;
     private int    $timeZone;
 
@@ -28,7 +31,7 @@ readonly class Env
 
     private function initEnv(): void
     {
-        $env = require dirname($_SERVER['DOCUMENT_ROOT']) . '/includes/env.php';
+        $env = require dirname($_SERVER['DOCUMENT_ROOT']) . self::envPath;
         $vars = (object)get_class_vars(self::class);
         foreach ($vars as $k => $v) {
             if (!isset($env->$k)) continue;
@@ -49,6 +52,12 @@ readonly class Env
     {
         $Env = self::getMyEnv();
         return in_array($_SERVER['REMOTE_ADDR'], $Env->debugIPs);
+    }
+
+    public static function isServerIp(): bool
+    {
+        $Env = self::getMyEnv();
+        return in_array($_SERVER['REMOTE_ADDR'], $Env->serverIPs);
     }
 
     public static function isDebugMode(): bool
@@ -99,7 +108,7 @@ readonly class Env
             $Env->vkSecrets->appId,
             $Env->vkSecrets->privateKey,
             $Env->vkSecrets->serviceKey,
-            $Env->telegram->callback,
+            $Env->vkSecrets->callback,
             $Env->vkSecrets->loginPageTitle ?? 'Вход'
         );
     }
@@ -149,6 +158,12 @@ readonly class Env
             fn($var) => $protocol . $var,
             $Env->clientDomains
         );
+    }
+
+    public static function getClientGroups(): array
+    {
+        $Env = self::getMyEnv();
+        return $Env->clientGroups;
     }
 
     public static function getAPIDomains(?string $protocol = null): array

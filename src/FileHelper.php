@@ -2,6 +2,8 @@
 
 namespace Symphograph\Bicycle;
 
+use Throwable;
+
 class FileHelper
 {
     public static function FileList(string $dir): array
@@ -129,7 +131,7 @@ class FileHelper
         $dir = self::addRoot($dir);
         try {
             $d = opendir($dir);
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return false;
         }
 

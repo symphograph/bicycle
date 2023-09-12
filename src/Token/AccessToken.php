@@ -8,9 +8,11 @@ class AccessToken
 {
     public static function create(
         int    $uid,
+        int    $accountId,
         array  $powers = [],
         string $createdAt = 'now',
-        string $authType = 'default'
+        string $authType = 'default',
+        string $avaFileName = 'init_ava.jpg',
     ): string
     {
         $audience = Env::getJWT()->audience;
@@ -19,11 +21,13 @@ class AccessToken
         $Token = new Token(
             jti: 'any',
             uid: $uid,
+            accountId: $accountId,
             aud: $audience,
             createdAt: $createdAt,
             expireDuration: '+1 day',
             powers: $powers,
-            authType: $authType
+            authType: $authType,
+            avaFileName: $avaFileName
         );
         return $Token->jwt;
     }

@@ -12,12 +12,13 @@ use Lcobucci\JWT\Validation\Constraint\{PermittedFor, RelatedTo, SignedWith};
 use Lcobucci\JWT\Validation\Validator;
 use Symphograph\Bicycle\Env\Env;
 use Symphograph\Bicycle\Errors\AuthErr;
+use Throwable;
 
 
 class Token
 {
     public string             $jwt;
-    public string             $iss; // (issuer) издатель токена
+    public string $iss; // (issuer) издатель токена
     private DateTimeImmutable $iat; // (issued at) время создания токена
     private DateTimeImmutable $exp; // (expire time) срок действия токена
     private DateTimeImmutable $nbf; // (not before) срок, до которого токен не действителен
@@ -26,19 +27,22 @@ class Token
         public string  $jti, // (JWT id) идентификатор токена
         public ?string $sub = 'auth', // (subject) "тема", назначение токена
         public ?int    $uid = null,
+        public ?int    $accountId = null,
         public ?array  $aud = [], // (audience) аудитория, получатели токена
         public string  $createdAt = 'now',
         public string  $expireDuration = '+1 hour',
         public array   $powers = [],
-        public string  $authType = 'default'
+        public string  $authType = 'default',
+        public string $avaFileName = 'init_ava.jpg',
+        string $iss = '' // (issuer) издатель токена
     )
     {
         try {
-            $this->iss = $_SERVER['SERVER_NAME'];
+            $this->iss = !empty($iss) ? $iss : $_SERVER['SERVER_NAME'];
             self::buildDatetime();
             self::initJWT();
             //self::validation($this->jvt, ignoreExpire: true);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             throw new AuthErr($e->getMessage(), 'Ошибка генерации токена', 500);
         }
 
@@ -49,7 +53,7 @@ class Token
         $tokenBuilder = (new Builder(new JoseEncoder(), ChainedFormatter::default()));
 
         $Token = $tokenBuilder
-            ->issuedBy($_SERVER['SERVER_NAME']) // iss (issuer) издатель токена
+            ->issuedBy($this->iss) // iss (issuer) издатель токена
             ->permittedFor(...$this->aud) // aud (audience) аудитория, получатели токена
             ->identifiedBy($this->jti) // jti (JWT id) идентификатор токена
             ->relatedTo($this->sub ?? 'auth')
@@ -57,8 +61,10 @@ class Token
             ->canOnlyBeUsedAfter($this->nbf) // nbf (not before) срок, до которого токен не действителен
             ->expiresAt($this->exp) // exp (expire time) срок действия токена
             ->withClaim('uid', $this->uid)
+            ->withClaim('accountId', $this->accountId)
             ->withClaim('powers', $this->powers)
             ->withClaim('authType', $this->authType)
+            ->withClaim('avaFileName', $this->avaFileName)
             ->withHeader('foo', 'bar')
             ->getToken(new Sha256(), self::getKey());
 
@@ -102,7 +108,7 @@ class Token
             => throw new AuthErr('Token is Expired'),
 
             $token->hasBeenIssuedBy(Env::getJWT()->issuer)
-            => throw new AuthErr('Token has unexpected Issuer'),
+            => throw new AuthErr('Token has an unexpected Issuer'),
 
             $validator->validate($token, new PermittedFor($_SERVER['SERVER_NAME']))
             => throw new AuthErr('Invalid token audience'),

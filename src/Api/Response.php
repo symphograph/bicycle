@@ -28,7 +28,7 @@ class Response
 
     #[NoReturn] private static function jsonResponse(array|object $data, $statusCode = 200): void
     {
-        header_remove();
+        //header_remove();
         header("Content-Type: application/json");
         http_response_code($statusCode);
 

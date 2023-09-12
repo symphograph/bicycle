@@ -4,6 +4,7 @@ namespace Symphograph\Bicycle;
 
 class ConnectDB
 {
+    const envPath = '/includes/env.php';
     public function __construct(
         public string $host,
         public string $name,
@@ -15,7 +16,7 @@ class ConnectDB
 
     public static function byName(?string $connectName): self
     {
-        $env = require dirname($_SERVER['DOCUMENT_ROOT']) . '/includes/env.php';
+        $env = require dirname($_SERVER['DOCUMENT_ROOT']) . self::envPath;
         if(empty($connectName)){
             $connectName = array_key_first($env->connects);
         }

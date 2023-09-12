@@ -2,7 +2,10 @@
 
 namespace Symphograph\Bicycle;
 
+use Exception;
 use Symphograph\Bicycle\Env\Env;
+use Symphograph\Bicycle\Errors\AppErr;
+use TypeError;
 
 class Helpers
 {
@@ -42,7 +45,7 @@ class Helpers
      * @param  string|object  $class
      * @return string
      */
-    public static function classBasename($class): string
+    public static function classBasename(object|string $class): string
     {
         $class = is_object($class) ? get_class($class) : $class;
 
@@ -63,7 +66,7 @@ class Helpers
         return $arr;
     }
 
-    public static function sanitazeName(string|null $str): string
+    public static function sanitizeName(string|null $str): string
     {
         if(empty($str)) return '';
         $str = trim($str);
@@ -105,7 +108,7 @@ class Helpers
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public static function NickGenerator(int $locale = 0): string
     {
@@ -126,7 +129,7 @@ class Helpers
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public static function randomString($length, $keySpace = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'): string
     {
@@ -155,7 +158,7 @@ class Helpers
 
     public static function isArrayIntList(array $arr): bool
     {
-        return self::isArrayInt($arr) && array_is_list($arr);
+        return array_is_list($arr) && self::isArrayInt($arr);
     }
 
     public static function isArrayInt(array $arr): bool
@@ -163,6 +166,38 @@ class Helpers
         foreach ($arr as $a){
             if(!is_int($a))
                 return false;
+        }
+        return true;
+    }
+
+    /**
+     * @return bool
+     * Return true if $array is string[]
+     */
+    public static function isArrayString(array $array): bool
+    {
+        foreach ($array as $value){
+            if(!is_string($value)) return false;
+        }
+        return true;
+    }
+
+    /**
+     * @param string[] $array
+     * @param string $className
+     * @return bool
+     */
+    public static function isArrayPropsOfClass(array $array, string $className): bool
+    {
+        if(!self::isArrayString($array)){
+            throw new TypeError('$array is not string[]');
+        }
+        $classVars = get_class_vars($className);
+        foreach ($array as $var){
+            if(!array_key_exists($var, $classVars)){
+                $className = self::class;
+                return false;
+            }
         }
         return true;
     }
@@ -183,5 +218,44 @@ class Helpers
             $timeZone = Env::getTimeZone();
         }
         return strtotime($datetime) < (time() + 3600 * $timeZone);
+    }
+
+    /**
+     * @param array $Array
+     * @param string $colName
+     * @param $needle
+     * @return array|object
+     * First element of the filtered by ColValue Array
+     */
+    public static function arrayMultiSearch(array $Array, string $colName, $needle): array|object
+    {
+        $elements = array_filter($Array, fn($el) => $el->$colName === $needle);
+        return array_shift($elements);
+    }
+
+    public static function arrayConcat(array $array1, array $array2, string $glue = ' '): array
+    {
+        if(!self::isArrayString($array1) || !self::isArrayString($array2)){
+            throw new TypeError('invalid type of array values');
+        }
+        if(!array_is_list($array1) || !array_is_list($array2)){
+            throw new TypeError('array must be a list');
+        }
+
+        $master = $array1;
+        $slave = $array2;
+        if(count($array1) < count($array2)) {
+            $master = $array2;
+            $slave = $array1;
+        }
+
+        $result = [];
+        foreach ($master as $k => $value){
+            $result[] =
+                isset($slave[$k])
+                ? $value . $glue . $slave[$k]
+                : $value;
+        }
+        return $result;
     }
 }

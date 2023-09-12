@@ -2,6 +2,7 @@
 
 namespace Symphograph\Bicycle\Errors;
 
+use Symphograph\Bicycle\Api\Response;
 use Symphograph\Bicycle\Env\Config;
 use Symphograph\Bicycle\Logs\ErrorLog;
 use Exception;
@@ -11,9 +12,13 @@ class MyErrors extends Exception
 {
     protected string $type     = 'Err';
     protected bool   $loggable = true;
+    public string $logFolder = 'errors';
 
-
-    public function __construct(string $message = '', private string $pubMsg = '', protected int $httpStatus = 500)
+    public function __construct(
+        string $message = '',
+        private readonly string $pubMsg = '',
+        protected int $httpStatus = 500
+    )
     {
         parent::__construct($message);
         if ($this->loggable) {

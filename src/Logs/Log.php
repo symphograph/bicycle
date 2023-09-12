@@ -4,6 +4,7 @@ namespace Symphograph\Bicycle\Logs;
 
 use JsonException;
 use Symphograph\Bicycle\FileHelper;
+use Throwable;
 
 class Log
 {
@@ -20,12 +21,25 @@ class Log
     public array  $post;
     public string $queryString;
 
+    public static function msg(string $msg, array $data = [], string $logFolder = 'tmpLog'): void
+    {
+        $datetime = date('Y-m-d H:i:s');
+        foreach ($data as $k => $v){
+            $msg .= PHP_EOL . $k . ' - ' . $v;
+        }
+        $msg = "[$datetime UTC] - $msg";
+        self::writeData($msg, $logFolder);
+    }
 
     protected function writeToFile(): void
     {
         $data = self::getJson();
-        $logPath = self::createLogPath("/logs/$this->folder/");
+        self::writeData($data, $this->folder);
+    }
 
+    public static function writeData(string $data, string $logFolder): void
+    {
+        $logPath = self::createLogPath($logFolder);
         $log = fopen($logPath, 'a+');
         fwrite($log, "$data" . PHP_EOL);
         fclose($log);
@@ -35,7 +49,7 @@ class Log
     {
         try {
             $data = json_encode($this, JSON_PARTIAL_OUTPUT_ON_ERROR | JSON_THROW_ON_ERROR);
-        }catch (\Throwable $exception) {
+        }catch (Throwable $exception) {
             return '{}' . PHP_EOL;
         }
         return $data;
@@ -43,7 +57,7 @@ class Log
 
     public static function createLogPath(string $logFolder): string
     {
-        $logPath = dirname($_SERVER['DOCUMENT_ROOT']) . $logFolder . date('Y-m-d') . '.log';
+        $logPath = dirname($_SERVER['DOCUMENT_ROOT']) . '/logs/' . $logFolder . '/' . date('Y-m-d') . '.log';
         if (!file_exists($logPath)) {
             FileHelper::fileForceContents($logPath, '');
         }

@@ -4,6 +4,7 @@ namespace Symphograph\Bicycle;
 
 use PDO;
 use PDOStatement;
+use TypeError;
 
 
 class DB
@@ -33,16 +34,34 @@ class DB
         $this->pdo = new PDO($dsn, $con->user, $con->pass, $this->opt);
     }
 
-    public function qwe($sql, $args = NULL): bool|PDOStatement
+    public function qwe(string $sql, array $args = NULL): bool|PDOStatement
     {
         if (!$args) {
             return self::query($sql);
         }
+        $args = self::mergeArgs($args);
         return self::execute($sql, $args);
+    }
+
+    private static function mergeArgs(array $args): array
+    {
+        $arr1 = [];
+        $arr2 = [];
+        foreach ($args as $k1 => $element){
+            if(!is_array($element)){
+                $arr1[$k1] = $element;
+                continue;
+            }
+            foreach ($element as $k2 => $el){
+                $arr2[$k2] = $el;
+            }
+        }
+        return array_merge($arr1, $arr2);
     }
 
     private function execute(string $sql, array $args): PDOStatement
     {
+        //printr($args);
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($args);
         return $stmt;
@@ -62,7 +81,7 @@ class DB
         return boolval($DB->qwe($rd->sql,$rd->params));
     }
 
-    private static function connect(): void
+    public static function connect(): void
     {
         global $DB;
         if(!isset($DB)){
@@ -70,21 +89,33 @@ class DB
         }
     }
 
-    public static function pHolders(array $list): string
+    public static function pdo(): PDO
     {
-        //return rtrim(str_repeat('?, ', count($list)), ', ') ;
+        global $DB;
+        self::connect();
+        return $DB->pdo;
+    }
 
-        $inKeys = array_map(function ($key) {
-            return ':var_' . intval($key);
-        }, array_keys($list));
+    public static function lastId(): int
+    {
+        return self::pdo()->lastInsertId();
+    }
+
+    public static function pHolders(array $list, int $i = 1): string
+    {
+        $inKeys = array_map(
+            fn($key) =>
+                ':var'.$i.'_' . intval($key),
+            array_keys($list)
+        );
         return implode(', ', $inKeys);
     }
 
-    public static function pHoldsArr(array $list): array
+    public static function pHoldsArr(array $list, int $i = 1): array
     {
         $arr = [];
         foreach ($list as $key => $val) {
-            $arr['var_' . intval($key)] = $val;
+            $arr['var'.$i.'_' . intval($key)] = $val;
         }
         return $arr;
     }
@@ -239,4 +270,10 @@ class DB
         return $q->id ?? 1;
     }
 
+    public static function implodeIntIn(array $ids): string
+    {
+        Helpers::isArrayIntList($ids)
+            or throw new TypeError('array is not ints');
+        return '(' . implode(',', $ids) . ')';
+    }
 }

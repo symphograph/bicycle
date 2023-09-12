@@ -7,21 +7,24 @@ use Symphograph\Bicycle\Env\Env;
 class CurlToken
 {
     public static function create(
-        int    $uid,
         array  $powers = [],
-        string $authType = 'curl'
+        string $authType = 'server',
+        string $ussuer = ''
     ): string
     {
-        $audience = Env::getJWT()->audience;
+        $jwtEnv = Env::getJWT();
+        $audience = $jwtEnv->audience;
 
         $audience[] = $_SERVER['SERVER_NAME'];
         $Token = new Token(
             jti: 'any',
-            uid: $uid,
+            uid: $jwtEnv->uid,
+            accountId: $jwtEnv->accountId,
             aud: $audience,
             expireDuration: '+1 min',
             powers: $powers,
-            authType: $authType
+            authType: $authType,
+            iss: $jwtEnv->issuer
         );
         return $Token->jwt;
     }

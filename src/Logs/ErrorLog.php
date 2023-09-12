@@ -2,7 +2,10 @@
 
 namespace Symphograph\Bicycle\Logs;
 
+
+use Error;
 use ReflectionClass;
+use Symphograph\Bicycle\Errors\MyErrors;
 use Throwable;
 
 class ErrorLog extends Log
@@ -14,12 +17,24 @@ class ErrorLog extends Log
     public string    $code;
     protected string $folder = 'errors';
 
+    public static function writeMsg(string $msg): void
+    {
+        $err = new Error($msg);
+        $log = new self();
+        $log->initData($err);
+        $log->writeToFile();
+        self::writeToPHP($err);
+    }
 
     public static function writeToLog(Throwable $err): void
     {
         $data = new self();
+        if(!empty($err->logFolder)){
+            $data->folder = $err->logFolder;
+        }
         $data->initData($err);
         $data->writeToFile();
+        self::writeToPHP($err);
     }
 
     private function initData(Throwable $err): void
@@ -43,7 +58,7 @@ class ErrorLog extends Log
 
     public static function writeToPHP(Throwable $err): void
     {
-        ini_set("error_log", Log::createLogPath('/logs/phpErrors/'));
+        ini_set("error_log", Log::createLogPath('/phpErrors/'));
         error_log($err);
     }
 }

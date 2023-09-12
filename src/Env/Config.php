@@ -31,7 +31,7 @@ class Config
 
     public static function checkPermission(): void
     {
-        if (Env::isDebugMode()) {
+        if (Env::isDebugMode() || Env::isDebugIp()) {
             return;
         }
         $folders = Env::getDebugOnlyFolders();
@@ -97,8 +97,8 @@ class Config
         if (empty($_SERVER['HTTP_ORIGIN'])) {
             throw new ConfigErr('emptyOrigin', 'emptyOrigin', 401);
         }
-        return in_array($_SERVER['HTTP_ORIGIN'] ?? '', Env::getClientDomains('https://'))
-            || in_array($_SERVER['HTTP_ORIGIN'] ?? '', Env::getAPIDomains('https://'));
+        return in_array($_SERVER['HTTP_ORIGIN'], Env::getClientDomains('https://'))
+            || in_array($_SERVER['HTTP_ORIGIN'], Env::getAPIDomains('https://'));
     }
 
     public static function postHandler(): void
