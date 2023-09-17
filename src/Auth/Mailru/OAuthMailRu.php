@@ -20,7 +20,7 @@ class OAuthMailRu
     public static string|int $user_id;
     public static            $userData;
 
-    public static function goToAuth($secret): void
+    #[NoReturn] public static function goToAuth($secret): void
     {
         $url = self::authUrl .
             '?client_id=' . $secret->app_id .
