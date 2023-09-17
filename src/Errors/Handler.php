@@ -45,11 +45,11 @@ class Handler
 
     public static function myExceptionHandler(Throwable $err): void
     {
-        ini_set("error_log", Log::createLogPath('/phpErrors/'));
-        error_log($err);
-
         $httpStatus = self::getHttpStatus($err);
-        ErrorLog::writeToLog($err);
+        if(!empty($err->logable ?? true)){
+            ErrorLog::writeToLog($err);
+        }
+
         if (Config::isApi() || Config::isCurl()) {
             $trace = [];
             if (ini_get('display_errors')) {

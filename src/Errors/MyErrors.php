@@ -21,9 +21,11 @@ class MyErrors extends Exception
     )
     {
         parent::__construct($message);
+        /*
         if ($this->loggable) {
             ErrorLog::writeToLog($this);
         }
+        */
     }
 
     public function getType(): string
