@@ -258,4 +258,29 @@ class Helpers
         }
         return $result;
     }
+
+
+    /**
+     * Sorts an array of object by props
+     */
+    public static function sortMultiArrayByProp($array, array $args = ['votes' => 'desc']): array
+    {
+        usort($array, function ($a, $b) use ($args) {
+            $res = 0;
+
+            $a = (object)$a;
+            $b = (object)$b;
+
+            foreach ($args as $k => $v) {
+                $res = $a->$k <=> $b->$k;
+                if(!$res) continue;
+                if ($v == 'desc') $res = -$res;
+                break;
+            }
+
+            return $res;
+        });
+
+        return $array;
+    }
 }
