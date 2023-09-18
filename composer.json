@@ -1,6 +1,6 @@
 {
   "name": "symphograph/bicycle",
-  "description": "My First Lib",
+  "description": "Library for esy development",
   "type": "library",
   "authors": [
     {

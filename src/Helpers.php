@@ -141,7 +141,7 @@ class Helpers
         return $str;
     }
 
-    public static function median(array $arr): int|bool
+    public static function median(array $arr): int|float|bool
     {
 
         if (!($count = count($arr))) {
