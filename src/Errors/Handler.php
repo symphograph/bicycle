@@ -46,7 +46,7 @@ class Handler
     public static function myExceptionHandler(Throwable $err): void
     {
         $httpStatus = self::getHttpStatus($err);
-        if(!empty($err->logable ?? true)){
+        if(!isset($err->loggable) || !!$err->loggable){
             ErrorLog::writeToLog($err);
         }
 

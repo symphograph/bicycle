@@ -11,7 +11,7 @@ use Symphograph\Bicycle\Env\Env;
 class MyErrors extends Exception
 {
     protected string $type     = 'Err';
-    protected bool   $loggable = true;
+    public bool   $loggable = true;
     public string $logFolder = 'errors';
 
     public function __construct(
