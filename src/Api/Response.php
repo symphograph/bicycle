@@ -3,6 +3,7 @@
 namespace Symphograph\Bicycle\Api;
 
 use JetBrains\PhpStorm\NoReturn;
+use Symphograph\Bicycle\AppStore;
 use Symphograph\Bicycle\Env\Env;
 
 class Response
@@ -14,7 +15,7 @@ class Response
 
     #[NoReturn] public static function data(array|object $data, string $msg = 'Готово', $statusCode = 200): void
     {
-        $data = ['result'=>$msg,'data' => $data];
+        $data = ['result'=>$msg,'data' => $data, 'warnings' => AppStore::getWarnings()];
         self::jsonResponse($data, $statusCode);
     }
 
@@ -23,8 +24,6 @@ class Response
         $data = ['result'=>$msg];
         self::jsonResponse($data, $statusCode);
     }
-
-    
 
     #[NoReturn] private static function jsonResponse(array|object $data, $statusCode = 200): void
     {
