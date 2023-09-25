@@ -10,12 +10,13 @@ class Vkontakte
     {
 
         $secrets = Env::getVKSecrets();
+        $url = 'https://' . $_SERVER['SERVER_NAME'] . $secrets->callback;
         return <<<HTML
             <!DOCTYPE html>
             <html lang="ru">
                 <head>
                     <meta charset="utf-8">
-                    <title>$title</title>
+                    <title>$secrets->loginPageTitle</title>
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <style>
                     #vkAuthArea {
@@ -46,7 +47,7 @@ class Vkontakte
                     <div id="vkAuthArea"><div id="vkAuth"></div></div>              
                     <script type="text/javascript">
                          VK.Widgets.Auth('vkAuth', {
-                             authUrl: '$secrets->callback',
+                             authUrl: "$url",
                              width: '100%'
                          });
                     </script>
