@@ -6,7 +6,7 @@ use Symphograph\Bicycle\Env\Env;
 
 class Vkontakte
 {
-    public static function widgetPage(string $title, string $callbackUrl): string
+    public static function widgetPage(): string
     {
 
         $secrets = Env::getVKSecrets();
