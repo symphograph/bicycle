@@ -12,15 +12,17 @@ trait DTOTrait
     public static function byId(int $id): self|bool
     {
         $tableName = self::tableName;
-        $className = self::class;
-        if(defined("$className::colId")){
-            $colId = self::colId;
-        }else {
-            $colId = 'id';
-        }
+        $colId = self::getColId();
 
         $qwe = qwe("select * from $tableName where $colId = :$colId", [$colId => $id]);
         return $qwe->fetchObject(self::class);
+    }
+
+    public static function delFromDB(int $id): self|bool
+    {
+        $tableName = self::tableName;
+        $colId = self::getColId();
+        qwe("delete from $tableName where $colId = :$colId", [$colId => $id]);
     }
 
     public static function byAccountId(int $accountId): self|bool
@@ -75,5 +77,14 @@ trait DTOTrait
         $sql = "select * from $tableName where id in (:ids) order by id";
         $qwe = qwe($sql,['ids' => $ids]);
         return $qwe->fetchAll(PDO::FETCH_CLASS, self::class);
+    }
+
+    public static function getColId(): string
+    {
+        $className = self::class;
+        if(defined("$className::colId")){
+            return self::colId;
+        }
+        return 'id';
     }
 }
