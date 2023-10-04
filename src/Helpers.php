@@ -4,6 +4,7 @@ namespace Symphograph\Bicycle;
 
 use Exception;
 use Symphograph\Bicycle\Env\Env;
+use Symphograph\Bicycle\Env\Server\ServerEnv;
 use Symphograph\Bicycle\Errors\AppErr;
 use TypeError;
 
@@ -33,7 +34,7 @@ class Helpers
     public static function isMyClassExist(string $className): bool
     {
         $fileName = str_replace('\\', '/', $className) . '.php';
-        if(!file_exists(dirname($_SERVER['DOCUMENT_ROOT']) . '/' . $fileName)){
+        if(!file_exists(dirname(ServerEnv::DOCUMENT_ROOT()) . '/' . $fileName)){
             return false;
         }
         return class_exists($className);
@@ -73,7 +74,6 @@ class Helpers
         $str = preg_replace('/[^a-zA-ZА-Яа-я\-\s]/ui','',$str);
         $str = str_replace('&amp;', '&', $str);
         $str = str_replace('&nbsp;', ' ', $str);
-        $str = preg_replace('!\s++!u', ' ', $str);
         $str = preg_replace('/\s+/', ' ', $str);
         return $str ?? '';
     }
@@ -283,4 +283,29 @@ class Helpers
 
         return $array;
     }
+
+    /**
+     * Определение правильной формы слова на основе числа.
+     *
+     * @param int $number Число, для которого нужно определить форму слова.
+     * @param array $wordForms [яблоко, яблока, яблок]
+     * @return string Правильная форма слова в зависимости от числа.
+     */
+    function numDeclension(int $number, array $wordForms = ['год', 'года', 'лет']): string
+    {
+        $lastDigit = $number % 10;
+        $lastTwoDigits = $number % 100;
+
+        // Правила склонения в русском языке для различных чисел.
+        $cases = array(2, 0, 1, 1, 1, 2);
+
+        // Определение формы слова на основе числа и контекста.
+        $formIndex = ($lastTwoDigits > 4 && $lastTwoDigits < 20)
+            ? 2
+            : $cases[min($lastDigit, 5)];
+
+        // Возвращение правильной формы слова из массива.
+        return $wordForms[$formIndex];
+    }
+
 }
