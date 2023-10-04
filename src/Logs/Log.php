@@ -3,7 +3,9 @@
 namespace Symphograph\Bicycle\Logs;
 
 use JsonException;
+use Symphograph\Bicycle\Env\Server\ServerEnv;
 use Symphograph\Bicycle\FileHelper;
+use Symphograph\Bicycle\HTTP\Agent;
 use Throwable;
 
 class Log
@@ -16,7 +18,7 @@ class Log
     public string $script;
     public string $level = 'info';
     public string $type  = 'any';
-    public object $agent;
+    public Agent  $agent;
     public array  $get;
     public array  $post;
     public string $queryString;
@@ -57,7 +59,7 @@ class Log
 
     public static function createLogPath(string $logFolder): string
     {
-        $logPath = dirname($_SERVER['DOCUMENT_ROOT']) . '/logs/' . $logFolder . '/' . date('Y-m-d') . '.log';
+        $logPath = dirname(ServerEnv::DOCUMENT_ROOT()) . '/logs/' . $logFolder . '/' . date('Y-m-d') . '.log';
         if (!file_exists($logPath)) {
             FileHelper::fileForceContents($logPath, '');
         }

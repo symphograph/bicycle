@@ -2,7 +2,7 @@
 
 namespace Symphograph\Bicycle\Token;
 
-use Symphograph\Bicycle\Errors\AuthErr;
+use Symphograph\Bicycle\Env\Server\ServerEnv;
 
 class SessionToken
 {
@@ -10,7 +10,7 @@ class SessionToken
     {
         $Token = new Token(
             jti: $sessionId,
-            aud: [$_SERVER['SERVER_NAME']],
+            aud: [ServerEnv::SERVER_NAME()],
             createdAt: $createdAt,
             expireDuration: '+1 month'
         );

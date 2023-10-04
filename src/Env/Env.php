@@ -2,11 +2,14 @@
 
 namespace Symphograph\Bicycle\Env;
 
+use Symphograph\Bicycle\Env\Server\ServerEnv;
+
 readonly class Env
 {
     const envPath = '/includes/env.php';
     private array  $debugIPs;
     private array  $serverIPs;
+    private string $serverName;
     private bool   $debugMode;
     private int    $adminAccountId;
     private string $frontendDomain;
@@ -23,6 +26,7 @@ readonly class Env
     private array  $clientGroups;
     private array  $apiDomains;
     private int    $timeZone;
+    private string $recipientEmail;
 
     public function __construct()
     {
@@ -31,7 +35,8 @@ readonly class Env
 
     private function initEnv(): void
     {
-        $env = require dirname($_SERVER['DOCUMENT_ROOT']) . self::envPath;
+        /** @noinspection PhpUndefinedFunctionInspection */
+        $env = require getRoot() . self::envPath;
         $vars = (object)get_class_vars(self::class);
         foreach ($vars as $k => $v) {
             if (!isset($env->$k)) continue;
@@ -48,22 +53,31 @@ readonly class Env
         return $Env;
     }
 
+    public static function getDebugIps(): array
+    {
+        $Env = self::getMyEnv();
+        return $Env->debugIPs;
+    }
+
     public static function isDebugIp(): bool
     {
         $Env = self::getMyEnv();
-        return in_array($_SERVER['REMOTE_ADDR'], $Env->debugIPs);
+        return in_array(ServerEnv::REMOTE_ADDR(), $Env->debugIPs);
     }
 
     public static function isServerIp(): bool
     {
         $Env = self::getMyEnv();
-        return in_array($_SERVER['REMOTE_ADDR'], $Env->serverIPs);
+        return in_array(ServerEnv::REMOTE_ADDR(), $Env->serverIPs);
     }
 
     public static function isDebugMode(): bool
     {
+        if (PHP_SAPI === 'cli') {
+            return true;
+        }
         $Env = self::getMyEnv();
-        return $Env->debugMode && in_array($_SERVER['REMOTE_ADDR'], $Env->debugIPs);
+        return $Env->debugMode && in_array(ServerEnv::REMOTE_ADDR(), $Env->debugIPs);
     }
 
     public static function getAdminAccountId(): int
@@ -183,6 +197,18 @@ readonly class Env
     {
         $Env = self::getMyEnv();
         return $Env->timeZone ?? 0;
+    }
+
+    public static function getRecipientEmail(): string
+    {
+        $Env = self::getMyEnv();
+        return $Env->recipientEmail ?? 'email@example.com';
+    }
+
+    public static function getServerName(): string
+    {
+        $Env = self::getMyEnv();
+        return $Env->serverName;
     }
 
 }

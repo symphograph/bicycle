@@ -3,6 +3,7 @@
 namespace Symphograph\Bicycle\Auth\Vkontakte;
 
 use Symphograph\Bicycle\Env\Env;
+use Symphograph\Bicycle\Env\Server\ServerEnv;
 
 class Vkontakte
 {
@@ -10,7 +11,7 @@ class Vkontakte
     {
 
         $secrets = Env::getVKSecrets();
-        $url = 'https://' . $_SERVER['SERVER_NAME'] . $secrets->callback;
+        $url = 'https://' . ServerEnv::SERVER_NAME() . $secrets->callback;
         return <<<HTML
             <!DOCTYPE html>
             <html lang="ru">

@@ -9,6 +9,7 @@ use Symphograph\Bicycle\Env\Config;
 use Symphograph\Bicycle\Env\Env;
 use App\User\Sess;
 use JetBrains\PhpStorm\NoReturn;
+use Symphograph\Bicycle\Env\Server\ServerEnv;
 use Symphograph\Bicycle\HTTP\Request;
 use Symphograph\Bicycle\JsonDecoder;
 
@@ -94,6 +95,7 @@ class DiscordApi
 
     private static function getRedirectUrl(): string
     {
-        return "https://{$_SERVER['SERVER_NAME']}/auth/discord/callback.php";
+        $serverName = ServerEnv::SERVER_NAME();
+        return "https://$serverName/auth/discord/callback.php";
     }
 }

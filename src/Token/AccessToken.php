@@ -3,6 +3,7 @@
 namespace Symphograph\Bicycle\Token;
 
 use Symphograph\Bicycle\Env\Env;
+use Symphograph\Bicycle\Env\Server\ServerEnv;
 
 class AccessToken
 {
@@ -17,7 +18,7 @@ class AccessToken
     {
         $audience = Env::getJWT()->audience;
 
-        $audience[] = $_SERVER['SERVER_NAME'];
+        $audience[] = ServerEnv::SERVER_NAME();
         $Token = new Token(
             jti: 'any',
             uid: $uid,

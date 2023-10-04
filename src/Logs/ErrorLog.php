@@ -5,7 +5,8 @@ namespace Symphograph\Bicycle\Logs;
 
 use Error;
 use ReflectionClass;
-use Symphograph\Bicycle\Errors\MyErrors;
+use Symphograph\Bicycle\Env\Server\ServerEnv;
+use Symphograph\Bicycle\HTTP\Agent;
 use Throwable;
 
 class ErrorLog extends Log
@@ -40,13 +41,13 @@ class ErrorLog extends Log
     private function initData(Throwable $err): void
     {
         $this->datetime = date('Y-m-d H:i:s');
-        $this->ip = $_SERVER['REMOTE_ADDR'];
-        $this->script = $_SERVER['SCRIPT_NAME'];
+        $this->ip = ServerEnv::REMOTE_ADDR();
+        $this->script = ServerEnv::SCRIPT_NAME();
         $this->level = 'error';
         $this->type = (new ReflectionClass($err))->getShortName();
-        $this->agent = get_browser();
-        $this->method = $_SERVER['REQUEST_METHOD'];
-        $this->queryString = $_SERVER['QUERY_STRING'];
+        $this->agent = Agent::getSelf();
+        $this->method = ServerEnv::REQUEST_METHOD();
+        $this->queryString = ServerEnv::QUERY_STRING();
         $this->get = !empty($_GET) ? $_GET : [];
         $this->post = !empty($_POST) ? $_POST : [];
         $this->msg = $err->getMessage();

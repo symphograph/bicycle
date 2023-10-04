@@ -7,6 +7,7 @@ namespace Symphograph\Bicycle\Auth\Mailru;
 
 use JetBrains\PhpStorm\NoReturn;
 use Symphograph\Bicycle\Api\Api;
+use Symphograph\Bicycle\Env\Server\ServerEnv;
 use Symphograph\Bicycle\Errors\AuthErr;
 
 class OAuthMailRu
@@ -59,7 +60,7 @@ class OAuthMailRu
 
     private static function callbackUrl(): string
     {
-        return 'https://' . $_SERVER['SERVER_NAME'] . self::callback;
+        return 'https://' . ServerEnv::SERVER_NAME() . self::callback;
     }
 
     #[NoReturn] private static function redirect($uri = ''): void

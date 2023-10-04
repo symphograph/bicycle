@@ -2,6 +2,7 @@
 
 namespace Symphograph\Bicycle;
 
+use Symphograph\Bicycle\Env\Server\ServerEnv;
 use Throwable;
 
 class FileHelper
@@ -83,15 +84,15 @@ class FileHelper
         return @move_uploaded_file($from, $to);
     }
 
-    public static function forceDir(string $to, bool $addRoot = false) : bool
+    public static function forceDir(string $to, bool $addRoot = false): bool
     {
-        if($addRoot){
-            $to = $_SERVER['DOCUMENT_ROOT']. '/' . $to;
+        if ($addRoot) {
+            $to = ServerEnv::DOCUMENT_ROOT() . '/' . $to;
             $to = self::removeDoubleSeparators($to);
         }
-        $dir = pathinfo($to,PATHINFO_DIRNAME);
-        if(!is_dir($dir)){
-            if(!mkdir($dir, 0775, true)){
+        $dir = pathinfo($to, PATHINFO_DIRNAME);
+        if (!is_dir($dir)) {
+            if (!mkdir($dir, 0775, true)) {
                 return false;
             }
         }
@@ -120,7 +121,7 @@ class FileHelper
     public static function addRoot(string $file): string
     {
         if(!str_starts_with($file,'/tmp/') && !str_starts_with($file,'/home/')){
-            $file = $_SERVER['DOCUMENT_ROOT']. '/' . $file;
+            $file = ServerEnv::DOCUMENT_ROOT() . '/' . $file;
         }
 
         return self::removeDoubleSeparators($file);
@@ -158,7 +159,7 @@ class FileHelper
         return false;
     }
 
-    public static function delAllExtensions(string $fileName, array $exts = ['.jpg', '.png', '.jpeg', '.svg'])
+    public static function delAllExtensions(string $fileName, array $exts = ['.jpg', '.png', '.jpeg', '.svg']): void
     {
         foreach ($exts as $ext)
         {

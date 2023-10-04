@@ -11,6 +11,7 @@ use Lcobucci\JWT\UnencryptedToken;
 use Lcobucci\JWT\Validation\Constraint\{PermittedFor, RelatedTo, SignedWith};
 use Lcobucci\JWT\Validation\Validator;
 use Symphograph\Bicycle\Env\Env;
+use Symphograph\Bicycle\Env\Server\ServerEnv;
 use Symphograph\Bicycle\Errors\AuthErr;
 use Throwable;
 
@@ -38,7 +39,7 @@ class Token
     )
     {
         try {
-            $this->iss = !empty($iss) ? $iss : $_SERVER['SERVER_NAME'];
+            $this->iss = !empty($iss) ? $iss : ServerEnv::SERVER_NAME();
             self::buildDatetime();
             self::initJWT();
             //self::validation($this->jvt, ignoreExpire: true);
@@ -110,7 +111,7 @@ class Token
             $token->hasBeenIssuedBy(Env::getJWT()->issuer)
             => throw new AuthErr('Token has an unexpected Issuer'),
 
-            $validator->validate($token, new PermittedFor($_SERVER['SERVER_NAME']))
+            $validator->validate($token, new PermittedFor(ServerEnv::SERVER_NAME()))
             => throw new AuthErr('Invalid token audience'),
 
             self::validatePowers($tokenArray['powers'], $needPowers)

@@ -4,6 +4,7 @@ namespace Symphograph\Bicycle\Api;
 
 use Curl\Curl;
 use Symphograph\Bicycle\Env\Env;
+use Symphograph\Bicycle\Env\Server\ServerEnv;
 use Symphograph\Bicycle\Errors\ApiErr;
 use Symphograph\Bicycle\Errors\CurlErr;
 use Symphograph\Bicycle\Errors\NoContentErr;
@@ -28,10 +29,10 @@ class CurlAPI
         $curl = new Curl();
         //$curl->setBasicAuthentication('username', 'password');
         //$curl->setUserAgent('MyUserAgent/0.0.1 (+https://www.example.com/bot.html)');
-        $curl->setReferrer('https://' . $_SERVER['SERVER_NAME'] . '/test/001.php');
+        $curl->setReferrer('https://' . ServerEnv::SERVER_NAME() . '/test/001.php');
         $curl->setHeader('X-Requested-With', 'XMLHttpRequest');
         $curl->setHeader('Accept', 'application/json');
-        $curl->setHeader('Origin', 'https://' . $_SERVER['SERVER_NAME']);
+        $curl->setHeader('Origin', 'https://' . ServerEnv::SERVER_NAME());
         $curl->setHeader('Authorization', Env::getApiKey());
         $curl->setHeader('Accesstoken', $this->assessToken);
         //$curl->setCookie('key', 'value');

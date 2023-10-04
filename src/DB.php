@@ -4,6 +4,7 @@ namespace Symphograph\Bicycle;
 
 use PDO;
 use PDOStatement;
+use Symphograph\Bicycle\Env\Server\ServerEnv;
 use TypeError;
 
 
@@ -138,7 +139,7 @@ class DB
 
     private static function getLogFilename(): string
     {
-        return dirname($_SERVER['DOCUMENT_ROOT']). '/logs/sqlErrors/' . date('Y-m-d') . '.log';
+        return dirname(ServerEnv::DOCUMENT_ROOT()). '/logs/sqlErrors/' . date('Y-m-d') . '.log';
     }
 
     public function __destruct()

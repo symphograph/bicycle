@@ -8,7 +8,6 @@
       "email": "roman.chubich@gmail.com"
     }
   ],
-  "minimum-stability": "dev",
   "require": {
     "php": ">=8.2",
     "ext-json": "*",

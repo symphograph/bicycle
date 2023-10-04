@@ -1,6 +1,7 @@
 <?php
 namespace Symphograph\Bicycle\Auth\Telegram;
 use Symphograph\Bicycle\Env\Env;
+use Symphograph\Bicycle\Env\Server\ServerEnv;
 use Symphograph\Bicycle\Errors\AuthErr;
 
 class Telegram
@@ -125,6 +126,7 @@ class Telegram
 
     public static function widgetScript(string $callbackUrl): string
     {
+        $serverName = ServerEnv::SERVER_NAME();
         $botName = Env::getTelegramSecrets()->bot_name;
         return <<<HTML
             <div style="padding: 3em">
@@ -132,7 +134,7 @@ class Telegram
                     src="https://telegram.org/js/telegram-widget.js?15" 
                     data-telegram-login="$botName" 
                     data-size="large" 
-                    data-auth-url="https://{$_SERVER['SERVER_NAME']}/$callbackUrl" 
+                    data-auth-url="https://$serverName/$callbackUrl" 
                     data-request-access="write">
                 </script>
             </div>

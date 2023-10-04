@@ -4,6 +4,7 @@ namespace Symphograph\Bicycle\Errors;
 
 use Symphograph\Bicycle\Api\Response;
 use Symphograph\Bicycle\Env\Config;
+use Symphograph\Bicycle\Env\Server\ServerEnv;
 use Symphograph\Bicycle\Logs\ErrorLog;
 use Exception;
 use Symphograph\Bicycle\Env\Env;
@@ -52,7 +53,7 @@ class MyErrors extends Exception
 
     public static function getLogFilename(): string
     {
-        return dirname($_SERVER['DOCUMENT_ROOT']) . '/logs/errors/' . date('Y-m-d') . '.log';
+        return dirname(ServerEnv::DOCUMENT_ROOT()) . '/logs/errors/' . date('Y-m-d') . '.log';
     }
 
 }

@@ -3,6 +3,7 @@
 namespace Symphograph\Bicycle\Token;
 
 use Symphograph\Bicycle\Env\Env;
+use Symphograph\Bicycle\Env\Server\ServerEnv;
 
 class CurlToken
 {
@@ -15,7 +16,7 @@ class CurlToken
         $jwtEnv = Env::getJWT();
         $audience = $jwtEnv->audience;
 
-        $audience[] = $_SERVER['SERVER_NAME'];
+        $audience[] = ServerEnv::SERVER_NAME();
         $Token = new Token(
             jti: 'any',
             uid: $jwtEnv->uid,

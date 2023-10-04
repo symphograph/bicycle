@@ -2,22 +2,33 @@
 
 namespace Symphograph\Bicycle\Env;
 
+use Symphograph\Bicycle\Env\Server\ServerEnv;
 use Symphograph\Bicycle\Errors\ConfigErr;
 
 
 class Config
 {
-    public static function redirectFromWWW(): void
+    /**
+     * Выполняет перенаправление с версии сайта с "www" на версию без "www".
+     *
+     * @param string $serverName Имя сервера, на котором выполняется запрос.
+     * @return void
+     */
+    public static function redirectFromWWW(string $serverName): void
     {
-        if (!preg_match('/www./', $_SERVER['SERVER_NAME'])) {
+        if (!str_starts_with($serverName, 'www.')) {
             return;
         }
-        $server_name = str_replace('www.', '', $_SERVER['SERVER_NAME']);
-        $ref = $_SERVER["QUERY_STRING"];
-        if ($ref != "") $ref = "?" . $ref;
+
+        $serverName = substr($serverName, 4);
+
+        $queryString = ServerEnv::QUERY_STRING();
+        $queryString = !empty($queryString) ? '?' . $queryString : '';
+        $redirectURL = "https://" . $serverName . ServerEnv::REQUEST_URI() . $queryString;
 
         header("HTTP/1.1 301 Moved Permanently");
-        header("Location: https://" . $server_name . "/" . $ref);
+        header("Location: " . $redirectURL);
+
         exit();
     }
 
@@ -36,7 +47,7 @@ class Config
         }
         $folders = Env::getDebugOnlyFolders();
         foreach ($folders as $folder) {
-            if (str_starts_with($_SERVER['SCRIPT_NAME'], '/' . $folder . '/')) {
+            if (str_starts_with(ServerEnv::SCRIPT_NAME(), '/' . $folder . '/')) {
                 throw new ConfigErr('debugOnlyFolders permits', 'Недостаточно прав', 403);
             }
         }
@@ -44,11 +55,11 @@ class Config
 
     protected static function initEndPoint(string $path, array $allowedMethods, array $expectedHeaders = []): void
     {
-        if(!str_starts_with($_SERVER['SCRIPT_NAME'], $path)){
+        if(!str_starts_with(ServerEnv::SCRIPT_NAME(), $path)){
             return;
         }
 
-        if (!in_array($_SERVER['REQUEST_METHOD'], $allowedMethods)) {
+        if (!in_array(ServerEnv::REQUEST_METHOD(), $allowedMethods)) {
             throw new ConfigErr('invalid method', 'invalid method', 405);
         }
 
@@ -57,8 +68,6 @@ class Config
 
     protected static function checkExpectedHeaders(array $expectedHeaders): void
     {
-
-        //printr($expectedHeaders);
         foreach ($expectedHeaders as $expectedHeader => $expectedValue){
             if(empty($_SERVER[$expectedHeader])){
                 throw new ConfigErr($expectedHeader . ' is empty', '', 401);
@@ -74,12 +83,12 @@ class Config
 
     public static function isApi(): bool
     {
-        return str_starts_with($_SERVER['SCRIPT_NAME'], '/api/');
+        return str_starts_with(ServerEnv::SCRIPT_NAME(), '/api/');
     }
 
     public static function isCurl(): bool
     {
-        return str_starts_with($_SERVER['SCRIPT_NAME'], '/curl/');
+        return str_starts_with(ServerEnv::SCRIPT_NAME(), '/curl/');
     }
 
     protected static function checkOrigin(): void
@@ -94,11 +103,11 @@ class Config
 
     public static function isClientOrigin(): bool
     {
-        if (empty($_SERVER['HTTP_ORIGIN'])) {
+        if (empty(ServerEnv::HTTP_ORIGIN())) {
             throw new ConfigErr('emptyOrigin', 'emptyOrigin', 401);
         }
-        return in_array($_SERVER['HTTP_ORIGIN'], Env::getClientDomains('https://'))
-            || in_array($_SERVER['HTTP_ORIGIN'], Env::getAPIDomains('https://'));
+        return in_array(ServerEnv::HTTP_ORIGIN(), Env::getClientDomains('https://'))
+            || in_array(ServerEnv::HTTP_ORIGIN(), Env::getAPIDomains('https://'));
     }
 
     public static function postHandler(): void
@@ -121,7 +130,6 @@ class Config
         if(!$expires){
             $expires = time() + 60*60*24*30;
         }
-        //$domain = $domain ?? $_SERVER['SERVER_NAME'];
 
         if($debug){
             return [

@@ -3,6 +3,7 @@
 namespace Symphograph\Bicycle\Auth\Yandex;
 
 use Symphograph\Bicycle\Env\Env;
+use Symphograph\Bicycle\Env\Server\ServerEnv;
 
 class Yandex
 {
@@ -10,8 +11,9 @@ class Yandex
     {
 
         $secrets = Env::getYandexSecrets();
-        $tokenPage = "https://{$_SERVER['SERVER_NAME']}/auth/ya/token.php";
-        $origin = "https://{$_SERVER['SERVER_NAME']}";
+        $serverName = ServerEnv::SERVER_NAME();
+        $tokenPage = "https://$serverName/auth/ya/token.php";
+        $origin = "https://$serverName";
         return <<<HTML
             <!DOCTYPE html>
             <html lang="ru">
