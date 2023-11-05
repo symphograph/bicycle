@@ -4,16 +4,15 @@ namespace Symphograph\Bicycle\DTO;
 
 trait ModelTrait
 {
-    public static function byId(int $id): self|bool
+    use BindTrait;
+    public static function byId(int $id): self|false
     {
-        $ObjectDTO = parent::byId($id);
-        if(!$ObjectDTO) return false;
-        $selfObject = new self();
-        $selfObject->bindSelf($ObjectDTO);
-        return $selfObject;
+        $parent = parent::byId($id);
+        if(!$parent) return false;
+        return self::byBind($parent);
     }
 
-    public static function byAccountID(int $accountId): self|bool
+    public static function byAccountID(int $accountId): self|false
     {
         $ObjectDTO = parent::byAccountId($accountId);
         if(!$ObjectDTO) return false;
@@ -26,19 +25,23 @@ trait ModelTrait
     {
         $selfObject = self::byId($id);
         if(!$selfObject) return false;
-        $selfObject->initData();
+        if(method_exists(self::class, 'initData')){
+            $selfObject->initData();
+        }
         return $selfObject;
     }
 
     /**
-     * @param self[] $objects
-     * @return self[]
+     * @param object[] $objects
+     * @return object[]
      */
     public static function initDataInList(array $objects): array
     {
         $arr = [];
         foreach ($objects as $object){
-            $object->initData();
+            if(method_exists($object::class, 'initData')){
+                $object->initData();
+            }
             $arr[] = $object;
         }
         return $arr;
@@ -46,8 +49,7 @@ trait ModelTrait
 
     public function putToDB(): void
     {
-        $ObjectDTO = new parent();
-        $ObjectDTO->bindSelf($this);
-        $ObjectDTO->putToDB();
+        $parent = parent::byBind($this);
+        $parent->putToDB();
     }
 }

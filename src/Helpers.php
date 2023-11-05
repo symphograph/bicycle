@@ -291,7 +291,7 @@ class Helpers
      * @param array $wordForms [яблоко, яблока, яблок]
      * @return string Правильная форма слова в зависимости от числа.
      */
-    function numDeclension(int $number, array $wordForms = ['год', 'года', 'лет']): string
+    public static function numDeclension(int $number, array $wordForms = ['год', 'года', 'лет']): string
     {
         $lastDigit = $number % 10;
         $lastTwoDigits = $number % 100;

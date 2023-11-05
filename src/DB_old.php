@@ -8,7 +8,7 @@ use Symphograph\Bicycle\Env\Server\ServerEnv;
 use TypeError;
 
 
-class DB
+class DB_old
 {
     public ?PDO $pdo;
     private ?array    $opt;
@@ -32,6 +32,7 @@ class DB
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES   => FALSE
         ];
+
         $this->pdo = new PDO($dsn, $con->user, $con->pass, $this->opt);
     }
 
@@ -62,7 +63,6 @@ class DB
 
     private function execute(string $sql, array $args): PDOStatement
     {
-        //printr($args);
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($args);
         return $stmt;
@@ -86,7 +86,7 @@ class DB
     {
         global $DB;
         if(!isset($DB)){
-            $DB = new DB();
+            $DB = new DB_old();
         }
     }
 
@@ -147,7 +147,7 @@ class DB
         $pdo = null;
     }
 
-    public static function prepMul(array $params): DB
+    public static function prepMul(array $params): DB_old
     {
         $parNames = array_keys($params);
         $phArr = [];
@@ -200,7 +200,6 @@ class DB
 
             if (is_array($v) || is_object($v)) {
                 $v = json_encode($v);
-
             }
 
             $v = is_bool($object->$k) ? intval($v) : $v;

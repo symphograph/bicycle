@@ -11,11 +11,11 @@ class Config
     /**
      * Выполняет перенаправление с версии сайта с "www" на версию без "www".
      *
-     * @param string $serverName Имя сервера, на котором выполняется запрос.
      * @return void
      */
-    public static function redirectFromWWW(string $serverName): void
+    public static function redirectFromWWW(): void
     {
+        $serverName = ServerEnv::SERVER_NAME();
         if (!str_starts_with($serverName, 'www.')) {
             return;
         }

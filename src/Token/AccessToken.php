@@ -2,6 +2,7 @@
 
 namespace Symphograph\Bicycle\Token;
 
+
 use Symphograph\Bicycle\Env\Env;
 use Symphograph\Bicycle\Env\Server\ServerEnv;
 
@@ -41,5 +42,7 @@ class AccessToken
             ignoreExpire: $ignoreExpire
         );
     }
+
+
 
 }

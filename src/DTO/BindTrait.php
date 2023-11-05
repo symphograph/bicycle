@@ -27,4 +27,21 @@ trait BindTrait
         $self->bindSelf($data);
         return $self;
     }
+
+    /**
+     * @return self[]
+     */
+    public static function listByBind(array $objects): array
+    {
+        $list = [];
+        foreach ($objects as $object){
+            $list[] = self::byBind($object);
+        }
+        return $list;
+    }
+
+    public function getAllProps(): array
+    {
+        return get_object_vars($this);
+    }
 }

@@ -3,18 +3,20 @@
 namespace Symphograph\Bicycle\Auth\Vkontakte;
 
 
-use Symphograph\Bicycle\DB;
 use Symphograph\Bicycle\DTO\DTOTrait;
 use Symphograph\Bicycle\DTO\SocialAccountDTO;
 use Symphograph\Bicycle\Env\Env;
 use Symphograph\Bicycle\Errors\AuthErr;
+use Symphograph\Bicycle\PDO\DB;
 
 class VkUser extends SocialAccountDTO
 {
     use DTOTrait;
     const colId = 'uid';
     const tableName = 'user_vkontakte';
+
     public int    $uid;
+    public string $domain;
     public string $first_name;
     public string $last_name;
     public string $photo;
@@ -37,6 +39,7 @@ class VkUser extends SocialAccountDTO
         $vars = get_class_vars(self::class);
         foreach ($vars as $k => $v) {
             if ($k === 'accountId') continue;
+            if ($k === 'domain') continue;
             if (!isset($arr->$k)) {
                 throw new AuthErr('VkData is invalid');
             }
@@ -53,6 +56,16 @@ class VkUser extends SocialAccountDTO
         $secrets = Env::getVKSecrets();
         ($hash === md5($secrets->appId . $this->uid . $secrets->privateKey))
         or throw new AuthErr('Invalid vkHash');
+    }
+
+    public static function byContact(string $contactValue): self|false
+    {
+        $qwe = DB::qwe("
+            select * from user_vkontakte 
+            where domain = :contactValue",
+            ['contactValue' => $contactValue]
+        );
+        return $qwe->fetchObject(self::class);
     }
 
 }

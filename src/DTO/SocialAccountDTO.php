@@ -4,7 +4,7 @@ namespace Symphograph\Bicycle\DTO;
 
 use Symphograph\Bicycle\ITF\SocialAccountITF;
 
-class SocialAccountDTO extends DTO implements SocialAccountITF
+abstract class SocialAccountDTO implements SocialAccountITF
 {
     public int $accountId;
 }

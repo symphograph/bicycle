@@ -12,6 +12,7 @@ use Lcobucci\JWT\Validation\Constraint\{PermittedFor, RelatedTo, SignedWith};
 use Lcobucci\JWT\Validation\Validator;
 use Symphograph\Bicycle\Env\Env;
 use Symphograph\Bicycle\Env\Server\ServerEnv;
+use Symphograph\Bicycle\Errors\AccessErr;
 use Symphograph\Bicycle\Errors\AuthErr;
 use Throwable;
 
@@ -115,7 +116,7 @@ class Token
             => throw new AuthErr('Invalid token audience'),
 
             self::validatePowers($tokenArray['powers'], $needPowers)
-            => throw new AuthErr('powers', 'Нет доступа', 403),
+            => throw new AccessErr('Token has not required Powers'),
 
             default => true
         };

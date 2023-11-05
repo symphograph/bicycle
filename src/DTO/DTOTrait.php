@@ -4,38 +4,42 @@ namespace Symphograph\Bicycle\DTO;
 
 
 use PDO;
-use Symphograph\Bicycle\DB;
+use Symphograph\Bicycle\PDO\DB;
 use Symphograph\Bicycle\SQL\SQLBuilder;
 
 trait DTOTrait
 {
+    use BindTrait;
+
     public static function byId(int $id): self|bool
     {
         $tableName = self::tableName;
         $colId = self::getColId();
 
+        /** @noinspection PhpUndefinedFunctionInspection */
         $qwe = qwe("select * from $tableName where $colId = :$colId", [$colId => $id]);
-        return $qwe->fetchObject(self::class);
+        return $qwe->fetchAll(PDO::FETCH_CLASS|PDO::FETCH_PROPS_LATE, self::class)[0] ?? false;
     }
 
-    public static function delFromDB(int $id): self|bool
+    public static function delById(int $id): void
     {
         $tableName = self::tableName;
         $colId = self::getColId();
+        /** @noinspection PhpUndefinedFunctionInspection */
         qwe("delete from $tableName where $colId = :$colId", [$colId => $id]);
     }
 
     public static function byAccountId(int $accountId): self|bool
     {
         $tableName = self::tableName;
+        /** @noinspection PhpUndefinedFunctionInspection */
         $qwe = qwe("select * from $tableName where accountId = :accountId", ['accountId'=> $accountId]);
         return $qwe->fetchObject(self::class);
     }
 
     public function putToDB(): void
     {
-        $params = DB::initParams($this);
-        DB::replace(self::tableName, $params);
+        DB::replace(self::tableName, self::getAllProps());
     }
 
     /**
@@ -46,6 +50,7 @@ trait DTOTrait
         $tableName = self::tableName;
         $orderBy = self::orderBy($orderBy);
 
+        /** @noinspection PhpUndefinedFunctionInspection */
         $qwe = qwe("
             select id from $tableName 
             where id >= :startId 
@@ -66,6 +71,7 @@ trait DTOTrait
      */
     public static function listBySQL(string $sql): array
     {
+        /** @noinspection PhpUndefinedFunctionInspection */
         $qwe = qwe($sql);
         return $qwe->fetchAll(PDO::FETCH_CLASS, self::class);
     }
@@ -75,6 +81,7 @@ trait DTOTrait
         $tableName = self::tableName;
         $ids = implode(',', $ids);
         $sql = "select * from $tableName where id in (:ids) order by id";
+        /** @noinspection PhpUndefinedFunctionInspection */
         $qwe = qwe($sql,['ids' => $ids]);
         return $qwe->fetchAll(PDO::FETCH_CLASS, self::class);
     }

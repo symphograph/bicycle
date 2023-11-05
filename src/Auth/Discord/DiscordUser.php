@@ -4,6 +4,7 @@ namespace Symphograph\Bicycle\Auth\Discord;
 
 use Symphograph\Bicycle\DTO\DTOTrait;
 use Symphograph\Bicycle\DTO\SocialAccountDTO;
+use Symphograph\Bicycle\PDO\DB;
 
 class DiscordUser extends SocialAccountDTO
 {
@@ -27,5 +28,18 @@ class DiscordUser extends SocialAccountDTO
     public bool    $mfa_enabled = false;
     //public bool    $system = false;
     public bool $bot = false;
+
+    private static function byUserName(string $username): self|false
+    {
+        $qwe = DB::qwe("select * from user_discord where username = :username", ['username' => $username]);
+        return $qwe->fetchObject(self::class);
+    }
+
+    public static function byContact(string $contactValue): self|false
+    {
+        return self::byUserName($contactValue);
+    }
+
+
 
 }

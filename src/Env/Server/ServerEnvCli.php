@@ -4,6 +4,11 @@ namespace Symphograph\Bicycle\Env\Server;
 
 use Symphograph\Bicycle\Env\Env;
 
+/**
+ * Класс, представляющий окружение сервера для CLI-запросов.
+ *
+ * @package Symphograph\Bicycle\Env\Server
+ */
 class ServerEnvCli extends ServerEnv
 {
     public function __construct()

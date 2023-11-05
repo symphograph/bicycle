@@ -3,11 +3,11 @@
 namespace Symphograph\Bicycle\Auth\Mailru;
 
 
-use Symphograph\Bicycle\DB;
+use Symphograph\Bicycle\ITF\SocialAccountITF;
+use Symphograph\Bicycle\PDO\DB;
 use Symphograph\Bicycle\DTO\DTOTrait;
 use Symphograph\Bicycle\DTO\SocialAccountDTO;
 use Symphograph\Bicycle\Errors\AuthErr;
-use Symphograph\Bicycle\JsonDecoder;
 
 class MailruUser extends SocialAccountDTO
 {
@@ -34,8 +34,13 @@ class MailruUser extends SocialAccountDTO
 
     public static function byEmail(string $email): self|bool
     {
-        $qwe = qwe("select * from user_mailru where email = :email", ['email'=>$email]);
+        $qwe = DB::qwe("select * from user_mailru where email = :email", ['email'=>$email]);
         return $qwe->fetchObject(self::class);
+    }
+
+    public static function byContact(string $contactValue): self|false
+    {
+        return self::byEmail($contactValue);
     }
 
     public static function byMailruToken(string $token, $userUrl): self
@@ -68,7 +73,6 @@ class MailruUser extends SocialAccountDTO
             $this->birthday = date('Y-m-d', strtotime($this->birthday));
         }
 
-        $params = DB::initParams($this);
-        DB::replace(self::tableName, $params);
+        DB::replace(self::tableName, self::getAllProps());
     }
 }

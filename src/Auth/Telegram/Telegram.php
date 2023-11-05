@@ -21,7 +21,7 @@ class Telegram
 
     public static function auth() : TeleUser|bool
     {
-        $Login = new Telegram();
+        $Login = new self();
         $auth_data = $Login->checkTelegramAuthorization();
         if(!$auth_data){
             return false;
@@ -31,7 +31,7 @@ class Telegram
             return false;
         }
 
-        return TeleUser::byData($auth_data);
+        return TeleUser::byBind($auth_data);
     }
 
     public function getToken()
@@ -87,19 +87,26 @@ class Telegram
             return false;
         }
 
+        $hash = $this->getHash($auth_data);
+
+        if(strcmp($hash, $check_hash) !== 0) {
+            $this->err = 'Data is NOT from Telegram';
+            return false;
+        }
+        return true;
+    }
+
+    public function getHash(array $TeleUserProps): string
+    {
         $data_check_arr = [];
-        foreach ($auth_data as $key => $value) {
+        foreach ($TeleUserProps as $key => $value) {
             $data_check_arr[] = $key . '=' . $value;
         }
         sort($data_check_arr);
         $data_check_string = implode("\n", $data_check_arr);
         $secret_key        = hash('sha256', $this->token, true);
         $hash              = hash_hmac('sha256', $data_check_string, $secret_key);
-        if(strcmp($hash, $check_hash) !== 0) {
-            $this->err = 'Data is NOT from Telegram';
-            return false;
-        }
-        return true;
+        return $hash;
     }
 
     public function saveTelegramUserData($auth_data) : bool

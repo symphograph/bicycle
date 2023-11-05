@@ -1,9 +1,6 @@
 <?php
 namespace Symphograph\Bicycle\Auth\Telegram;
-use Symphograph\Bicycle\DB;
-use Symphograph\Bicycle\DTO\DTOTrait;
 use Symphograph\Bicycle\DTO\ModelTrait;
-use Symphograph\Bicycle\DTO\SocialAccountDTO;
 
 class TeleUser extends TeleUserDTO
 {
@@ -12,19 +9,19 @@ class TeleUser extends TeleUserDTO
     public string $hash       = '';
 
 
-    public static function byData(array|object $auth_data) : self
+    public static function byUserName(string $username): self|false
     {
-        $TeleUser = new TeleUser();
-        $TeleUser->bindSelf($auth_data);
-        return $TeleUser;
+        $parent = parent::byUserName($username);
+        if(!$parent){
+            return false;
+        }
+        return self::byBind($parent);
     }
 
-    public function putToDB(): void
+    public function initData(): void
     {
-        $this->auth_date = date('Y-m-d H:i:s',$this->auth_date);
-        $parentObject = new parent();
-        $parentObject->bindSelf($this);
-        $parentObject->putToDB();
+        $Telegram = new Telegram();
+        $this->hash = $Telegram->getHash($this->getAllProps());
     }
 
 }

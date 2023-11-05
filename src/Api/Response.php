@@ -3,33 +3,42 @@
 namespace Symphograph\Bicycle\Api;
 
 use JetBrains\PhpStorm\NoReturn;
-use Symphograph\Bicycle\AppStore;
+use Symphograph\Bicycle\AppStorage;
+use Symphograph\Bicycle\DTO\BindTrait;
 use Symphograph\Bicycle\Env\Env;
 
 class Response
 {
-    #[NoReturn] public static function error(string $msg, int $statusCode = 500, array $trace = []): void
+    use BindTrait;
+
+    public string $result;
+    public string $error;
+    public array|object $data;
+    public array $warnings;
+    public int $httpStatus;
+
+    #[NoReturn] public static function error(string $msg, int $httpStatus = 500, array $trace = []): void
     {
-        self::jsonResponse(['error' => $msg, 'trace' => $trace], $statusCode);
+        self::jsonResponse(['error' => $msg, 'trace' => $trace], $httpStatus);
     }
 
-    #[NoReturn] public static function data(array|object $data, string $msg = 'Готово', int $statusCode = 200): void
+    #[NoReturn] public static function data(array|object $data, string $msg = 'Готово', int $httpStatus = 200): void
     {
-        $data = ['result'=>$msg,'data' => $data, 'warnings' => AppStore::getWarnings()];
-        self::jsonResponse($data, $statusCode);
+        $data = ['result'=>$msg,'data' => $data, 'warnings' => AppStorage::getWarnings()];
+        self::jsonResponse($data, $httpStatus);
     }
 
-    #[NoReturn] public static function success(string $msg = 'Готово', int $statusCode = 200): void
+    #[NoReturn] public static function success(string $msg = 'Готово', int $httpStatus = 200): void
     {
         $data = ['result'=>$msg];
-        self::jsonResponse($data, $statusCode);
+        self::jsonResponse($data, $httpStatus);
     }
 
-    #[NoReturn] private static function jsonResponse(array|object $data, int $statusCode = 200): void
+    #[NoReturn] private static function jsonResponse(array|object $data, int $httpStatus = 200): void
     {
         //header_remove();
         header("Content-Type: application/json");
-        http_response_code($statusCode);
+        http_response_code($httpStatus);
 
         $buffer = ob_get_clean();
         echo json_encode($data,JSON_UNESCAPED_UNICODE);
