@@ -1,6 +1,5 @@
 {
   "name": "symphograph/bicycle",
-  "minimum-stability": "stable",
   "description": "Library for easy development",
   "type": "library",
   "authors": [
@@ -22,5 +21,10 @@
     "lcobucci/jwt": "^5.0",
     "php-curl-class/php-curl-class": "^9.17",
     "ext-exif" : "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Symphograph\\Bicycle\\": "src/"
+    }
   }
 }
