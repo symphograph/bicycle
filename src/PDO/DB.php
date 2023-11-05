@@ -22,15 +22,16 @@ class DB
         PDO::ATTR_EMULATE_PREPARES   => FALSE
     ];
 
-    public PDO $pdo;
+    public PDO                      $pdo;
     private false|PDOStatement|null $stmt;
+    private static array            $instances = [];
 
     /**
      * Конструктор класса. Устанавливает соединение с базой данных.
      *
      * @param string $charset Кодировка для соединения.
      */
-    public function __construct(string $connectName = '')
+    public function __construct(string $connectName = 'default')
     {
         $dbConnect = ConnectDB::byName($connectName);
         $dsn = "mysql:host=$dbConnect->host;dbname=$dbConnect->name;charset=$dbConnect->charset";
@@ -38,17 +39,23 @@ class DB
     }
 
     /**
-     * Получает экземпляр класса DB. Реализует паттерн Singleton.
+     * Реализует паттерн Singleton, сохраняя возможность использовать разные соединения.
      *
      * @return self Экземпляр класса DB.
      */
-    public static function getSelf(): self
+    public static function getSelf($connectName = 'default'): self
     {
-        global $DB;
-        if (!isset($DB)) {
-            $DB = new self();
+        if(isset(self::$instances[$connectName])) {
+            return self::$instances[$connectName];
         }
-        return $DB;
+
+        if($connectName === 'default') {
+            $envConnectName = ConnectDB::getDefaultConnectName();
+        } else {
+            $envConnectName = $connectName;
+        }
+        self::$instances[$connectName] = new self($envConnectName);
+        return self::$instances[$connectName];
     }
 
     /**
@@ -56,14 +63,14 @@ class DB
      *
      * @return PDO Объект PDO.
      */
-    public static function pdo(): PDO
+    public static function pdo($connectName = 'default'): PDO
     {
-        return self::getSelf()->pdo;
+        return self::getSelf($connectName)->pdo;
     }
 
-    public static function lastId()
+    public static function lastId($connectName = 'default'): false|string
     {
-        return self::pdo()->lastInsertId();
+        return self::pdo($connectName)->lastInsertId();
     }
 
     /**
@@ -74,9 +81,9 @@ class DB
      *
      * @return false|PDOStatement Объект PDOStatement с результатами запроса.
      */
-    public static function qwe(#[Language('SQL')] string $sql, array $args = []): false|PDOStatement
+    public static function qwe(#[Language('SQL')] string $sql, array $args = [], $connectName = 'default'): false|PDOStatement
     {
-        $DB = self::getSelf();
+        $DB = self::getSelf($connectName);
         if (empty($args)) {
             return $DB->query($sql);
         }
@@ -167,7 +174,7 @@ class DB
      *
      * @throws MyErrors В случае ошибки.
      */
-    public static function insertRows(string $tableName, array $rows): void
+    public static function insertRows(string $tableName, array $rows, $connectName = 'default'): void
     {
         if (!array_is_list($rows)) {
             throw new MyErrors('rows must be a list');
@@ -183,14 +190,14 @@ class DB
 
         $sql = "INSERT INTO $tableName $propsSting VALUES $valuesString";
 
-        $DB = self::getSelf();
+        $DB = self::getSelf($connectName);
         $DB->stmt = $DB->pdo->prepare($sql);
         foreach ($rows as $suffix => $args) {
             $DB->bindValues($args, $suffix + 1);
         }
-        //$DB->pdo->beginTransaction();
+
         $DB->stmt->execute();
-        //$DB->pdo->commit();
+
     }
 
     /**
@@ -199,7 +206,7 @@ class DB
      * @param string $tableName Имя таблицы.
      * @param array  $params    Ассоциативный массив с данными для вставки/обновления.
      */
-    public static function replace(string $tableName, array $params): void
+    public static function replace(string $tableName, array $params, $connectName = 'default'): void
     {
         $propsSting = self::propsSting($params);
         $valuesString = self::rowInsertPHolders($params);
@@ -208,7 +215,7 @@ class DB
         $params = self::addParamsWithSuffixUpd($params);
         $sql = "INSERT INTO $tableName $propsSting VALUES $valuesString on duplicate key update $paramsForUpdateStr";
 
-        $DB = self::getSelf();
+        $DB = self::getSelf($connectName);
         $DB->stmt = $DB->pdo->prepare($sql);
         $DB->bindValues($params);
         $DB->stmt->execute();

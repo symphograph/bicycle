@@ -20,12 +20,18 @@ class ConnectDB
     public static function byName(?string $connectName): self
     {
         $env = require dirname(ServerEnv::DOCUMENT_ROOT()) . self::envPath;
-        if(empty($connectName)){
+        if(empty($connectName) || $connectName === 'default'){
             $connectName = array_key_first($env->connects);
         }
         $con = $env->connects[$connectName];
         return new self(
             host: $con->host, name: $con->name, user: $con->user, pass: $con->pass, charset: $con->charset ?? 'utf8mb4'
         );
+    }
+
+    public static function getDefaultConnectName(): string
+    {
+        $env = require dirname(ServerEnv::DOCUMENT_ROOT()) . self::envPath;
+        return array_key_first($env->connects);
     }
 }
