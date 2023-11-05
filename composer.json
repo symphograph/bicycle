@@ -1,5 +1,6 @@
 {
   "name": "symphograph/bicycle",
+  "minimum-stability": "stable",
   "description": "Library for easy development",
   "type": "library",
   "authors": [
