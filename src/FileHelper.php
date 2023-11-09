@@ -7,13 +7,15 @@ use RecursiveIteratorIterator;
 use Symfony\Component\Filesystem\Exception\FileNotFoundException;
 use Symphograph\Bicycle\Env\Server\ServerEnv;
 use Symphograph\Bicycle\Errors\AppErr;
+use Symphograph\Bicycle\Errors\FileErr;
+use Symphograph\Bicycle\Errors\MyErrors;
 use Throwable;
 
 class FileHelper
 {
     public static function FileList(string $dir): array
     {
-        $dir = self::addRoot($dir);
+        $dir = self::fullPath($dir);
         if (!file_exists($dir)) {
             return [];
         }
@@ -30,13 +32,26 @@ class FileHelper
         return $files2;
     }
 
-    public static function addRoot(string $file): string
+    public static function fullPath(string $relOrFullPath): string
     {
-        if (!str_starts_with($file, '/tmp/') && !str_starts_with($file, '/home/')) {
-            $file = ServerEnv::DOCUMENT_ROOT() . '/' . $file;
+        if (!self::isRootPath($relOrFullPath)) {
+            $fullPath = ServerEnv::DOCUMENT_ROOT() . '/' . $relOrFullPath;
+        } else {
+            $fullPath = $relOrFullPath;
         }
 
-        return self::removeDoubleSeparators($file);
+        return self::cleanPath($fullPath);
+    }
+
+    private static function isRootPath(string $path): bool
+    {
+        return str_starts_with($path, '/tmp/') || str_starts_with($path, '/home/');
+    }
+
+    public static function cleanPath(string $path): string
+    {
+        $path = preg_replace('#/+#', '/', $path);
+        return preg_replace('#/\.\./#', '/', $path);
     }
 
     public static function removeDoubleSeparators(string $dir): string
@@ -47,7 +62,7 @@ class FileHelper
     public static function folderList(string $dir): array
     {
         //Получает массив с именами папок в директории
-        $dir = self::addRoot($dir);
+        $dir = self::fullPath($dir);
         $files = scandir($dir);
         $skip = ['.', '..'];
         $folders = [];
@@ -60,8 +75,8 @@ class FileHelper
 
     public static function fileExists(string $dir): bool
     {
-        $dir = self::addRoot($dir);
-        $dir = self::removeDoubleSeparators($dir);
+        $dir = self::fullPath($dir);
+        $dir = self::cleanPath($dir);
         return file_exists($dir) && !is_dir($dir);
     }
 
@@ -70,72 +85,64 @@ class FileHelper
      * - Если фала нет, создает его
      * - Если нет директории, создаёт её
      *
-     * @param string $dir
-     * @param $data
-     * @return false|int
+     * @param string $fullPath
+     * @param string $data
+     * @param int $permissions
+     * @return int
+     * @throws MyErrors
      */
-    public static function fileForceContents(string $dir, $data): false|int
+    public static function fileForceContents(string $fullPath, string $data, int $permissions = 0775): int
     {
-        $parts = explode('/', $dir);
-        $file = array_pop($parts);
-        $dir = '';
-        $i = 0;
+        $cleanPath = self::cleanPath($fullPath);
 
-        foreach ($parts as $part) {
-            $i++;
-            if (empty($part)){
-                continue;
-            }
+        $dir = dirname($cleanPath);
 
-            $dir = $i == 1 ? $part : "$dir/$part";
-
-            if (!is_dir($dir)) {
-                mkdir($dir, 0775, true);
-            }
+        if (!is_dir($dir)) {
+            mkdir($dir, $permissions, true)
+            or throw new FileErr("error on create dir: $dir", "Не удалось создать папку для файла");
         }
-        return file_put_contents("$dir/$file", $data);
+
+        $bytes = file_put_contents($cleanPath, $data);
+        if ($bytes === false) {
+            throw new FileErr('error on file_put_contents', "Ошибка при создании файла.");
+        }
+        return $bytes;
     }
 
     public static function moveUploaded(string $from, string $to): bool
     {
-        if (!self::forceDir($to))
-            return false;
-
+        self::forceDir($to);
         return @move_uploaded_file($from, $to);
     }
 
-    public static function forceDir(string $to, bool $addRoot = false): bool
+    public static function forceDir(string $to, int $permissions = 0775): void
     {
-        if ($addRoot) {
-            $to = ServerEnv::DOCUMENT_ROOT() . '/' . $to;
-            $to = self::removeDoubleSeparators($to);
+        $fullPath = self::fullPath($to);
+
+        $dir = pathinfo($fullPath, PATHINFO_DIRNAME);
+        if(is_dir($dir)) {
+            return;
         }
-        $dir = pathinfo($to, PATHINFO_DIRNAME);
-        if (!is_dir($dir)) {
-            if (!mkdir($dir, 0775, true)) {
-                return false;
-            }
-        }
-        return true;
+        mkdir($dir, $permissions, true) or
+        throw new FileErr("error on create dir: $dir", "Не удалось создать папку для файла");
     }
 
     public static function copy(string $from, string $to): bool
     {
-        $from = self::addRoot($from);
-        $to = self::addRoot($to);
+        $from = self::fullPath($from);
+        $to = self::fullPath($to);
 
         if (!file_exists($from))
             return false;
 
-        if (!self::forceDir($to))
-            return false;
+        self::forceDir($to);
 
         return @copy($from, $to);
     }
 
     public static function delDir($dir): bool
     {
-        $dir = self::addRoot($dir);
+        $dir = self::fullPath($dir);
         try {
             $d = opendir($dir);
         } catch (Throwable) {
@@ -156,16 +163,25 @@ class FileHelper
         return rmdir($dir);
     }
 
-    public static function delAllExtensions(string $fileName, array $exts = ['.jpg', '.png', '.jpeg', '.svg']): void
+    public static function delAllExtensions(string $fileName, array $exts = ['jpg', 'png', 'jpeg', 'svg']): void
     {
+        $exts = self::getExtensionsInAllCases($exts);
+
         foreach ($exts as $ext) {
-            self::delete($fileName . $ext);
+            self::delete($fileName . '.' . $ext);
         }
+    }
+
+    public static function getExtensionsInAllCases(array $exts = ['jpg', 'png', 'jpeg', 'svg']): array
+    {
+        $extsLowCase = array_map('strtolower', $exts);
+        $extsUpCase = array_map('strtoupper', $exts);
+        return array_merge($extsLowCase, $extsUpCase);
     }
 
     public static function delete(string $file): bool
     {
-        $file = self::addRoot($file);
+        $file = self::fullPath($file);
         if (file_exists($file) && !is_dir($file)) {
             return @unlink($file);
         }
@@ -177,7 +193,7 @@ class FileHelper
         $outputFile = fopen($outputFilePath, 'w');
 
         if ($outputFile === false) {
-            throw new AppErr('fopen err','Не удалось открыть выходной файл для записи');
+            throw new FileErr('fopen err', 'Не удалось открыть выходной файл для записи');
         }
 
         $files = new RecursiveIteratorIterator(
@@ -185,7 +201,7 @@ class FileHelper
         );
 
         foreach ($files as $file) {
-            if (!$file->isFile() || $file->getPathname() === $outputFilePath){
+            if (!$file->isFile() || $file->getPathname() === $outputFilePath) {
                 continue;
             }
             // Получаем полный путь файла и записываем его в выходной файл
