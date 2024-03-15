@@ -2,14 +2,13 @@
 
 namespace Symphograph\Bicycle;
 
+use FilesystemIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
-use Symfony\Component\Filesystem\Exception\FileNotFoundException;
 use Symphograph\Bicycle\Env\Server\ServerEnv;
-use Symphograph\Bicycle\Errors\AppErr;
-use Symphograph\Bicycle\Errors\FileErr;
+use Symphograph\Bicycle\Errors\Files\FileErr;
 use Symphograph\Bicycle\Errors\MyErrors;
-use Throwable;
+use Symphograph\Bicycle\Helpers\TextHelper;
 
 class FileHelper
 {
@@ -32,10 +31,11 @@ class FileHelper
         return $files2;
     }
 
-    public static function fullPath(string $relOrFullPath): string
+    public static function fullPath(string $relOrFullPath, bool $isPublic = true): string
     {
         if (!self::isRootPath($relOrFullPath)) {
-            $fullPath = ServerEnv::DOCUMENT_ROOT() . '/' . $relOrFullPath;
+            $root = $isPublic ? ServerEnv::DOCUMENT_ROOT() : dirname(ServerEnv::DOCUMENT_ROOT());
+            $fullPath = $root . '/' . $relOrFullPath;
         } else {
             $fullPath = $relOrFullPath;
         }
@@ -142,24 +142,19 @@ class FileHelper
 
     public static function delDir($dir): bool
     {
-        $dir = self::fullPath($dir);
-        try {
-            $d = opendir($dir);
-        } catch (Throwable) {
-            return false;
+        if (!file_exists($dir)) {
+            return true;
         }
 
-        if (!$d) return false;
-        while (($entry = readdir($d)) !== false) {
-            if ($entry != "." && $entry != "..") {
-                if (is_dir($dir . "/" . $entry)) {
-                    self::delDir($dir . "/" . $entry);
-                } else {
-                    unlink($dir . "/" . $entry);
-                }
-            }
+        $RecursDirIterator = new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS);
+        $mode = RecursiveIteratorIterator::CHILD_FIRST;
+        $files = new RecursiveIteratorIterator($RecursDirIterator, $mode);
+
+        foreach ($files as $fileInfo) {
+            $todo = ($fileInfo->isDir() ? 'rmdir' : 'unlink');
+            $todo($fileInfo->getRealPath());
         }
-        closedir($d);
+
         return rmdir($dir);
     }
 
@@ -217,5 +212,62 @@ class FileHelper
         }
 
         fclose($outputFile);
+    }
+
+    public static function renameToTranslit($fileName, $maxLength = 50): string
+    {
+        $ext = pathinfo($fileName, PATHINFO_EXTENSION);
+        $fileName = pathinfo($fileName, PATHINFO_FILENAME);
+
+        $cleanFilename = str_replace(['-', '+'], ' ', $fileName);
+        $cleanFilename = preg_replace('/[^\p{L}\p{N}\s]/u', ' ', $cleanFilename);
+        $cleanFilename = preg_replace('/[\s_]+/u', ' ', $cleanFilename);
+        $cleanFilename = trim($cleanFilename);
+        $words = preg_split('/\s+/', $cleanFilename);
+        $ignoreWords = ['и', 'в', 'на', 'с', 'по', 'из', 'для', 'о', 'не', 'за', 'к', 'от'];
+
+        $filteredWords = array_filter(array_map('mb_strtolower', $words), function ($word) use ($ignoreWords) {
+            return !in_array($word, $ignoreWords);
+        });
+
+
+        $newFilenameParts = [];
+        $currentLength = 0;
+
+        $lastWord = end($filteredWords);
+        reset($filteredWords);
+
+
+        foreach ($filteredWords as $word) {
+            $transliteratedWord = TextHelper::transliterate($word);
+            $wordLength = mb_strlen($transliteratedWord);
+
+            if ($currentLength + $wordLength + 1 <= $maxLength || $word === $lastWord) {
+                $newFilenameParts[] = ucfirst($transliteratedWord);
+                $currentLength += $wordLength + 1;
+            }
+
+            if ($currentLength > $maxLength) {
+                break;
+            }
+        }
+
+        $englishFilename = implode('', $newFilenameParts);
+
+        if (mb_strlen($cleanFilename) > $maxLength && empty($newFilenameParts)) {
+            $englishFilename = mb_substr($cleanFilename, 0, $maxLength);
+        }
+
+        if(!empty($ext)) {
+            $englishFilename .= '.' . $ext;
+        }
+        return $englishFilename;
+    }
+
+    public static function getMD5Path(string $md5): string
+    {
+        $subDir1 = substr($md5, 0, 2);
+        $subDir2 = substr($md5, 2, 2);
+        return $subDir1 . '/' . $subDir2;
     }
 }

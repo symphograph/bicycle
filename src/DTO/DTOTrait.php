@@ -4,6 +4,7 @@ namespace Symphograph\Bicycle\DTO;
 
 
 use PDO;
+use Symphograph\Bicycle\Errors\AppErr;
 use Symphograph\Bicycle\PDO\DB;
 use Symphograph\Bicycle\SQL\SQLBuilder;
 
@@ -16,30 +17,57 @@ trait DTOTrait
         $tableName = self::tableName;
         $colId = self::getColId();
 
-        /** @noinspection PhpUndefinedFunctionInspection */
-        $qwe = qwe("select * from $tableName where $colId = :$colId", [$colId => $id]);
-        return $qwe->fetchAll(PDO::FETCH_CLASS|PDO::FETCH_PROPS_LATE, self::class)[0] ?? false;
+        $sql = "select * from $tableName where $colId = :$colId";
+        $params = [$colId => $id];
+        $qwe = DB::qwe($sql, $params);
+        return DB::fetchClass($qwe, self::class);
     }
 
     public static function delById(int $id): void
     {
         $tableName = self::tableName;
         $colId = self::getColId();
-        /** @noinspection PhpUndefinedFunctionInspection */
-        qwe("delete from $tableName where $colId = :$colId", [$colId => $id]);
+
+        $sql = "delete from $tableName where $colId = :$colId";
+        $params = [$colId => $id];
+        DB::qwe($sql, $params);
+    }
+
+    public static function byProp(string $propName, int|float|string $propValue): self|bool
+    {
+        $tableName = self::tableName;
+
+        $sql = "select * from $tableName where $propName = :propValue";
+        $params = ['propValue' => $propValue];
+        $qwe = DB::qwe($sql, $params);
+
+        $result = $qwe->fetchAll(PDO::FETCH_CLASS|PDO::FETCH_PROPS_LATE, self::class);
+        if(empty($result)) {
+            return false;
+        }
+        if(count($result) > 1) {
+            throw new AppErr("$propName is not unique in table $tableName");
+        }
+        return $result[0];
     }
 
     public static function byAccountId(int $accountId): self|bool
     {
         $tableName = self::tableName;
-        /** @noinspection PhpUndefinedFunctionInspection */
-        $qwe = qwe("select * from $tableName where accountId = :accountId", ['accountId'=> $accountId]);
+
+        $sql = "select * from $tableName where accountId = :accountId";
+        $params = ['accountId'=> $accountId];
+        $qwe = DB::qwe($sql, $params);
         return $qwe->fetchObject(self::class);
     }
 
     public function putToDB(): void
     {
         DB::replace(self::tableName, self::getAllProps());
+
+        if(method_exists(self::class, 'afterPut')){
+            $this->afterPut();
+        }
     }
 
     /**

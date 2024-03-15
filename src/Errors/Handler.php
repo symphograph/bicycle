@@ -3,9 +3,12 @@
 namespace Symphograph\Bicycle\Errors;
 
 use ErrorException;
+use JetBrains\PhpStorm\NoReturn;
 use ReflectionClass;
 use Symphograph\Bicycle\Api\Response;
+use Symphograph\Bicycle\AppStorage;
 use Symphograph\Bicycle\Env\Config;
+use Symphograph\Bicycle\Env\Env;
 use Symphograph\Bicycle\Logs\ErrorLog;
 use Symphograph\Bicycle\Logs\Log;
 use Throwable;
@@ -24,15 +27,29 @@ class Handler
         }
     }
 
+    public static function warningHandler(): void
+    {
+        $error = error_get_last();
+        if(empty($error)) {
+            return;
+        }
+
+        if(Env::isDebugMode() && in_array($error['type'], [E_WARNING, E_NOTICE, E_DEPRECATED])) {
+            AppStorage::$warnings[] = $error;
+        }
+    }
+
     public function myShutdownHandler(): void
     {
         $error = error_get_last();
-        if ($error !== null) {
-            $e = new ErrorException(
-                $error['message'], 0, $error['type'], $error['file'], $error['line']
-            );
-            self::myExceptionHandler($e);
+        if(empty($error)) {
+            return;
         }
+
+        $e = new ErrorException(
+            $error['message'], 0, $error['type'], $error['file'], $error['line']
+        );
+        ErrorLog::writeToLog($e);
     }
 
     /**
@@ -43,6 +60,20 @@ class Handler
         throw new ErrorException($message, 0, $level, $file, $line);
     }
 
+    #[NoReturn] private static function apiResponse(Throwable $err, int $httpStatus): void
+    {
+        $trace = [];
+        if (ini_get('display_errors')) {
+            $trace = $err->getTrace() ?? [];
+            array_unshift($trace, [
+                'msg'  => $err->getMessage(),
+                'file' => $err->getFile(),
+                'line' => $err->getLine()
+            ]);
+        }
+        Response::error(self::getErrorMsg($err), $httpStatus, $trace);
+    }
+
     public static function myExceptionHandler(Throwable $err): void
     {
         $httpStatus = self::getHttpStatus($err);
@@ -51,20 +82,15 @@ class Handler
         }
 
         if (Config::isApi() || Config::isCurl()) {
-            $trace = [];
-            if (ini_get('display_errors')) {
-                $trace = $err->getTrace() ?? [];
-                array_unshift($trace, [
-                    'msg'  => $err->getMessage(),
-                    'file' => $err->getFile(),
-                    'line' => $err->getLine()
-                ]);
-            }
-            Response::error(self::getErrorMsg($err), $httpStatus, $trace);
+            self::apiResponse($err, $httpStatus);
         }
 
-        http_response_code($httpStatus);
+        if (!Config::isCLI()) {
+            http_response_code($httpStatus);
+        }
+
         if (ini_get('display_errors')) {
+            echo PHP_EOL;
             echo $err;
             return;
         }

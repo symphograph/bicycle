@@ -4,26 +4,25 @@ namespace Symphograph\Bicycle;
 
 class AppStorage
 {
-    public array $warnings = [];
+    public static AppStorage $self;
+    public static array $warnings = [];
 
     public static function getSelf(): self
     {
-        global $AppStorage;
-        if(!isset($AppStorage)){
-            $AppStorage = new self();
+        if(!isset(self::$self)){
+            self::$self = new self();
         }
-        return $AppStorage;
+        return self::$self;
     }
 
     public static function addWarning(string $msg): void
     {
-        $AppStorage = self::getSelf();
-        $AppStorage->warnings[] = $msg;
+        self::$warnings[] = $msg;
     }
 
     public static function getWarnings(): array
     {
-        $AppStorage = self::getSelf();
-        return $AppStorage->warnings;
+        //$AppStorage = self::getSelf();
+        return self::$warnings;
     }
 }

@@ -2,8 +2,34 @@
 
 namespace Symphograph\Bicycle\Helpers;
 
+use DateTime;
+
 class DateTimeHelper
 {
+    const array formats = [
+        'Y-m-d',
+        'd.m.Y',
+        'Y-m-d H:i:s',
+        'd.m.Y H:i',
+        'd-m-Y',
+        'Y/m/d',
+        'd/m/Y',
+        'Y.m.d',
+        'Ymd',
+        'H:i:s',
+        'Y-m-d H:i:sP',
+        'Y-m-d H:i:sO',
+        'Y-m-d H:i:s.u',
+        'Y-m-d\TH:i:sP',
+        'Y-m-d\TH:i:sO',
+        'Y-m-d\TH:i:s.u',
+        'Y-m-d\TH:i:s.uP',
+        'Y-m-d\TH:i:s.uO',
+        'c', // ISO 8601 формат
+        'r', // RFC 2822 формат
+        'U'
+    ];
+
     /**
      *  Format a time/date from any format to any format
      * @param string $outputFormat <p>
@@ -263,42 +289,50 @@ class DateTimeHelper
             $outputFormat = 'Y-m-d H:i:s';
         }
 
-        $formats = [
-            'Y-m-d H:i:s',
-            'd.m.Y H:i',
-            'Y-m-d',
-            'd-m-Y',
-            'Y/m/d',
-            'd/m/Y',
-            'm-d-Y',
-            'Y.m.d',
-            'd.m.Y',
-            'Ymd',
-            'H:i:s',
-            'Y-m-d H:i:sP',
-            'Y-m-d H:i:sO',
-            'Y-m-d H:i:s.u',
-            'Y-m-d\TH:i:sP',
-            'Y-m-d\TH:i:sO',
-            'Y-m-d\TH:i:s.u',
-            'Y-m-d\TH:i:s.uP',
-            'Y-m-d\TH:i:s.uO',
-            'c', // ISO 8601 формат
-            'r', // RFC 2822 формат
-            'U'
-        ];
-
-        $normalizedDate = false;
-
-        foreach ($formats as $format) {
+        foreach (self::formats as $format) {
             $date = date_create_from_format($format, $inputDate);
 
             if ($date !== false) {
-                $normalizedDate = date_format($date, $outputFormat);
-                break;
+                return date_format($date, $outputFormat);
             }
         }
 
-        return $normalizedDate;
+        return false;
     }
+
+    public static function extractDate(string $inputString, ?array $formats = null): ?string
+    {
+        if(empty($formats)) {
+            $formats = ['Y-m-d', 'd-m-Y', 'Y.m.d', 'd.m.Y'];
+        }
+        $dateRegex = '/(\d{1,4}[._-]\d{1,2}[._-]\d{2,4})/';
+        preg_match_all($dateRegex, $inputString, $matches);
+
+        foreach ($matches[1] as $match) {
+            if (self::isDate($match, $formats)) {
+                return $match;
+            }
+        }
+
+        return null;
+    }
+
+    public static function isDate(string $date, string|array|null $formats = null): bool
+    {
+        if(empty($formats)) {
+            $formats = self::formats;
+        }elseif (is_string($formats)) {
+            $formats = [$formats];
+        }
+
+        foreach ($formats as $format){
+            $dateTime = DateTime::createFromFormat($format, $date);
+            if(!$dateTime) continue;
+            $errors = DateTime::getLastErrors();
+            return empty($errors);
+        }
+        return false;
+    }
+
 }
+

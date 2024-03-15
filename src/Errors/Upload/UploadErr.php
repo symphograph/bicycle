@@ -1,6 +1,6 @@
 <?php
 
-namespace Symphograph\Bicycle\Errors;
+namespace Symphograph\Bicycle\Errors\Upload;
 
 use Symphograph\Bicycle\Errors\MyErrors;
 use Symphograph\Bicycle\Helpers;
@@ -13,7 +13,6 @@ class UploadErr extends MyErrors
         int $httpStatus = 500
     )
     {
-        $this->type = Helpers::classBasename(self::class);
         parent::__construct($message, $pubMsg, $httpStatus);
     }
 }

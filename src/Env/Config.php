@@ -91,6 +91,11 @@ class Config
         return str_starts_with(ServerEnv::SCRIPT_NAME(), '/curl/');
     }
 
+    public static function isCLI(): bool
+    {
+        return php_sapi_name() === 'cli';
+    }
+
     protected static function checkOrigin(): void
     {
         if(!self::isApi() || !self::isCurl()){

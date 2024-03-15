@@ -5,6 +5,7 @@ namespace Symphograph\Bicycle\Errors;
 use Symphograph\Bicycle\Api\Response;
 use Symphograph\Bicycle\Env\Config;
 use Symphograph\Bicycle\Env\Server\ServerEnv;
+use Symphograph\Bicycle\Helpers;
 use Symphograph\Bicycle\Logs\ErrorLog;
 use Exception;
 use Symphograph\Bicycle\Env\Env;
@@ -19,14 +20,11 @@ class MyErrors extends Exception
         string $message = '',
         private readonly string $pubMsg = '',
         protected int $httpStatus = 500
+
     )
     {
         parent::__construct($message);
-        /*
-        if ($this->loggable) {
-            ErrorLog::writeToLog($this);
-        }
-        */
+        $this->type = Helpers::classBasename(static::class);
     }
 
     public function getType(): string

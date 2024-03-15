@@ -308,4 +308,19 @@ class Helpers
         return $wordForms[$formIndex];
     }
 
+    /**
+     * Объединяет элементы в строку, разделяя запятой и словом 'and' перед последним элементом
+     * @param string[] $words
+     * @return string
+     */
+    function joinWordsWithAnd(array $words): string
+    {
+        if (count($words) < 2) {
+            return implode(', ', $words);
+        }
+
+        $lastWord = array_pop($words);
+        return implode(', ', $words) . ' and ' . $lastWord;
+    }
+
 }

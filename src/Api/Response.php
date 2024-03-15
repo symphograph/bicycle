@@ -6,6 +6,7 @@ use JetBrains\PhpStorm\NoReturn;
 use Symphograph\Bicycle\AppStorage;
 use Symphograph\Bicycle\DTO\BindTrait;
 use Symphograph\Bicycle\Env\Env;
+use Symphograph\Bicycle\Errors\Handler;
 
 class Response
 {
@@ -24,7 +25,7 @@ class Response
 
     #[NoReturn] public static function data(array|object $data, string $msg = 'Готово', int $httpStatus = 200): void
     {
-        $data = ['result'=>$msg,'data' => $data, 'warnings' => AppStorage::getWarnings()];
+        $data = ['result'=>$msg,'data' => $data];
         self::jsonResponse($data, $httpStatus);
     }
 
@@ -37,16 +38,19 @@ class Response
     #[NoReturn] private static function jsonResponse(array|object $data, int $httpStatus = 200): void
     {
         //header_remove();
+        Handler::warningHandler();
+        $data['warnings'] = AppStorage::$warnings;
         header("Content-Type: application/json");
         http_response_code($httpStatus);
 
         $buffer = ob_get_clean();
         echo json_encode($data,JSON_UNESCAPED_UNICODE);
         if(!empty($buffer) && Env::isDebugMode()){
-            echo $buffer;
+            echo PHP_EOL.$buffer;
         }
 
         die();
+
     }
 }
 

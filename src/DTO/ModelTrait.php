@@ -38,6 +38,7 @@ trait ModelTrait
     public static function initDataInList(array $objects): array
     {
         $arr = [];
+
         foreach ($objects as $object){
             if(method_exists($object::class, 'initData')){
                 $object->initData();
@@ -49,7 +50,15 @@ trait ModelTrait
 
     public function putToDB(): void
     {
+        if(method_exists(self::class, 'beforePut')){
+            $this->beforePut();
+        }
+
         $parent = parent::byBind($this);
         $parent->putToDB();
+
+        if(method_exists(self::class, 'afterPut')){
+            $this->afterPut();
+        }
     }
 }
