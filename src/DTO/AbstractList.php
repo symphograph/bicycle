@@ -2,6 +2,7 @@
 
 namespace Symphograph\Bicycle\DTO;
 
+
 use PDO;
 
 use Symphograph\Bicycle\PDO\DB;
@@ -22,6 +23,18 @@ abstract class AbstractList implements ListITF
         $className = static::getItemClass();
         $qwe = DB::qwe($sql, $params);
         $List->list = $qwe->fetchAll(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, $className) ?: [];
+        return $List;
+    }
+
+    public static function byJoinSql(string $sql, array $params = []): static
+    {
+        $List = new static();
+        $className = static::getItemClass();
+        $qwe = DB::qwe($sql, $params);
+        $rows = $qwe->fetchAll();
+        foreach ($rows as $item) {
+            $List->list[] = $className::byJoin($item);
+        }
         return $List;
     }
 

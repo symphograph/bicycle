@@ -33,6 +33,20 @@ trait DTOTrait
         DB::qwe($sql, $params);
     }
 
+    public function del(): void
+    {
+        if(method_exists(static::class, 'beforeDel')){
+            $this->beforeDel();
+        }
+
+        $colId = self::getColId();
+        self::delById($this->$colId);
+
+        if(method_exists(static::class, 'afterDel')){
+            $this->afterDel();
+        }
+    }
+
     public static function byProp(string $propName, int|float|string $propValue): self|bool
     {
         $tableName = self::tableName;
@@ -63,6 +77,10 @@ trait DTOTrait
 
     public function putToDB(): void
     {
+        if(method_exists(self::class, 'beforePut')){
+            $this->beforePut();
+        }
+
         DB::replace(self::tableName, self::getAllProps());
 
         if(method_exists(self::class, 'afterPut')){
