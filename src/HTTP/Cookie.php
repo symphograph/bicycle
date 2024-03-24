@@ -3,6 +3,8 @@
 namespace Symphograph\Bicycle\HTTP;
 
 use JetBrains\PhpStorm\ExpectedValues;
+use Symphograph\Bicycle\Env\Env;
+use Symphograph\Bicycle\Env\Server\ServerEnv;
 use Throwable;
 
 class Cookie
@@ -15,6 +17,7 @@ class Cookie
         public bool    $secure = true,
         public bool    $httponly = true,
         public ?string $domain = null,
+        public bool $partitioned = false
     )
     {
         if($expires){
@@ -30,23 +33,27 @@ class Cookie
         bool    $secure = true,
         bool    $httponly = true,
         ?string $domain = null,
+        bool $partitioned = false
     ): self
     {
+        if (Env::isDebugMode()){
+            //$secure = false;
+        }
 
-       return new self($expires, $path, $samesite, $secure, $httponly, $domain);
+       return new self($expires, $path, $samesite, $secure, $httponly, $domain, $partitioned);
 
     }
 
     public static function set(string $name, string $value, ?self $opts = null): void
     {
         $opts = (array) ($opts ?? new self());
+        unset($opts['partitioned']);
         try {
             setcookie($name,$value, $opts);
         } catch (Throwable $err) {
             printr($opts);
             throw $err;
         }
-
     }
 
 }

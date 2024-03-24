@@ -7,10 +7,13 @@ use PDO;
 
 use Symphograph\Bicycle\PDO\DB;
 
-abstract class AbstractList implements ListITF
+abstract class AbstractList implements ListITF, \Iterator
 {
 
-    public function __construct(protected array $list = []){}
+    public function __construct(
+        protected array $list = [],
+        public int $position = 0
+    ){}
 
     public function getList(): array
     {
@@ -45,6 +48,41 @@ abstract class AbstractList implements ListITF
         }
     }
 
+    /**
+     * @return int[]
+     */
+    public function getIds(): array
+    {
+        $ids = [];
+        foreach ($this->list as $el) {
+            $ids[] = $el->id;
+        }
+        return $ids;
+    }
 
 
+    public function rewind(): void
+    {
+        $this->position = 0;
+    }
+
+    public function current(): mixed
+    {
+        return $this->list[$this->position];
+    }
+
+    public function key(): int
+    {
+        return $this->position;
+    }
+
+    public function next(): void
+    {
+        ++$this->position;
+    }
+
+    public function valid(): bool
+    {
+        return isset($this->list[$this->position]);
+    }
 }

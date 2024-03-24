@@ -229,6 +229,19 @@ class DB
         $DB->stmt->execute();
     }
 
+    public static function insert(string $tableName, array $params, $connectName = 'default'): void
+    {
+        $propsSting = self::propsSting($params);
+        $valuesString = self::rowInsertPHolders($params);
+        $params = self::castingTypes($params);
+        $sql = "INSERT INTO $tableName $propsSting VALUES $valuesString";
+
+        $DB = self::getSelf($connectName);
+        $DB->stmt = $DB->pdo->prepare($sql);
+        $DB->bindValues($params);
+        $DB->stmt->execute();
+    }
+
     /**
      * Генерирует строку для использования в SQL-запросе при обновлении записи.
      *

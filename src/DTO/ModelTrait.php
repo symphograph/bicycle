@@ -2,6 +2,8 @@
 
 namespace Symphograph\Bicycle\DTO;
 
+use Symphograph\Bicycle\PDO\PutMode;
+
 trait ModelTrait
 {
     use BindTrait;
@@ -48,14 +50,14 @@ trait ModelTrait
         return $arr;
     }
 
-    public function putToDB(): void
+    public function putToDB(PutMode $mode = PutMode::safeReplace): void
     {
         if(method_exists(self::class, 'beforePut')){
             $this->beforePut();
         }
 
         $parent = parent::byBind($this);
-        $parent->putToDB();
+        $parent->putToDB($mode);
 
         if(method_exists(self::class, 'afterPut')){
             $this->afterPut();

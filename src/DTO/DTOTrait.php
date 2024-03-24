@@ -6,6 +6,7 @@ namespace Symphograph\Bicycle\DTO;
 use PDO;
 use Symphograph\Bicycle\Errors\AppErr;
 use Symphograph\Bicycle\PDO\DB;
+use Symphograph\Bicycle\PDO\PutMode;
 use Symphograph\Bicycle\SQL\SQLBuilder;
 
 trait DTOTrait
@@ -75,13 +76,13 @@ trait DTOTrait
         return $qwe->fetchObject(self::class);
     }
 
-    public function putToDB(): void
+    public function putToDB(PutMode $mode = PutMode::safeReplace): void
     {
         if(method_exists(self::class, 'beforePut')){
             $this->beforePut();
         }
-
-        DB::replace(self::tableName, self::getAllProps());
+        $mode->execute(self::tableName, self::getAllProps());
+        //DB::replace(self::tableName, self::getAllProps());
 
         if(method_exists(self::class, 'afterPut')){
             $this->afterPut();
@@ -96,8 +97,7 @@ trait DTOTrait
         $tableName = self::tableName;
         $orderBy = self::orderBy($orderBy);
 
-        /** @noinspection PhpUndefinedFunctionInspection */
-        $qwe = qwe("
+        $qwe = DB::qwe("
             select id from $tableName 
             where id >= :startId 
             order by $orderBy

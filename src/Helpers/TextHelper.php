@@ -28,4 +28,27 @@ class TextHelper
         return strtr($string, $converter);
     }
 
+    /**
+     * Определение правильной формы слова на основе числа.
+     *
+     * @param int $number Число, для которого нужно определить форму слова.
+     * @param array $wordForms [яблоко, яблока, яблок]
+     * @return string Правильная форма слова в зависимости от числа.
+     */
+    public static function numDeclension(int $number, array $wordForms = ['год', 'года', 'лет']): string
+    {
+        $lastDigit = $number % 10;
+        $lastTwoDigits = $number % 100;
+
+        // Правила склонения в русском языке для различных чисел.
+        $cases = array(2, 0, 1, 1, 1, 2);
+
+        // Определение формы слова на основе числа и контекста.
+        $formIndex = ($lastTwoDigits > 4 && $lastTwoDigits < 20)
+            ? 2
+            : $cases[min($lastDigit, 5)];
+
+        // Возвращение правильной формы слова из массива.
+        return $wordForms[$formIndex];
+    }
 }

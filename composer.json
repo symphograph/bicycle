@@ -9,7 +9,7 @@
     }
   ],
   "require": {
-    "php": ">=8.2",
+    "php": ">=8.3",
     "ext-json": "*",
     "ext-mysqli": "*",
     "ext-iconv": "*",
@@ -20,7 +20,8 @@
     "ext-calendar" : "*",
     "lcobucci/jwt": "^5.0",
     "php-curl-class/php-curl-class": "^9.17",
-    "ext-exif" : "*"
+    "ext-exif" : "*",
+    "ext-imagick": "*"
   },
   "autoload": {
     "psr-4": {

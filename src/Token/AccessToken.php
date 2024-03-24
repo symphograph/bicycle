@@ -15,6 +15,7 @@ class AccessToken
         string $createdAt = 'now',
         string $authType = 'default',
         string $avaFileName = 'init_ava.jpg',
+        ?int $persId = null
     ): string
     {
         $audience = Env::getJWT()->audience;
@@ -29,7 +30,8 @@ class AccessToken
             expireDuration: '+1 day',
             powers: $powers,
             authType: $authType,
-            avaFileName: $avaFileName
+            avaFileName: $avaFileName,
+            persId: $persId
         );
         return $Token->jwt;
     }
