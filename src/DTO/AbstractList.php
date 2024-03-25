@@ -20,6 +20,12 @@ abstract class AbstractList implements ListITF, \Iterator
         return $this->list;
     }
 
+    public function setList(array $list): static
+    {
+        $this->list = $list;
+        return $this;
+    }
+
     public static function bySql(string $sql, array $params = []): static
     {
         $List = new static();

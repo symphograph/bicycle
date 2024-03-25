@@ -29,20 +29,34 @@ class FileIMG extends FileDTO
                 $this->svgHandler();
                 return;
             }
+
             $this->source = new Imagick($this->getFullPath());
-            if (empty($sizes)) {
-                $sizes = self::defaultSizes;
-            }
+            $sizes = $this->prepareSizes($sizes);
+
             $this->updateStatus(FileStatus::Process);
             foreach ($sizes as $width) {
                 $this->makeSize($width);
             }
             $this->updateStatus(FileStatus::Completed);
-        } catch (\Throwable) {
+        } catch (\Throwable $err) {
             $this->updateStatus(FileStatus::Failed);
-            throw new FileProcessErr($this->id);
+            throw new FileProcessErr($err->getMessage());
         }
 
+    }
+
+    private function prepareSizes(array $sizes): array
+    {
+        if (empty($sizes)) {
+            $sizes = self::defaultSizes;
+        }
+        $sizes = array_unique($sizes);
+        if(in_array(0, $sizes)) {
+            unset($sizes[array_search(0, $sizes)]);
+        }
+        rsort($sizes);
+        array_unshift($sizes, 0);
+        return $sizes;
     }
 
     private function svgHandler(): void

@@ -12,7 +12,7 @@ use Symphograph\Bicycle\Errors\AuthErr;
 class MailruUser extends SocialAccountDTO
 {
     use DTOTrait;
-    const tableName = 'user_mailru';
+    const string tableName = 'user_mailru';
     public ?int    $id;
     public ?int    $user_id;
     public ?string $client_id;
@@ -67,12 +67,11 @@ class MailruUser extends SocialAccountDTO
         return trim(($this->first_time ?? '') . ' ' . ($this->last_name ?? ''));
     }
 
-    public function putToDB(): void
+    private function beforePut(): void
     {
         if(isset($this->birthday)){
             $this->birthday = date('Y-m-d', strtotime($this->birthday));
         }
-
-        DB::replace(self::tableName, self::getAllProps());
     }
+
 }

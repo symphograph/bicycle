@@ -11,6 +11,7 @@ class AccessTokenData extends TokenData
     public array $powers;
     public string $authType;
     public string $avaFileName;
+    public ?int $persId;
 
     public function __construct(string $jvt)
     {
@@ -22,6 +23,7 @@ class AccessTokenData extends TokenData
         $this->powers = $jwtArr['powers'];
         $this->authType = $jwtArr['authType'];
         $this->avaFileName = $jwtArr['avaFileName'];
+        $this->persId = $jwtArr['persId'] ?? null;
     }
 
     public static function accountId(): int
@@ -46,5 +48,11 @@ class AccessTokenData extends TokenData
     {
         $tokenData = new self(ServerEnv::HTTP_ACCESSTOKEN());
         return $tokenData->avaFileName;
+    }
+
+    public static function persId(): ?int
+    {
+        $tokenData = new self(ServerEnv::HTTP_ACCESSTOKEN());
+        return $tokenData->persId;
     }
 }
