@@ -50,6 +50,7 @@ class Handler
             $error['message'], 0, $error['type'], $error['file'], $error['line']
         );
         ErrorLog::writeToLog($e);
+        http_response_code(500);
     }
 
     /**

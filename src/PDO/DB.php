@@ -16,7 +16,7 @@ use TypeError;
  */
 class DB
 {
-    const options = [
+    const array options = [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES   => FALSE
@@ -115,6 +115,79 @@ class DB
     }
 
     /**
+     * Вставляет одну строку в таблицу или обновляет существующую, если запись уже существует.
+     *
+     * @param string $tableName Имя таблицы.
+     * @param array $params Ассоциативный массив с данными для вставки/обновления.
+     */
+    public static function replace(string $tableName, array $params, $connectName = 'default'): void
+    {
+        $propsSting = self::propsSting($params);
+        $valuesString = self::rowInsertPHolders($params);
+        $paramsForUpdateStr = self::rowUpdatePHolders($params);
+        $params = self::castingTypes($params);
+        $params = self::addParamsWithSuffixUpd($params);
+        $sql = "INSERT INTO $tableName $propsSting VALUES $valuesString on duplicate key update $paramsForUpdateStr";
+
+        $DB = self::getSelf($connectName);
+        $DB->stmt = $DB->pdo->prepare($sql);
+        $DB->bindValues($params);
+        $DB->stmt->execute();
+    }
+
+    /**
+     * Вставляет или обновляет несколько строк в таблице.
+     *
+     * @param string $tableName Имя таблицы.
+     * @param array $rows Массив с данными для вставки или обновления.
+     */
+    public static function replaceRows(string $tableName, array $rows, $connectName = 'default'): void
+    {
+        if (!array_is_list($rows) || empty($rows)) {
+            throw new MyErrors('rows must be a list and not empty');
+        }
+
+        $propsString = self::propsSting($rows[0]);
+        $rowStrings = [];
+        $castedRows = [];
+        foreach ($rows as $suffix => $row) {
+            // Приводим типы для каждой строки
+            $castedRow = self::castingTypes($row);
+            $castedRows[] = $castedRow;
+            $rowStrings[] = self::rowInsertPHolders($castedRow, $suffix + 1);
+        }
+
+        $valuesString = implode(', ', $rowStrings);
+        $updateString = self::rowUpdatePHoldersForMultipleRows($rows[0]);
+
+        $sql = "INSERT INTO $tableName $propsString VALUES $valuesString ON DUPLICATE KEY UPDATE $updateString";
+
+        $DB = self::getSelf($connectName);
+        $DB->stmt = $DB->pdo->prepare($sql);
+        foreach ($castedRows as $suffix => $args) {
+            $DB->bindValues($args, $suffix + 1);
+        }
+
+        $DB->stmt->execute();
+    }
+
+    /**
+     * Генерирует строку для обновления в SQL-запросе для множественной вставки.
+     *
+     * @param array $firstRow Первая строка данных для генерации шаблона обновления.
+     *
+     * @return string Строка с параметрами для обновления.
+     */
+    private static function rowUpdatePHoldersForMultipleRows(array $firstRow): string
+    {
+        $updateParts = array_map(function ($column) {
+            return "$column=VALUES($column)";
+        }, array_keys($firstRow));
+
+        return implode(', ', $updateParts);
+    }
+
+    /**
      * Генерирует строку с именами полей для использования в SQL-запросе.
      *
      * @param array $props Ассоциативный массив с данными.
@@ -206,27 +279,6 @@ class DB
         $this->bindValues($args);
         $this->stmt->execute();
         return $this->stmt;
-    }
-
-    /**
-     * Вставляет одну строку в таблицу или обновляет существующую, если запись уже существует.
-     *
-     * @param string $tableName Имя таблицы.
-     * @param array $params Ассоциативный массив с данными для вставки/обновления.
-     */
-    public static function replace(string $tableName, array $params, $connectName = 'default'): void
-    {
-        $propsSting = self::propsSting($params);
-        $valuesString = self::rowInsertPHolders($params);
-        $paramsForUpdateStr = self::rowUpdatePHolders($params);
-        $params = self::castingTypes($params);
-        $params = self::addParamsWithSuffixUpd($params);
-        $sql = "INSERT INTO $tableName $propsSting VALUES $valuesString on duplicate key update $paramsForUpdateStr";
-
-        $DB = self::getSelf($connectName);
-        $DB->stmt = $DB->pdo->prepare($sql);
-        $DB->bindValues($params);
-        $DB->stmt->execute();
     }
 
     public static function insert(string $tableName, array $params, $connectName = 'default'): void

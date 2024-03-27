@@ -81,7 +81,7 @@ trait DTOTrait
         if(method_exists(self::class, 'beforePut')){
             $this->beforePut();
         }
-        $mode->execute(self::tableName, self::getAllProps());
+        $mode->execute(self::tableName, $this->getAllProps());
         //DB::replace(self::tableName, self::getAllProps());
 
         if(method_exists(self::class, 'afterPut')){
