@@ -6,9 +6,13 @@ use Symphograph\Bicycle\DTO\AbstractList;
 
 class TestClassList extends AbstractList
 {
+    /**
+     * @var TestClassList[]
+     */
+    protected array $list = [];
 
     #[\Override] public static function getItemClass(): string
     {
-        // TODO: Implement getItemClass() method.
+        return TestClass::class;
     }
 }
