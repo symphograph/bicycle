@@ -10,7 +10,8 @@ class TeleUserDTO extends SocialAccountDTO
 {
     use DTOTrait;
 
-    const tableName = 'user_telegram';
+    const string tableName = 'user_telegram';
+
     public int    $id         = 0;
     public string $first_name = '';
     public string $last_name  = '';

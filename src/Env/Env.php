@@ -6,7 +6,8 @@ use Symphograph\Bicycle\Env\Server\ServerEnv;
 
 readonly class Env
 {
-    const envPath = '/includes/env.php';
+    const string envPath = '/includes/env.php';
+
     private array  $debugIPs;
     private array  $serverIPs;
     private string $serverName;
@@ -156,7 +157,7 @@ readonly class Env
         return $Env->debugOnlyFolders;
     }
 
-    public static function getJWT()
+    public static function getJWT(): object
     {
         $Env = self::getMyEnv();
         return $Env->jwt;

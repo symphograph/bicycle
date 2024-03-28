@@ -8,6 +8,7 @@ use Symphograph\Bicycle\DTO\ModelTrait;
 use Symphograph\Bicycle\Errors\AppErr;
 use Symphograph\Bicycle\Errors\Files\FileProcessErr;
 use Symphograph\Bicycle\FileHelper;
+use Symphograph\Bicycle\Logs\Log;
 
 
 class FileIMG extends FileDTO
@@ -24,6 +25,7 @@ class FileIMG extends FileDTO
 
     public function makeSizes(array $sizes = []): void
     {
+        Log::msg("file $this->id {$this->nameByMD5()} started", [], 'worker');
         try {
             if ($this->ext === 'svg') {
                 $this->svgHandler();
@@ -63,6 +65,7 @@ class FileIMG extends FileDTO
     {
         FileHelper::copy($this->getFullPath(), $this->getSizedPath());
         $this->updateStatus(FileStatus::Completed);
+        Log::msg("file $this->id {$this->nameByMD5()} is svg. completed", [], 'worker');
     }
 
     public function getSizedPath(int $width = 0): string
@@ -79,17 +82,18 @@ class FileIMG extends FileDTO
     {
         $sizedPath = $this->getSizedPath($width);
         if (FileHelper::fileExists($sizedPath)) {
+            Log::msg("file $this->id {$this->nameByMD5()} $width already exists", [], 'worker');
             return;
         }
 
         if ($this->source->getImageWidth() >= $width && $width > 0) {
             $this->source = Resizer::processResize($this->source, $width);
+            Log::msg("file $this->id {$this->nameByMD5()} $width processed", [], 'worker');
         }
 
         $blob = $this->source->getImageBlob();
         FileHelper::fileForceContents($sizedPath, $blob);
-
-
+        Log::msg("file $this->id {$this->nameByMD5()} $width saved", [], 'worker');
     }
 
     public function validate(): void
@@ -97,6 +101,20 @@ class FileIMG extends FileDTO
         parent::validate();
         if ($this->type !== 'img') {
             throw new AppErr('Type must be img');
+        }
+    }
+
+    protected function beforeDel()
+    {
+        $this->delSizes();
+        parent::delById($this->id);
+    }
+
+    public function delSizes()
+    {
+        foreach (self::defaultSizes as $width) {
+            $sizedPath = $this->getSizedPath($width);
+            FileHelper::delete($sizedPath);
         }
     }
 
