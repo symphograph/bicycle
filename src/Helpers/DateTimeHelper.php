@@ -334,5 +334,14 @@ class DateTimeHelper
         return false;
     }
 
+    public static function yesterday(string $date = 'Now', string $outputFormat = 'Y-m-d'): string
+    {
+        if($date !== 'Now'){
+            $date = self::extractDate($date);
+        }
+        $date = self::extractDate($date);
+        return (new DateTime($date))->modify('-1 day')->format($outputFormat);
+    }
+
 }
 

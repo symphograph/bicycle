@@ -6,7 +6,9 @@ use JetBrains\PhpStorm\NoReturn;
 use Symphograph\Bicycle\AppStorage;
 use Symphograph\Bicycle\DTO\BindTrait;
 use Symphograph\Bicycle\Env\Env;
+use Symphograph\Bicycle\Errors\Files\FileDoesNotExistsErr;
 use Symphograph\Bicycle\Errors\Handler;
+use Symphograph\Bicycle\FileHelper;
 
 class Response
 {
@@ -51,6 +53,38 @@ class Response
 
         die();
 
+    }
+
+    public static function download(string $fullPath, ?string $fileName = null): void
+    {
+        if(empty($fileName)){
+            $fileName = basename($fullPath);
+        }
+
+        if(!FileHelper::fileExists($fullPath)){
+            throw new FileDoesNotExistsErr($fullPath);
+        }
+
+        //$mimeType = mime_content_type($fullPath);
+        $mimeType = 'image/jpeg';
+        header('Content-Type: ' . $mimeType);
+        header('Content-Description: File Transfer');
+        header('Content-Disposition: attachment; filename="'.$fileName.'"');
+        header('Expires: 0');
+        header('Cache-Control: must-revalidate');
+        header('Pragma: public');
+        header('Content-Length: ' . filesize($fullPath));
+
+        // Отчистить буфер вывода
+        ob_clean();
+        flush();
+
+        // Отправить файл пользователю
+        //readfile($fullPath);
+        $file = fopen($fullPath, 'rb');
+        fpassthru($file);
+        fclose($file);
+        exit;
     }
 }
 

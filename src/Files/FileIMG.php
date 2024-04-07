@@ -104,13 +104,13 @@ class FileIMG extends FileDTO
         }
     }
 
-    protected function beforeDel()
+    protected function beforeDel(): void
     {
         $this->delSizes();
         parent::delById($this->id);
     }
 
-    public function delSizes()
+    public function delSizes(): void
     {
         foreach (self::defaultSizes as $width) {
             $sizedPath = $this->getSizedPath($width);

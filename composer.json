@@ -21,7 +21,8 @@
     "lcobucci/jwt": "^5.0",
     "php-curl-class/php-curl-class": "^9.17",
     "ext-exif" : "*",
-    "ext-imagick": "*"
+    "ext-imagick": "*",
+    "ext-simplexml": "*"
   },
   "autoload": {
     "psr-4": {

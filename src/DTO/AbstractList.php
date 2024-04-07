@@ -94,11 +94,12 @@ abstract class AbstractList implements ListITF, \Iterator
         return $this;
     }
 
-    public function initData(): void
+    public function initData(): static
     {
         foreach ($this->list as $object) {
             $object->initData();
         }
+        return $this;
     }
 
     /**

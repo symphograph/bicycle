@@ -34,9 +34,9 @@ class Request
         }
     }
 
-    public static function checkEmpty(array $required,#[ExpectedValues(['post', 'get'])] string $method='post'): void
+    public static function checkEmpty(array $required,#[ExpectedValues(['post', 'get', 'files'])] string $method='post'): void
     {
-        $methods = ['post' => $_POST,'get' => $_GET];
+        $methods = ['post' => $_POST,'get' => $_GET, 'files' => $_FILES];
         $method = $methods[$method];
         foreach ($required as $key) {
             if (empty($method[$key])) {

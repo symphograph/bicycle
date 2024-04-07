@@ -2,6 +2,7 @@
 
 namespace Symphograph\Bicycle\Files;
 
+use Symphograph\Bicycle\Env\Server\ServerEnv;
 use Symphograph\Bicycle\Errors\Upload\EmptyFilesErr;
 use Symphograph\Bicycle\Errors\Upload\UploadErr;
 use Symphograph\Bicycle\FileHelper;
@@ -23,12 +24,36 @@ class TmpUploadFile
         $this->validate();
     }
 
+    public static function byExternal(string $externalUrl): static|false
+    {
+        try {
+            $fileData = file_get_contents($externalUrl);
+        } catch (\Throwable) {
+            return false;
+        }
+
+        $fileName = md5($fileData);
+        $fullPath = FileHelper::fullPath('/uploadtmp/' . $fileName, false);
+        FileHelper::fileForceContents($fullPath, $fileData);
+        return static::newInstance($fullPath, $fileName);
+    }
+
+    public static function newInstance(string $tmpFullPath, string $name): static
+    {
+        $file = [];
+        $file['tmp_name'] = $tmpFullPath;
+        $file['name'] = $name;
+        $file['size'] = 0;
+
+        return new static($file);
+    }
+
     public static function getFile(): static
     {
         if(empty($_FILES)){
             throw new EmptyFilesErr();
         }
-        $file = array_shift($_FILES);
+        $file = $_FILES[array_key_first($_FILES)];
         return new static($file);
     }
 
@@ -48,8 +73,8 @@ class TmpUploadFile
             empty($this->name)
             => throw new UploadErr('empty name', 'Ошибка при загрузке.'),
 
-            !is_uploaded_file($this->tmpFullPath)
-            => throw new UploadErr('empty name', 'Ошибка при загрузке.'),
+            //!is_uploaded_file($this->tmpFullPath)
+            //=> throw new UploadErr('it is not uploaded file', 'Ошибка при загрузке.'),
 
             $this->size > $this->maxSize
             => throw new UploadErr('Over size', 'Файл слишком большой.'),
@@ -65,7 +90,8 @@ class TmpUploadFile
 
     public function saveAs(string $newFullPath): void
     {
-        FileHelper::moveUploaded($this->tmpFullPath, $newFullPath);
+        FileHelper::fileForceContents($newFullPath,'');
+        rename($this->tmpFullPath, $newFullPath);
     }
 
     public function getMd5(): string
