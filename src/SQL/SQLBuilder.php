@@ -2,6 +2,9 @@
 
 namespace Symphograph\Bicycle\SQL;
 
+use InvalidArgumentException;
+use ReflectionClass;
+use ReflectionProperty;
 use Symphograph\Bicycle\Errors\AppErr;
 use Symphograph\Bicycle\Helpers;
 use TypeError;
@@ -15,6 +18,7 @@ class SQLBuilder
         public int $limit = 0,
     )
     {
+
     }
 
     public static function orderByArr(string $className, string|array $orderBy): string
@@ -69,5 +73,91 @@ class SQLBuilder
     private static function isDirection(string $direction): bool
     {
         return in_array(mb_strtolower($direction), ['asc', 'desc']);
+    }
+
+    public static function doubles(string $tableName, string $colName): string
+    {
+        return "SELECT *
+        FROM $tableName
+        WHERE $colName IN (
+            SELECT $colName
+            FROM $tableName
+            WHERE $colName IS NOT NULL AND $colName != ''
+            GROUP BY $colName
+            HAVING COUNT(*) > 1
+            )";
+
+    }
+
+    public static function createByClass(string $className): string
+    {
+        if (!class_exists($className)) {
+            throw new InvalidArgumentException("Class $className does not exist.");
+        }
+
+        $reflectionClass = new ReflectionClass($className);
+        $properties = $reflectionClass->getProperties();
+
+        $tableName = $reflectionClass->getConstant('tableName');
+        if (!$tableName) {
+            throw new InvalidArgumentException("Class $className does not have a tableName constant.");
+        }
+
+        $colId = $reflectionClass->getConstant('colId') ?: 'id';
+        $fields = [];
+        $indexes = [];
+        $hasPrimaryKey = false;
+
+        foreach ($properties as $property) {
+            $fieldName = $property->getName();
+            $type = $property->getType();
+            $typeName = strtolower($type->getName());
+
+            if ($typeName === 'int') {
+                $fieldType = 'INT';
+            } elseif ($typeName === 'string') {
+                // Check if the field is for HTML content
+                if ($fieldName === 'html') {
+                    $fieldType = 'LONGTEXT';
+                } else {
+                    $fieldType = 'VARCHAR(255)';
+                }
+            } else {
+                throw new InvalidArgumentException("Unsupported property type: " . $type->getName());
+            }
+
+            $nullability = $type->allowsNull() ? '' : 'NOT NULL';
+
+            if ($fieldName === 'id' && $fieldType === 'INT') {
+                $fields[] = "$fieldName $fieldType AUTO_INCREMENT PRIMARY KEY $nullability";
+                $hasPrimaryKey = true;
+            } else {
+                $fields[] = "$fieldName $fieldType $nullability";
+                if ($fieldName === $colId) {
+                    $hasPrimaryKey = true;
+                }
+                // Adding index for fields except the primary key
+                if ($fieldName !== $colId) {
+                    $indexes[] = "INDEX idx_$fieldName ($fieldName)";
+                }
+            }
+        }
+
+        // If the primary key field is specified in colId and it is not 'id', add it as the primary key
+        if ($hasPrimaryKey && $colId !== 'id') {
+            $fields[] = "PRIMARY KEY ($colId)";
+        }
+
+        $sql = "CREATE TABLE IF NOT EXISTS $tableName (\n";
+        $sql .= "    " . implode(",\n    ", $fields);
+
+        // Adding indexes if any
+        if (!empty($indexes)) {
+            $sql .= ",\n    " . implode(",\n    ", $indexes);
+        }
+
+        $sql .= "\n);";
+
+        return $sql;
     }
 }

@@ -9,7 +9,9 @@ readonly class VKSecrets
         public string $privateKey,
         public string $serviceKey,
         public string $callback,
-        public string $loginPageTitle
+        public string $loginPageTitle,
+        public string $codeRedirect,
+        public string $longToken
     )
     {
     }

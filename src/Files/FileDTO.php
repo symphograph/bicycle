@@ -75,7 +75,7 @@ class FileDTO implements FileITF
         return FileHelper::fullPath($relPath, false);
     }
 
-    private function getRelPath(): string
+    public function getRelPath(): string
     {
         $md5Path = FileHelper::getMD5Path($this->md5);
         return static::mainFolder . '/' . $md5Path . '/' . $this->nameByMD5();
@@ -128,7 +128,29 @@ class FileDTO implements FileITF
         $this->validate();
     }
 
-    protected function beforeDel(){}
+    protected function beforeDel()
+    {
+    }
 
-    protected function afterDel(){}
+    protected function afterDel()
+    {
+    }
+
+    public static function createTable(): void
+    {
+        $sql = "create table if not exists Files
+            (
+                id        bigint unsigned auto_increment
+                    primary key,
+                md5       char(32) charset ascii                              not null,
+                ext       char(4) charset ascii     default ''                not null,
+                type      varchar(16) charset ascii                           not null,
+                createdAt timestamp                 default CURRENT_TIMESTAMP not null,
+                status    varchar(32) charset ascii default 'uploaded'        not null,
+                constraint md5
+                    unique (md5, ext)
+            )
+                engine = InnoDB;";
+        DB::qwe($sql);
+    }
 }

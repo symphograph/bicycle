@@ -65,7 +65,6 @@ class Response
             throw new FileDoesNotExistsErr($fullPath);
         }
 
-        //$mimeType = mime_content_type($fullPath);
         $mimeType = 'image/jpeg';
         header('Content-Type: ' . $mimeType);
         header('Content-Description: File Transfer');

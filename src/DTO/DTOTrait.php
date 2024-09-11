@@ -4,7 +4,9 @@ namespace Symphograph\Bicycle\DTO;
 
 
 use PDO;
+use PDOException;
 use Symphograph\Bicycle\Errors\AppErr;
+use Symphograph\Bicycle\Errors\DelRestrictErr;
 use Symphograph\Bicycle\PDO\DB;
 use Symphograph\Bicycle\PDO\PutMode;
 use Symphograph\Bicycle\SQL\SQLBuilder;
@@ -13,7 +15,9 @@ trait DTOTrait
 {
     use BindTrait;
 
-    public static function byId(int $id): self|bool
+    const int maxId = 9223372036854775807;
+
+    public static function byId(int $id): static|false
     {
         $tableName = self::tableName;
         $colId = self::getColId();
@@ -21,7 +25,7 @@ trait DTOTrait
         $sql = "select * from $tableName where $colId = :$colId";
         $params = [$colId => $id];
         $qwe = DB::qwe($sql, $params);
-        return DB::fetchClass($qwe, self::class);
+        return DB::fetchClass($qwe, static::class);
     }
 
     public static function delById(int $id): void
@@ -31,7 +35,15 @@ trait DTOTrait
 
         $sql = "delete from $tableName where $colId = :$colId";
         $params = [$colId => $id];
-        DB::qwe($sql, $params);
+        try{
+            DB::qwe($sql, $params);
+        } catch (PDOException $e) {
+            if(str_contains($e->getMessage(),'ON DELETE RESTRICT')){
+                throw new DelRestrictErr($e->getMessage());
+            }
+            throw $e;
+        }
+
     }
 
     public function del(): void
@@ -78,11 +90,16 @@ trait DTOTrait
 
     public function putToDB(PutMode $mode = PutMode::safeReplace): void
     {
+        $this->putDTOToDB($mode);
+    }
+
+    protected function putDTOToDB(PutMode $mode = PutMode::safeReplace): void
+    {
         if(method_exists(self::class, 'beforePut')){
             $this->beforePut();
         }
+
         $mode->execute(self::tableName, $this->getAllProps());
-        //DB::replace(self::tableName, self::getAllProps());
 
         if(method_exists(self::class, 'afterPut')){
             $this->afterPut();
@@ -139,5 +156,40 @@ trait DTOTrait
             return self::colId;
         }
         return 'id';
+    }
+
+    public function getDtoProps(): array
+    {
+        $props = [];
+        foreach (get_object_vars($this) as $key => $value) {
+            // Проверяем, что свойство определено в классе DTO
+            if (property_exists(self::class, $key)) {
+                $props[$key] = $value;
+            }
+        }
+        return $props;
+    }
+
+    public static function createTable(): void
+    {
+        $sql = SQLBuilder::createByClass(self::class);
+        DB::qwe($sql);
+    }
+
+    public static function getClassName(): string
+    {
+        return static::class;
+    }
+
+    public static function getSelectSQL(array $columns = []): string
+    {
+        $tableName = self::tableName;
+        if(empty($columns)) {
+            return "select * from $tableName ";
+        }
+        $sql = "select ";
+        $sql .= implode(", ", $columns);
+        $sql .= " from $tableName ";
+        return $sql;
     }
 }

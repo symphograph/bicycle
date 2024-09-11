@@ -3,12 +3,18 @@
 namespace Symphograph\Bicycle\DTO;
 
 
+
 use PDO;
 
+use Symphograph\Bicycle\Errors\AppErr;
+use Symphograph\Bicycle\Helpers\ArrayHelper;
 use Symphograph\Bicycle\PDO\DB;
+use Symphograph\Bicycle\SQL\SQLBuilder;
 
 abstract class AbstractList implements ListITF, \Iterator
 {
+    protected const int MaxLimit = 1000000;
+
     protected int $batchSize = 1000;
 
     public function __construct(
@@ -25,6 +31,14 @@ abstract class AbstractList implements ListITF, \Iterator
         $qwe = DB::qwe($sql, $params);
         $List->list = $qwe->fetchAll(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, $className) ?: [];
         return $List;
+    }
+
+    public static function doubles(string $colName): static
+    {
+        $className = static::getItemClass();
+        $tableName = $className::tableName;
+        $sql = SQLBuilder::doubles($tableName, $colName);
+        return static::bySql($sql);
     }
 
     public static function byJoinSql(string $sql, array $params = []): static
@@ -83,7 +97,7 @@ abstract class AbstractList implements ListITF, \Iterator
     {
         $rows = [];
         foreach ($this->list as $item) {
-            $rows[] = $item->getAllProps();
+            $rows[] = $item->getDtoProps();
         }
         return $rows;
     }
@@ -112,6 +126,12 @@ abstract class AbstractList implements ListITF, \Iterator
             $ids[] = $el->id;
         }
         return $ids;
+    }
+
+    public function sortByCol(array $args = ['votes' => 'desc']): static
+    {
+        $this->list = ArrayHelper::sortMultiArrayByProp($this->list, $args);
+        return $this;
     }
 
 
@@ -146,6 +166,21 @@ abstract class AbstractList implements ListITF, \Iterator
             $this->beforePut();
         }
 
+       foreach ($this->list as $object) {
+           $object->putToDB();
+       }
+
+        if(method_exists(static::class, 'afterPut')){
+            $this->afterPut();
+        }
+    }
+
+    public function putBatchToDB(): void
+    {
+        if(method_exists(static::class, 'beforePut')){
+            $this->beforePut();
+        }
+
         $rows = $this->getProps();
         $className = static::getItemClass();
 
@@ -158,5 +193,60 @@ abstract class AbstractList implements ListITF, \Iterator
         if(method_exists(static::class, 'afterPut')){
             $this->afterPut();
         }
+    }
+
+    public function filter(string $colName, float|int|string $colValue): static
+    {
+        $this->list = ArrayHelper::filter($this->list, $colName, $colValue);
+        return $this;
+    }
+    
+    protected static function getTableName(): string
+    {
+        $className = static::getItemClass();
+        return $className::tableName;
+    }
+
+    protected static function orderBy(?string $orderBy = null): string
+    {
+        if(empty($orderBy)) return '';
+        $className = static::getItemClass();
+        return ' order by ' . SQLBuilder::orderBy($className, $orderBy);
+    }
+
+    protected static function limit(?int $limit = null): string
+    {
+        return empty($limit) ? '' : ' limit ' . $limit;
+    }
+
+    protected static function getSelectSql(array $cols): string
+    {
+        $className = static::getItemClass();
+        if (method_exists($className, 'getSelectSql')) {
+            return $className::getSelectSql($cols);
+        }
+        throw new AppErr('method getSelectSql does not exist');
+    }
+
+    protected static function sql(string $sql = '', ?string $orderBy = null, ?int $limit = null, array $cols = []): string
+    {
+        if(!str_starts_with(strtolower($sql), 'select ')){
+            $sql = self::getSelectSql($cols);
+        }
+
+        if(!empty($orderBy)){
+            $sql .= self::orderBy($orderBy);
+        }
+
+        if(!empty($limit)){
+            $sql .= self::limit($limit);
+        }
+        return $sql;
+    }
+
+    public static function getMaxId(): int
+    {
+        $className = static::getItemClass();
+        return $className::maxId;
     }
 }

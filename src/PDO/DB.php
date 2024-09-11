@@ -420,4 +420,23 @@ class DB
         or throw new TypeError('array is not ints');
         return '(' . implode(',', $ids) . ')';
     }
+
+    public static function isUniqueCol(string $tableName, string $colName): bool
+    {
+        $sql = "
+            SELECT COUNT($colName) = COUNT(DISTINCT $colName) AS is_unique
+            FROM $tableName";
+        $qwe = self::qwe($sql)->fetchColumn();
+        var_dump($qwe);
+        return false;
+    }
+
+    public static function doubles(string $tableName, string $colName): void
+    {
+        $sql = "SELECT $colName, COUNT(*) as count
+                FROM $tableName
+                WHERE $colName IS NOT NULL AND $colName != ''
+                GROUP BY $colName
+                HAVING COUNT(*) > 1";
+    }
 }

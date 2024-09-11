@@ -3,6 +3,9 @@
 namespace App\Files;
 use Symphograph\Bicycle\DTO\AbstractList;
 use Symphograph\Bicycle\Errors\AppErr;
+use Symphograph\Bicycle\Files\FileDoc;
+use Symphograph\Bicycle\Files\FileDTO;
+use Symphograph\Bicycle\Files\FileIMG;
 
 class FileList extends AbstractList
 {

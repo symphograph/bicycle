@@ -2,11 +2,11 @@
 
 namespace Symphograph\Bicycle\Errors;
 
-class AppErr extends MyErrors
+class DelRestrictErr extends MyErrors
 {
     public function __construct(
-        string $message = 'App error',
-        string $pubMsg = 'Ошибка приложения',
+        string $message,
+        string $pubMsg = 'Объект используется. Нельзя удалить',
         int $httpStatus = 500
     )
     {

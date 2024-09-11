@@ -51,4 +51,18 @@ class TextHelper
         // Возвращение правильной формы слова из массива.
         return $wordForms[$formIndex];
     }
+
+    public static function mb_ucfirst($string, $encoding = "UTF-8", $onlyFirst = false): string
+    {
+        // Первый символ в верхний регистр
+        $firstChar = mb_strtoupper(mb_substr($string, 0, 1, $encoding), $encoding);
+        $restOfString = mb_substr($string, 1, null, $encoding);
+        if(!$onlyFirst) {
+            $restOfString = mb_strtolower($restOfString, $encoding);
+        }
+
+        return $firstChar . $restOfString;
+    }
+
+
 }

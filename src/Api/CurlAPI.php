@@ -70,4 +70,5 @@ class CurlAPI
         $response->httpStatus = $curl->httpStatusCode;
         return $response;
     }
+
 }

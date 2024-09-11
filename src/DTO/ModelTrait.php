@@ -7,12 +7,6 @@ use Symphograph\Bicycle\PDO\PutMode;
 trait ModelTrait
 {
     use BindTrait;
-    public static function byId(int $id): self|false
-    {
-        $parent = parent::byId($id);
-        if(!$parent) return false;
-        return self::byBind($parent);
-    }
 
     public static function byAccountID(int $accountId): self|false
     {
@@ -57,7 +51,8 @@ trait ModelTrait
         }
 
         $parent = parent::byBind($this);
-        $parent->putToDB($mode);
+        $parent->putDTOToDB($mode);
+        $this->bindSelf($parent);
 
         if(method_exists(self::class, 'afterPut')){
             $this->afterPut();

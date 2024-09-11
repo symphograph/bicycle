@@ -34,7 +34,7 @@ class Debug
                 <meta charset="utf-8">
                 <title>$title</title>
             </head>
-            <body style="color: white; background-color: #262525">
+            <body style="color: white; background-color: #18171B">
         HTML;
 
     }
@@ -47,13 +47,18 @@ class Debug
             . ' сек.';
 
         $this->printMemoryUsed();
-
-        echo "<br>Пиковое использование памяти: " . memory_get_peak_usage() . " байт";
+        $formattedNumber = $this->formatMemoryUsage(memory_get_peak_usage());
+        echo "<br>Пиковое использование памяти: " . $formattedNumber . " байт";
         echo '</body>';
     }
 
     public function printMemoryUsed(string $msg = 'Памяти использовано: '): void
     {
         echo "<br>$msg {$this->memoryUsed()} байт";
+    }
+
+    private function formatMemoryUsage(int $num): string
+    {
+        return number_format($num, 0, '', ' ');
     }
 }

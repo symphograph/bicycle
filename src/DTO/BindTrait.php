@@ -35,7 +35,7 @@ trait BindTrait
     {
         $list = [];
         foreach ($objects as $object){
-            $list[] = self::byBind($object);
+            $list[] = static::byBind($object);
         }
         return $list;
     }
@@ -43,5 +43,30 @@ trait BindTrait
     public function getAllProps(): array
     {
         return get_object_vars($this);
+    }
+
+    public function unsetEmptyProps(): void
+    {
+        foreach ($this as $k => $v) {
+            if(!empty($v)) continue;
+            unset($this->$k);
+        }
+    }
+
+    public function unsetAllProps(): void
+    {
+        foreach ($this as $k => $v) {
+            unset($this->$k);
+        }
+    }
+
+    public function bindEmptyValues(array|object $object): void
+    {
+        $object = (object) $object;
+        foreach ($object as $k => $v) {
+            if(!empty($this->$k)) continue;
+            if (empty($object->$k)) continue;
+            $this->$k = $object->$k;
+        }
     }
 }

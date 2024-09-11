@@ -124,7 +124,9 @@ readonly class Env
             $Env->vkSecrets->privateKey,
             $Env->vkSecrets->serviceKey,
             $Env->vkSecrets->callback,
-            $Env->vkSecrets->loginPageTitle ?? 'Вход'
+            $Env->vkSecrets->loginPageTitle ?? 'Вход',
+            $Env->vkSecrets->codeRedirect ?? '',
+            $Env->vkSecrets->longToken ?? ''
         );
     }
 
