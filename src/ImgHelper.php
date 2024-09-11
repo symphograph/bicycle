@@ -4,7 +4,6 @@ namespace Symphograph\Bicycle;
 
 class ImgHelper
 {
-
     public static function getExtension(string $filePath): false|string
     {
         return match (exif_imagetype($filePath)) {

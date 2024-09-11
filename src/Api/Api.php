@@ -8,7 +8,7 @@ class Api
     {
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_HEADER, 0);
-        curl_setopt($curl,CURLOPT_POST,1);
+        curl_setopt($curl, CURLOPT_POST, 1);
         curl_setopt($curl, CURLOPT_POSTFIELDS, $post);
         curl_setopt($curl, CURLOPT_FAILONERROR, 1);
         curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true); // allow redirects

@@ -8,7 +8,8 @@ readonly class YandexSecrets
         public string $clientId,
         public string $clientSecret,
         public string $callback,
-        public string $loginPageTitle
+        public string $loginPageTitle,
+        public string $suggestKey
     )
     {
     }

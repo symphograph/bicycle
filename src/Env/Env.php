@@ -137,7 +137,8 @@ readonly class Env
             $Env->yandexSecrets->clientId,
             $Env->yandexSecrets->clientSecret,
             $Env->yandexSecrets->callback,
-            $Env->vkSecrets->loginPageTitle ?? 'Вход'
+            $Env->vkSecrets->loginPageTitle ?? 'Вход',
+            $Env->yandexSecrets->suggestKey
         );
     }
 
