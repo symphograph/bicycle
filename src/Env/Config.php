@@ -4,6 +4,7 @@ namespace Symphograph\Bicycle\Env;
 
 use Symphograph\Bicycle\Env\Server\ServerEnv;
 use Symphograph\Bicycle\Errors\ConfigErr;
+use Symphograph\Bicycle\Errors\ValidationErr;
 
 
 class Config
@@ -57,6 +58,12 @@ class Config
     {
         if(!str_starts_with(ServerEnv::SCRIPT_NAME(), $path)){
             return;
+        }
+
+        if(str_starts_with(ServerEnv::SCRIPT_NAME(), '/api/')){
+            if (empty($_POST['method'])) {
+                throw new ValidationErr('method is empty');
+            }
         }
 
         if (!in_array(ServerEnv::REQUEST_METHOD(), $allowedMethods)) {
