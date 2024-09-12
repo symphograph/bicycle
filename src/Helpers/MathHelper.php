@@ -50,4 +50,5 @@ class MathHelper
         rsort($aspectRatio);
         return $aspectRatio;
     }
+
 }
