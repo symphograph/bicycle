@@ -35,6 +35,7 @@ trait DTOTrait
 
         $sql = "delete from $tableName where $colId = :$colId";
         $params = [$colId => $id];
+
         try{
             DB::qwe($sql, $params);
         } catch (PDOException $e) {

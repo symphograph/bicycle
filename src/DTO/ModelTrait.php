@@ -52,6 +52,7 @@ trait ModelTrait
 
         $parent = parent::byBind($this);
         $parent->putDTOToDB($mode);
+
         $this->bindSelf($parent);
 
         if(method_exists(self::class, 'afterPut')){
