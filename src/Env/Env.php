@@ -134,11 +134,11 @@ readonly class Env
     {
         $Env = self::getMyEnv();
         return new YandexSecrets(
-            $Env->yandexSecrets->clientId,
-            $Env->yandexSecrets->clientSecret,
-            $Env->yandexSecrets->callback,
+            $Env->yandexSecrets->clientId ?? '',
+            $Env->yandexSecrets->clientSecret ?? '',
+            $Env->yandexSecrets->callback ?? '',
             $Env->vkSecrets->loginPageTitle ?? 'Вход',
-            $Env->yandexSecrets->suggestKey
+            $Env->yandexSecrets->suggestKey ?? ''
         );
     }
 
