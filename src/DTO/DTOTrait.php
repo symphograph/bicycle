@@ -39,7 +39,7 @@ trait DTOTrait
         try{
             DB::qwe($sql, $params);
         } catch (PDOException $e) {
-            if(str_contains($e->getMessage(),'ON DELETE RESTRICT')){
+            if(str_contains($e->getMessage(),'ON DELETE RESTRICT') || str_contains($e->getMessage(),'foreign key constraint')){
                 throw new DelRestrictErr($e->getMessage());
             }
             throw $e;
