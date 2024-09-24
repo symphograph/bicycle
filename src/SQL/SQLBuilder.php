@@ -4,9 +4,8 @@ namespace Symphograph\Bicycle\SQL;
 
 use InvalidArgumentException;
 use ReflectionClass;
-use ReflectionProperty;
 use Symphograph\Bicycle\Errors\AppErr;
-use Symphograph\Bicycle\Helpers;
+use Symphograph\Bicycle\Helpers\Arr;
 use TypeError;
 
 class SQLBuilder
@@ -62,10 +61,10 @@ class SQLBuilder
             self::isDirection($direction)
                 or throw new TypeError('Invalid direction in OrderBy');
         }
-        if(!Helpers::isArrayPropsOfClass($cols, $className)){
+        if(!Arr::isArrayPropsOfClass($cols, $className)){
             throw new TypeError('orderBy is Not Props of Class');
         }
-        $arr = Helpers::arrayConcat($cols, $directions);
+        $arr = Arr::arrayConcat($cols, $directions);
 
         return implode(', ', $arr);
     }

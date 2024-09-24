@@ -7,10 +7,11 @@ trait BindTrait
     public function bindSelf(object|array $object): void
     {
         $object = (object) $object;
-        $vars = get_class_vars($this::class);
-        foreach ($vars as $k => $v) {
-            if (!isset($object->$k)) continue;
-            $this->$k = $object->$k;
+
+        foreach ($object as $property => $value) {
+            if (property_exists($this, $property)) {
+                $this->$property = $value;
+            }
         }
     }
 
@@ -69,4 +70,27 @@ trait BindTrait
             $this->$k = $object->$k;
         }
     }
+
+    private function isPropExist(object $object, string $property): bool
+    {
+        if (!property_exists($object, $property)) {
+            return false; // Свойства нет в объекте
+        }
+
+        $refObject = new \ReflectionObject($object);
+        if (!$refObject->hasProperty($property)) {
+            return false;
+        }
+
+        $prop = $refObject->getProperty($property);
+
+        // Проверка инициализации, применим только если свойство публичное
+        if ($prop->isPublic()) {
+            return $prop->isInitialized($object);
+        }
+
+        // Для приватных/защищенных свойств возврат false, чтобы избежать ошибок доступа
+        return false;
+    }
+
 }

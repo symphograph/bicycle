@@ -2,7 +2,6 @@
 
 namespace Symphograph\Bicycle\Logs;
 
-use JsonException;
 use Symphograph\Bicycle\Env\Server\ServerEnv;
 use Symphograph\Bicycle\FileHelper;
 use Symphograph\Bicycle\HTTP\Agent;

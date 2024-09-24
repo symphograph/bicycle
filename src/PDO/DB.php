@@ -8,7 +8,7 @@ use PDO;
 use PDOStatement;
 use Symphograph\Bicycle\ConnectDB;
 use Symphograph\Bicycle\Errors\MyErrors;
-use Symphograph\Bicycle\Helpers;
+use Symphograph\Bicycle\Helpers\Arr;
 use TypeError;
 
 /**
@@ -416,7 +416,7 @@ class DB
 
     public static function implodeIntIn(array $ids): string
     {
-        Helpers::isArrayIntList($ids)
+        Arr::isArrayIntList($ids)
         or throw new TypeError('array is not ints');
         return '(' . implode(',', $ids) . ')';
     }

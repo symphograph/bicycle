@@ -53,20 +53,6 @@ class Helpers
         return basename(str_replace('\\', '/', $class));
     }
 
-    /**
-     * Принимает массив объектов и меняет его ключи на значения указанного поля
-     */
-    public static function colAsKey(array $List, string $key): array|bool
-    {
-        $arr = [];
-        foreach ($List as $Object){
-            if(!isset($Object->$key))
-                return false;
-            $arr[$Object->$key] = $Object;
-        }
-        return $arr;
-    }
-
     public static function sanitizeName(string|null $str): string
     {
         if(empty($str)) return '';
@@ -156,20 +142,6 @@ class Helpers
         return round(($arr[$middle - 1] + $arr[$middle]) / 2);
     }
 
-    public static function isArrayIntList(array $arr): bool
-    {
-        return array_is_list($arr) && self::isArrayInt($arr);
-    }
-
-    public static function isArrayInt(array $arr): bool
-    {
-        foreach ($arr as $a){
-            if(!is_int($a))
-                return false;
-        }
-        return true;
-    }
-
     /**
      * @return bool
      * Return true if $array is string[]
@@ -180,31 +152,6 @@ class Helpers
             if(!is_string($value)) return false;
         }
         return true;
-    }
-
-    /**
-     * @param string[] $array
-     * @param string $className
-     * @return bool
-     */
-    public static function isArrayPropsOfClass(array $array, string $className): bool
-    {
-        if(!self::isArrayString($array)){
-            throw new TypeError('$array is not string[]');
-        }
-        $classVars = get_class_vars($className);
-        foreach ($array as $var){
-            if(!array_key_exists($var, $classVars)){
-                $className = self::class;
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public static function isMultiArray(array $array): bool
-    {
-        return !!(count($array) - count($array, COUNT_RECURSIVE));
     }
 
     public static function isIntInRange($value, int $min, int $max): bool
@@ -231,32 +178,6 @@ class Helpers
     {
         $elements = array_filter($Array, fn($el) => $el->$colName === $needle);
         return array_shift($elements);
-    }
-
-    public static function arrayConcat(array $array1, array $array2, string $glue = ' '): array
-    {
-        if(!self::isArrayString($array1) || !self::isArrayString($array2)){
-            throw new TypeError('invalid type of array values');
-        }
-        if(!array_is_list($array1) || !array_is_list($array2)){
-            throw new TypeError('array must be a list');
-        }
-
-        $master = $array1;
-        $slave = $array2;
-        if(count($array1) < count($array2)) {
-            $master = $array2;
-            $slave = $array1;
-        }
-
-        $result = [];
-        foreach ($master as $k => $value){
-            $result[] =
-                isset($slave[$k])
-                ? $value . $glue . $slave[$k]
-                : $value;
-        }
-        return $result;
     }
 
     /**

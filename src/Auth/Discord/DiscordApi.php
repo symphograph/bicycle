@@ -2,12 +2,9 @@
 
 namespace Symphograph\Bicycle\Auth\Discord;
 
-use App\Api;
-use App\AuthCallBack;
-use Symphograph\Bicycle\Auth\Discord\DiscordUser;
+
 use Symphograph\Bicycle\Env\Config;
 use Symphograph\Bicycle\Env\Env;
-use App\User\Sess;
 use JetBrains\PhpStorm\NoReturn;
 use Symphograph\Bicycle\Env\Server\ServerEnv;
 use Symphograph\Bicycle\HTTP\Request;
@@ -15,10 +12,10 @@ use Symphograph\Bicycle\JsonDecoder;
 
 class DiscordApi
 {
-    const authorizeURL = 'https://discord.com/api/oauth2/authorize';
-    const tokenURL = 'https://discord.com/api/oauth2/token';
-    const apiURLBase = 'https://discord.com/api/users/@me';
-    const revokeURL = 'https://discord.com/api/oauth2/token/revoke';
+    const string authorizeURL = 'https://discord.com/api/oauth2/authorize';
+    const string tokenURL = 'https://discord.com/api/oauth2/token';
+    const string apiURLBase = 'https://discord.com/api/users/@me';
+    const string revokeURL = 'https://discord.com/api/oauth2/token/revoke';
 
 
     #[NoReturn] public static function login(): void

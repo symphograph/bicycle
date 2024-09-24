@@ -6,6 +6,7 @@ namespace Symphograph\Bicycle;
 use PDO;
 use PDOStatement;
 use Symphograph\Bicycle\Env\Server\ServerEnv;
+use Symphograph\Bicycle\Helpers\Arr;
 use TypeError;
 
 
@@ -271,7 +272,7 @@ class DB_old
 
     public static function implodeIntIn(array $ids): string
     {
-        Helpers::isArrayIntList($ids)
+        Arr::isArrayIntList($ids)
         or throw new TypeError('array is not ints');
         return '(' . implode(',', $ids) . ')';
     }

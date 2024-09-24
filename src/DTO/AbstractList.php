@@ -7,7 +7,7 @@ namespace Symphograph\Bicycle\DTO;
 use PDO;
 
 use Symphograph\Bicycle\Errors\AppErr;
-use Symphograph\Bicycle\Helpers\ArrayHelper;
+use Symphograph\Bicycle\Helpers\Arr;
 use Symphograph\Bicycle\PDO\DB;
 use Symphograph\Bicycle\SQL\SQLBuilder;
 
@@ -130,7 +130,7 @@ abstract class AbstractList implements ListITF, \Iterator
 
     public function sortByCol(array $args = ['votes' => 'desc']): static
     {
-        $this->list = ArrayHelper::sortMultiArrayByProp($this->list, $args);
+        $this->list = Arr::sortMultiArrayByProp($this->list, $args);
         return $this;
     }
 
@@ -197,7 +197,7 @@ abstract class AbstractList implements ListITF, \Iterator
 
     public function filter(string $colName, float|int|string $colValue): static
     {
-        $this->list = ArrayHelper::filter($this->list, $colName, $colValue);
+        $this->list = Arr::filter($this->list, $colName, $colValue);
         return $this;
     }
     
