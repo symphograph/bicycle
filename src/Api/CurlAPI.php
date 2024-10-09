@@ -15,17 +15,13 @@ use Throwable;
 
 class CurlAPI
 {
-    private string $url = '';
     protected string $assessToken = '';
 
     public function __construct(
-        protected string $apiName,
-        protected string $path,
+        protected string $url,
         protected array  $params,
     )
     {
-        $domain = ENV::getAPIDomains()[$this->apiName];
-        $this->url = "https://$domain$path";
         $this->assessToken = CurlToken::create([1]);
     }
 
@@ -54,7 +50,7 @@ class CurlAPI
         }
 
         if ($curl->error) {
-            $msg = $curl->errorMessage . ' ' . ($curl->response->error ?? '');
+            $msg = $curl->errorMessage . ' ' . ($curl->response->error ?? '| empty msg');
             throw new CurlErr(message: $msg , httpStatus: $curl->httpStatusCode);
         }
 

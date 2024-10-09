@@ -8,14 +8,14 @@ namespace Symphograph\Bicycle\Auth\Mailru;
 use JetBrains\PhpStorm\NoReturn;
 use Symphograph\Bicycle\Api\Api;
 use Symphograph\Bicycle\Env\Server\ServerEnv;
-use Symphograph\Bicycle\Errors\AuthErr;
+use Symphograph\Bicycle\Errors\Auth\AuthErr;
 
 class OAuthMailRu
 {
     const authUrl  = 'https://oauth.mail.ru/login';
     const tokenUrl = 'https://oauth.mail.ru/token';
     const userUrl  = 'https://oauth.mail.ru/userinfo';
-    const callback = '/auth/mailru/callback.php';
+    const callback = '/tauth/login/mailru/callback.php';
 
     private static string    $token;
     public static string|int $user_id;

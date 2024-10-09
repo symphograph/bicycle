@@ -3,11 +3,10 @@
 namespace Symphograph\Bicycle\Auth\Mailru;
 
 
-use Symphograph\Bicycle\ITF\SocialAccountITF;
-use Symphograph\Bicycle\PDO\DB;
 use Symphograph\Bicycle\DTO\DTOTrait;
 use Symphograph\Bicycle\DTO\SocialAccountDTO;
-use Symphograph\Bicycle\Errors\AuthErr;
+use Symphograph\Bicycle\Errors\Auth\AuthErr;
+use Symphograph\Bicycle\PDO\DB;
 
 class MailruUser extends SocialAccountDTO
 {
@@ -25,12 +24,6 @@ class MailruUser extends SocialAccountDTO
     public ?string $email;
     public ?string $birthday;
     public ?string $image;
-
-
-    public static function checkClass($Object): self
-    {
-        return $Object;
-    }
 
     public static function byEmail(string $email): self|bool
     {

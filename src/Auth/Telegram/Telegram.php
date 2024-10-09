@@ -2,7 +2,8 @@
 namespace Symphograph\Bicycle\Auth\Telegram;
 use Symphograph\Bicycle\Env\Env;
 use Symphograph\Bicycle\Env\Server\ServerEnv;
-use Symphograph\Bicycle\Errors\AuthErr;
+use Symphograph\Bicycle\Env\Services\Client;
+use Symphograph\Bicycle\Errors\Auth\AuthErr;
 
 class Telegram
 {
@@ -135,13 +136,16 @@ class Telegram
     {
         $serverName = ServerEnv::SERVER_NAME();
         $botName = Env::getTelegramSecrets()->bot_name;
+        $fold = Env::isTest() ? 'tauth' : 'auth';
+        $url = "https://$serverName/$fold/$callbackUrl";
+
         return <<<HTML
             <div style="padding: 3em">
                 <script type="text/javascript" async 
                     src="https://telegram.org/js/telegram-widget.js?15" 
                     data-telegram-login="$botName" 
                     data-size="large" 
-                    data-auth-url="https://$serverName/$callbackUrl" 
+                    data-auth-url="$url" 
                     data-request-access="write">
                 </script>
             </div>

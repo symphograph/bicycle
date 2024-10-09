@@ -2,7 +2,9 @@
 
 namespace Symphograph\Bicycle\Env;
 
+use stdClass;
 use Symphograph\Bicycle\Env\Server\ServerEnv;
+use Symphograph\Bicycle\Errors\AppErr;
 
 readonly class Env
 {
@@ -14,7 +16,7 @@ readonly class Env
     private bool   $debugMode;
     private int    $adminAccountId;
     private string $frontendDomain;
-    private object $telegram;
+    private array  $telegram;
     private object $mailruSecrets;
     private object $vkSecrets;
     private object $yandexSecrets;
@@ -28,6 +30,11 @@ readonly class Env
     private array  $apiDomains;
     private int    $timeZone;
     private string $recipientEmail;
+    private array  $services;
+    private array  $clients;
+    private bool   $isTest;
+    private array $powerManagers;
+    private array $curlLocations;
 
     public function __construct()
     {
@@ -108,11 +115,12 @@ readonly class Env
     public static function getTelegramSecrets(): TelegramSecrets
     {
         $Env = self::getMyEnv();
+        $tg = $Env->telegram[ServerEnv::SERVER_NAME()];
         return new TelegramSecrets(
-            $Env->telegram->token,
-            $Env->telegram->bot_name,
-            $Env->telegram->callback,
-            $Env->telegram->loginPageTitle ?? 'Вход'
+            $tg->token,
+            $tg->bot_name,
+            $tg->callback,
+            $tg->loginPageTitle ?? 'Вход'
         );
     }
 
@@ -213,6 +221,39 @@ readonly class Env
     {
         $Env = self::getMyEnv();
         return $Env->serverName;
+    }
+
+    /**
+     * @return stdClass[]
+     */
+    public static function getServices(): array
+    {
+        $Env = self::getMyEnv();
+        return $Env->services;
+    }
+
+    /**
+     * @return stdClass[]
+     */
+    public static function getClients(): array
+    {
+        $Env = self::getMyEnv();
+        return $Env->clients;
+    }
+
+    public static function getPowerServiceName(): string
+    {
+        $Env = self::getMyEnv();
+        if(empty($Env->powerManagers)) {
+            throw new AppErr('powerManagers not set');
+        }
+        return $Env->powerManagers[ServerEnv::SERVER_NAME()];
+    }
+
+    public static function isTest(): bool
+    {
+        $Env = self::getMyEnv();
+        return $Env->isTest;
     }
 
 }

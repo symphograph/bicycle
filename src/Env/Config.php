@@ -60,7 +60,7 @@ class Config
             return;
         }
 
-        if(str_starts_with(ServerEnv::SCRIPT_NAME(), '/api/')){
+        if(self::isApi()){
             if (empty($_POST['method'])) {
                 throw new ValidationErr('method is empty');
             }
@@ -90,7 +90,11 @@ class Config
 
     public static function isApi(): bool
     {
-        return str_starts_with(ServerEnv::SCRIPT_NAME(), '/api/');
+        $sn = ServerEnv::SCRIPT_NAME();
+        return str_starts_with($sn, '/api/')
+            || str_starts_with($sn, '/epoint/')
+            || str_starts_with($sn, '/tapi/api/')
+            || str_starts_with($sn, '/tauth/api/');
     }
 
     public static function isCurl(): bool
@@ -105,21 +109,27 @@ class Config
 
     protected static function checkOrigin(): void
     {
-        if(!self::isApi() || !self::isCurl()){
+        if(!self::isApi() && !self::isCurl()){
             return;
         }
 
         self::isClientOrigin()
-        or throw new ConfigErr('Unknown domain', 'Unknown domain', 401);
+        or throw new ConfigErr('Unknown origin', 'Unknown domain', 401);
     }
 
     public static function isClientOrigin(): bool
     {
-        if (empty(ServerEnv::HTTP_ORIGIN())) {
+        $origin = ServerEnv::HTTP_ORIGIN();
+
+        if (empty($origin)) {
             throw new ConfigErr('emptyOrigin', 'emptyOrigin', 401);
         }
-        return in_array(ServerEnv::HTTP_ORIGIN(), Env::getClientDomains('https://'))
-            || in_array(ServerEnv::HTTP_ORIGIN(), Env::getAPIDomains('https://'));
+
+        $clientDomains = Env::getClientDomains('https://');
+        $apiDomains = Env::getAPIDomains('https://');
+
+        return in_array($origin, $clientDomains)
+            || in_array($origin, $apiDomains);
     }
 
     public static function postHandler(): void

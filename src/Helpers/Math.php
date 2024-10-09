@@ -2,7 +2,7 @@
 
 namespace Symphograph\Bicycle\Helpers;
 
-class MathHelper
+class Math
 {
 
     /**
@@ -51,4 +51,18 @@ class MathHelper
         return $aspectRatio;
     }
 
+    public static function median(array $arr): int|float|bool
+    {
+
+        if (!($count = count($arr))) {
+            return false;
+        }
+
+        sort($arr);
+        $middle = floor($count / 2);
+        if ($count % 2){
+            return round($arr[$middle]);
+        }
+        return round(($arr[$middle - 1] + $arr[$middle]) / 2);
+    }
 }

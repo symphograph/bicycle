@@ -22,7 +22,7 @@ class DiscordApi
     {
         $state = bin2hex(random_bytes(12));
         setcookie('discordState', $state,
-            Config::cookOpts(expires: time() + 600, path: '/auth/', samesite: 'None')
+            Config::cookOpts(expires: time() + 600, samesite: 'None')
         );
         $params = [
             'client_id'     => Env::getDiscordSecrets()->clientId,
@@ -92,7 +92,8 @@ class DiscordApi
 
     private static function getRedirectUrl(): string
     {
+        $fold = str_starts_with($_SERVER['SCRIPT_NAME'], '/tauth/') ? 'tauth' : 'auth';
         $serverName = ServerEnv::SERVER_NAME();
-        return "https://$serverName/auth/discord/callback.php";
+        return "https://$serverName/$fold/login/discord/callback.php";
     }
 }

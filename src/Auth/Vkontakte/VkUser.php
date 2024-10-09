@@ -6,7 +6,7 @@ namespace Symphograph\Bicycle\Auth\Vkontakte;
 use Symphograph\Bicycle\DTO\DTOTrait;
 use Symphograph\Bicycle\DTO\SocialAccountDTO;
 use Symphograph\Bicycle\Env\Env;
-use Symphograph\Bicycle\Errors\AuthErr;
+use Symphograph\Bicycle\Errors\Auth\AuthErr;
 use Symphograph\Bicycle\PDO\DB;
 
 class VkUser extends SocialAccountDTO

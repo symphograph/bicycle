@@ -13,7 +13,7 @@ use Lcobucci\JWT\Validation\Validator;
 use Symphograph\Bicycle\Env\Env;
 use Symphograph\Bicycle\Env\Server\ServerEnv;
 use Symphograph\Bicycle\Errors\AccessErr;
-use Symphograph\Bicycle\Errors\AuthErr;
+use Symphograph\Bicycle\Errors\Auth\AuthErr;
 use Throwable;
 
 
@@ -110,8 +110,8 @@ class Token
             !self::isExpired($token, $ignoreExpire),
             => throw new AuthErr('Token is Expired'),
 
-            $token->hasBeenIssuedBy(Env::getJWT()->issuer)
-            => throw new AuthErr('Token has an unexpected Issuer'),
+            $token->hasBeenIssuedBy(/*Env::getJWT()->issuer*/ $_SERVER['SERVER_NAME'])
+            => throw new AuthErr("Token has an unexpected Issuer: {$_SERVER['SERVER_NAME']}"),
 
             $validator->validate($token, new PermittedFor(ServerEnv::SERVER_NAME()))
             => throw new AuthErr('Invalid token audience'),

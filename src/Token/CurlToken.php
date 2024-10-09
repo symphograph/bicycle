@@ -9,8 +9,6 @@ class CurlToken
 {
     public static function create(
         array  $powers = [],
-        string $authType = 'server',
-        string $ussuer = ''
     ): string
     {
         $jwtEnv = Env::getJWT();
@@ -24,8 +22,8 @@ class CurlToken
             aud: $audience,
             expireDuration: '+1 min',
             powers: $powers,
-            authType: $authType,
-            iss: $jwtEnv->issuer
+            authType: 'server',
+            iss: ServerEnv::SERVER_NAME()
         );
         return $Token->jwt;
     }
