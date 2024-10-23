@@ -17,7 +17,7 @@ class VKAuth
         $vk = Env::getVKSecrets();
         $oauth = new VKOAuth();
 
-        $client_id = $vk->appId;
+        $client_id = $vk->getAppId();
         $redirect_uri = "https://$_SERVER[SERVER_NAME]/$vk->codeRedirect";
         $display = VKOAuthDisplay::PAGE;
         $scope = array(VKOAuthUserScope::VIDEO, VKOAuthUserScope::GROUPS, VKOAuthUserScope::OFFLINE);

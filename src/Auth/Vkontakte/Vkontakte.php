@@ -7,17 +7,14 @@ use Symphograph\Bicycle\Env\Server\ServerEnv;
 
 class Vkontakte
 {
-    public static function widgetPage(): string
+    public static function widgetPage(string $title, int $appId, string $callbackUrl): string
     {
-
-        $secrets = Env::getVKSecrets();
-        $url = 'https://' . ServerEnv::SERVER_NAME() . $secrets->callback;
         return <<<HTML
             <!DOCTYPE html>
             <html lang="ru">
                 <head>
                     <meta charset="utf-8">
-                    <title>$secrets->loginPageTitle</title>
+                    <title>$title</title>
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <style>
                     #vkAuthArea {
@@ -42,13 +39,13 @@ class Vkontakte
                 <body>
                     <script type="text/javascript">
                         VK.init({
-                        apiId: $secrets->appId
+                        apiId: $appId
                         })
                     </script>
                     <div id="vkAuthArea"><div id="vkAuth"></div></div>              
                     <script type="text/javascript">
                          VK.Widgets.Auth('vkAuth', {
-                             authUrl: "$url",
+                             authUrl: "$callbackUrl",
                              width: '100%'
                          });
                     </script>

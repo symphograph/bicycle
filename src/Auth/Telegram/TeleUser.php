@@ -20,8 +20,7 @@ class TeleUser extends TeleUserDTO
 
     public function initData(): void
     {
-        $Telegram = new Telegram();
-        $this->hash = $Telegram->getHash($this->getAllProps());
+        $this->hash = Telegram::getHash($this->getAllProps());
     }
 
 }

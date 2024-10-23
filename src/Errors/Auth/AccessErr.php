@@ -1,6 +1,8 @@
 <?php
 
-namespace Symphograph\Bicycle\Errors;
+namespace Symphograph\Bicycle\Errors\Auth;
+
+use Symphograph\Bicycle\Errors\MyErrors;
 
 class AccessErr extends MyErrors
 {

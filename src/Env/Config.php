@@ -3,6 +3,8 @@
 namespace Symphograph\Bicycle\Env;
 
 use Symphograph\Bicycle\Env\Server\ServerEnv;
+use Symphograph\Bicycle\Env\Services\Client;
+use Symphograph\Bicycle\Errors\Auth\InvalidOriginErr;
 use Symphograph\Bicycle\Errors\ConfigErr;
 use Symphograph\Bicycle\Errors\ValidationErr;
 
@@ -91,10 +93,7 @@ class Config
     public static function isApi(): bool
     {
         $sn = ServerEnv::SCRIPT_NAME();
-        return str_starts_with($sn, '/api/')
-            || str_starts_with($sn, '/epoint/')
-            || str_starts_with($sn, '/tapi/api/')
-            || str_starts_with($sn, '/tauth/api/');
+        return str_starts_with($sn, '/epoint/');
     }
 
     public static function isCurl(): bool
@@ -113,23 +112,7 @@ class Config
             return;
         }
 
-        self::isClientOrigin()
-        or throw new ConfigErr('Unknown origin', 'Unknown domain', 401);
-    }
-
-    public static function isClientOrigin(): bool
-    {
-        $origin = ServerEnv::HTTP_ORIGIN();
-
-        if (empty($origin)) {
-            throw new ConfigErr('emptyOrigin', 'emptyOrigin', 401);
-        }
-
-        $clientDomains = Env::getClientDomains('https://');
-        $apiDomains = Env::getAPIDomains('https://');
-
-        return in_array($origin, $clientDomains)
-            || in_array($origin, $apiDomains);
+        Client::byOrigin();
     }
 
     public static function postHandler(): void

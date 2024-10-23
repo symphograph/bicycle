@@ -12,7 +12,7 @@ use Lcobucci\JWT\Validation\Constraint\{PermittedFor, RelatedTo, SignedWith};
 use Lcobucci\JWT\Validation\Validator;
 use Symphograph\Bicycle\Env\Env;
 use Symphograph\Bicycle\Env\Server\ServerEnv;
-use Symphograph\Bicycle\Errors\AccessErr;
+use Symphograph\Bicycle\Errors\Auth\AccessErr;
 use Symphograph\Bicycle\Errors\Auth\AuthErr;
 use Throwable;
 

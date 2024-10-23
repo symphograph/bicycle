@@ -2,15 +2,23 @@
 
 namespace Symphograph\Bicycle\DTO;
 
+use Symphograph\Bicycle\Errors\AppErr;
 use Symphograph\Bicycle\PDO\DB;
 
 class SortManager
 {
     private string $tableName;
+    private ?string $colName;
+    private ?int $colVal;
 
-    public function __construct(string $tableName)
+    public function __construct(string $tableName, ?string $colName = null, ?int $colVal = null)
     {
         $this->tableName = $tableName;
+        $this->colName = $colName;
+        $this->colVal = $colVal;
+        if(!empty($colName) && empty($colVal)) {
+            throw new AppErr("Col Value can't be empty");
+        }
     }
 
     public function moveUp(int $id, int $sortVal): void
@@ -51,14 +59,34 @@ class SortManager
 
     private function getPrev(int $sortVal): array|false
     {
-        $sql = "SELECT * FROM {$this->tableName} WHERE sortVal = :sortVal";
-        return DB::qwe($sql, ['sortVal' => $sortVal - 1])->fetch();
+        if(empty($this->colName)) {
+            $sql = "SELECT * FROM {$this->tableName} WHERE sortVal = :sortVal";
+            $params = ['sortVal' => $sortVal - 1];
+        } elseif(!empty($this->colVal)) {
+            $sql = "
+            SELECT * FROM {$this->tableName} 
+             WHERE sortVal = :sortVal
+             AND {$this->colName} = :colVal";
+            $params = ['sortVal' => $sortVal - 1, 'colVal' => $this->colVal];
+        }
+        return DB::qwe($sql, $params)->fetch();
     }
 
     private function getNext(int $sortVal): array|false
     {
-        $sql = "SELECT * FROM {$this->tableName} WHERE sortVal = :sortVal";
-        return DB::qwe($sql, ['sortVal' => $sortVal + 1])->fetch();
+        if(empty($this->colName)) {
+            $sql = "SELECT * FROM {$this->tableName} WHERE sortVal = :sortVal";
+            $params = ['sortVal' => $sortVal + 1];
+
+        } elseif(!empty($this->colVal)) {
+            $sql = "
+            SELECT * FROM {$this->tableName} 
+             WHERE sortVal = :sortVal
+             AND {$this->colName} = :colVal";
+            $params = ['sortVal' => $sortVal + 1, 'colVal' => $this->colVal];
+        }
+        return DB::qwe($sql, $params)->fetch();
+
     }
 
     private function updateSortVal(int $id, int $newSortVal): void
@@ -69,13 +97,21 @@ class SortManager
 
     private function reorder(): void
     {
-        $sql = "SELECT id FROM {$this->tableName} ORDER BY sortVal";
-        $rows = DB::qwe($sql)->fetchAll();
+        if(empty($this->colName)) {
+            $sql = "SELECT id FROM {$this->tableName} ORDER BY sortVal";
+            $rows = DB::qwe($sql)->fetchAll();
+        }elseif(!empty($this->colVal)){
+            $sql = "SELECT id FROM {$this->tableName} WHERE {$this->colName} = :colVal ORDER BY sortVal";
+            $rows = DB::qwe($sql, ['colVal' => $this->colVal])->fetchAll();
+        }
+
+
         $sortVal = 1;
 
         foreach ($rows as $row) {
-            $sql = "UPDATE {$this->tableName} SET sortVal = :sortVal WHERE id = :id";
-            DB::qwe($sql, ['sortVal' => $sortVal++, 'id' => $row['id']]);
+            $this->updateSortVal($row['id'], $sortVal++);
+            //$sql = "UPDATE {$this->tableName} SET sortVal = :sortVal WHERE id = :id";
+            //DB::qwe($sql, ['sortVal' => $sortVal++, 'id' => $row['id']]);
         }
     }
 }

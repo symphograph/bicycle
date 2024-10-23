@@ -45,6 +45,10 @@ abstract class AbstractList implements ListITF, \Iterator
     {
         $List = new static();
         $className = static::getItemClass();
+        if(!method_exists($className, 'byJoin')) {
+            throw new AppErr("class $className has not byJoin() method");
+        }
+
         $qwe = DB::qwe($sql, $params);
         $rows = $qwe->fetchAll();
         foreach ($rows as $item) {
@@ -56,6 +60,9 @@ abstract class AbstractList implements ListITF, \Iterator
     public static function byBind(array $data): static
     {
         $className = static::getItemClass();
+        if(!method_exists($className, 'byBind')) {
+            throw new AppErr("class $className has not byBind() method");
+        }
         $list = [];
         foreach ($data as $item) {
             $list[] = $className::byBind($item);
@@ -248,5 +255,21 @@ abstract class AbstractList implements ListITF, \Iterator
     {
         $className = static::getItemClass();
         return $className::maxId;
+    }
+
+    /**
+     * @param int $id
+     * @return object|null
+     */
+    public function elById(int $id): ?object
+    {
+        $arr = Arr::filter($this->list, 'id', $id);
+        $arr = array_values($arr);
+        return $arr[0] ?? null;
+    }
+    
+    public function elsByProps(array $prop): ?object
+    {
+        
     }
 }

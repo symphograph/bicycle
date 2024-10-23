@@ -7,7 +7,7 @@ use TypeError;
 
 class Arr
 {
-    public static function filter(array $Array, string $elName, string|int|float|bool $elValue, int $len = 0): array
+    public static function filter(array $Array, string $propName, string|int|float|bool $propValue, int $len = 0): array
     {
         $elements = array_filter($Array, fn($el) => $el->$elName === $elValue);
         if($len === 0) {

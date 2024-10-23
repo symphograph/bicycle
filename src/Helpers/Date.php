@@ -4,12 +4,13 @@ namespace Symphograph\Bicycle\Helpers;
 
 use DateTime;
 
-class DateTimeHelper
+class Date
 {
     const array formats = [
         'Y-m-d',
         'd.m.Y',
         'Y-m-d H:i:s',
+        'Y-m-d H:i',
         'd.m.Y H:i',
         'd-m-Y',
         'Y/m/d',
@@ -17,6 +18,7 @@ class DateTimeHelper
         'Y.m.d',
         'Ymd',
         'H:i:s',
+        'i:s',
         'Y-m-d H:i:sP',
         'Y-m-d H:i:sO',
         'Y-m-d H:i:s.u',

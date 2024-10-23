@@ -3,6 +3,11 @@
 namespace Symphograph\Bicycle\Env;
 
 use stdClass;
+use Symphograph\Bicycle\Auth\Discord\DiscordSecrets;
+use Symphograph\Bicycle\Auth\Mailru\MailruSecrets;
+use Symphograph\Bicycle\Auth\Telegram\TelegramSecrets;
+use Symphograph\Bicycle\Auth\Vkontakte\VKSecrets;
+use Symphograph\Bicycle\Auth\Yandex\YandexSecrets;
 use Symphograph\Bicycle\Env\Server\ServerEnv;
 use Symphograph\Bicycle\Errors\AppErr;
 
@@ -25,9 +30,6 @@ readonly class Env
     private string $apiKey;
     private string $tokenSecret;
     private object $jwt;
-    private array  $clientDomains;
-    private array  $clientGroups;
-    private array  $apiDomains;
     private int    $timeZone;
     private string $recipientEmail;
     private array  $services;
@@ -118,9 +120,7 @@ readonly class Env
         $tg = $Env->telegram[ServerEnv::SERVER_NAME()];
         return new TelegramSecrets(
             $tg->token,
-            $tg->bot_name,
-            $tg->callback,
-            $tg->loginPageTitle ?? 'Вход'
+            $tg->bot_name
         );
     }
 
@@ -172,37 +172,6 @@ readonly class Env
     {
         $Env = self::getMyEnv();
         return $Env->jwt;
-    }
-
-    public static function getClientDomains(?string $protocol = null): array
-    {
-        $Env = self::getMyEnv();
-        if (empty($protocol)) {
-            return $Env->clientDomains;
-        }
-        return array_map(
-            fn($var) => $protocol . $var,
-            $Env->clientDomains
-        );
-    }
-
-    public static function getClientGroups(): array
-    {
-        $Env = self::getMyEnv();
-        return $Env->clientGroups;
-    }
-
-    public static function getAPIDomains(?string $protocol = null): array
-    {
-        $Env = self::getMyEnv();
-        if (empty($protocol)) {
-            return $Env->apiDomains;
-        }
-
-        return array_map(
-            fn($var) => $protocol . $var,
-            $Env->apiDomains
-        );
     }
 
     public static function getTimeZone(): int

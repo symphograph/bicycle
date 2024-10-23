@@ -7,18 +7,10 @@ use Symphograph\Bicycle\Errors\Auth\AuthErr;
 
 class Telegram
 {
-
-    private string  $token    = '';
-    private string  $bot_name = '';
     public string   $err      = '';
     public TeleUser $TeleUser;
 
-    public function __construct()
-    {
-        $Secrets = Env::getTelegramSecrets();
-        $this->token = $Secrets->token ?? '';
-        $this->bot_name = $Secrets->bot_name ?? '';
-    }
+    public function __construct(){}
 
     public static function auth() : TeleUser|bool
     {
@@ -33,16 +25,6 @@ class Telegram
         }
 
         return TeleUser::byBind($auth_data);
-    }
-
-    public function getToken()
-    {
-        return $this->token;
-    }
-
-    public function getBotName()
-    {
-        return $this->bot_name;
     }
 
     public function checkTelegramAuthorization() : array|bool
@@ -88,7 +70,7 @@ class Telegram
             return false;
         }
 
-        $hash = $this->getHash($auth_data);
+        $hash = self::getHash($auth_data);
 
         if(strcmp($hash, $check_hash) !== 0) {
             $this->err = 'Data is NOT from Telegram';
@@ -97,15 +79,17 @@ class Telegram
         return true;
     }
 
-    public function getHash(array $TeleUserProps): string
+    public static function getHash(array $TeleUserProps): string
     {
+        $token = Env::getTelegramSecrets()->getKey();
+
         $data_check_arr = [];
         foreach ($TeleUserProps as $key => $value) {
             $data_check_arr[] = $key . '=' . $value;
         }
         sort($data_check_arr);
         $data_check_string = implode("\n", $data_check_arr);
-        $secret_key        = hash('sha256', $this->token, true);
+        $secret_key        = hash('sha256', $token, true);
         $hash              = hash_hmac('sha256', $data_check_string, $secret_key);
         return $hash;
     }
@@ -116,9 +100,9 @@ class Telegram
         return setcookie('tg_user', $auth_data_json);
     }
 
-    public static function widgetPage(string $title, string $callbackUrl): string
+    public static function widgetPage(string $title, string $botName, string $callbackUrl): string
     {
-        $script = self::widgetScript($callbackUrl);
+        $script = self::widgetScript($botName, $callbackUrl);
         return <<<HTML
             <!DOCTYPE html>
             <html lang="ru">
@@ -132,20 +116,17 @@ class Telegram
         HTML;
     }
 
-    public static function widgetScript(string $callbackUrl): string
+    private static function widgetScript(string $botName, string $callbackUrl): string
     {
-        $serverName = ServerEnv::SERVER_NAME();
-        $botName = Env::getTelegramSecrets()->bot_name;
-        $fold = Env::isTest() ? 'tauth' : 'auth';
-        $url = "https://$serverName/$fold/$callbackUrl";
+        $url = 'https://telegram.org/js/telegram-widget.js?15';
 
         return <<<HTML
             <div style="padding: 3em">
                 <script type="text/javascript" async 
-                    src="https://telegram.org/js/telegram-widget.js?15" 
+                    src="$url" 
                     data-telegram-login="$botName" 
                     data-size="large" 
-                    data-auth-url="$url" 
+                    data-auth-url="$callbackUrl" 
                     data-request-access="write">
                 </script>
             </div>

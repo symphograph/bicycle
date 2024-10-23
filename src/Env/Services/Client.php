@@ -4,7 +4,7 @@ namespace Symphograph\Bicycle\Env\Services;
 
 use Symphograph\Bicycle\Env\Env;
 use Symphograph\Bicycle\Env\Server\ServerEnv;
-use Symphograph\Bicycle\Errors\AccessErr;
+use Symphograph\Bicycle\Errors\Auth\AccessErr;
 use Symphograph\Bicycle\Errors\Auth\EmptyOriginErr;
 use Symphograph\Bicycle\Errors\Auth\InvalidOriginErr;
 use Symphograph\Bicycle\Token\Token;
