@@ -10,8 +10,14 @@ class SortManager
     private string $tableName;
     private ?string $colName;
     private ?int $colVal;
+    private string $colIdName = 'id';
 
-    public function __construct(string $tableName, ?string $colName = null, ?int $colVal = null)
+    public function __construct(
+        string $tableName,
+        ?string $colName = null,
+        ?int $colVal = null,
+        string $colIdName = 'id'
+    )
     {
         $this->tableName = $tableName;
         $this->colName = $colName;
@@ -19,6 +25,7 @@ class SortManager
         if(!empty($colName) && empty($colVal)) {
             throw new AppErr("Col Value can't be empty");
         }
+        $this->colIdName = $colIdName;
     }
 
     public function moveUp(int $id, int $sortVal): void
@@ -33,6 +40,11 @@ class SortManager
 
     private function swapWithNeighbor(int $id, int $sortVal, string $direction): void
     {
+        if ($sortVal === 0) {
+            $this->reorder();
+            return;
+            //throw new AppErr("Neighbor sort can't be zero");
+        }
         // Определяем предыдущий или следующий элемент
         $neighbor = $direction === 'up'
             ? $this->getPrev($sortVal)
@@ -44,10 +56,10 @@ class SortManager
 
         // Увеличиваем/уменьшаем значения sortVal
         if ($direction === 'up') {
-            $this->updateSortVal($neighbor['id'], $neighbor['sortVal'] + 1);
+            $this->updateSortVal($neighbor[$this->colIdName], $neighbor['sortVal'] + 1);
             $this->updateSortVal($id, $sortVal - 1);
         } else {
-            $this->updateSortVal($neighbor['id'], $neighbor['sortVal'] - 1);
+            $this->updateSortVal($neighbor[$this->colIdName], $neighbor['sortVal'] - 1);
             $this->updateSortVal($id, $sortVal + 1);
         }
 
@@ -59,16 +71,18 @@ class SortManager
 
     private function getPrev(int $sortVal): array|false
     {
+        $lessSortVal = $sortVal - 1;
         if(empty($this->colName)) {
             $sql = "SELECT * FROM {$this->tableName} WHERE sortVal = :sortVal";
-            $params = ['sortVal' => $sortVal - 1];
-        } elseif(!empty($this->colVal)) {
+            $params = ['sortVal' => $lessSortVal];
+        } elseif($this->colVal !== null) {
             $sql = "
             SELECT * FROM {$this->tableName} 
              WHERE sortVal = :sortVal
              AND {$this->colName} = :colVal";
-            $params = ['sortVal' => $sortVal - 1, 'colVal' => $this->colVal];
+            $params = ['sortVal' => $lessSortVal, 'colVal' => $this->colVal];
         }
+
         return DB::qwe($sql, $params)->fetch();
     }
 
@@ -78,7 +92,7 @@ class SortManager
             $sql = "SELECT * FROM {$this->tableName} WHERE sortVal = :sortVal";
             $params = ['sortVal' => $sortVal + 1];
 
-        } elseif(!empty($this->colVal)) {
+        } elseif($this->colVal !== null) {
             $sql = "
             SELECT * FROM {$this->tableName} 
              WHERE sortVal = :sortVal
@@ -91,17 +105,17 @@ class SortManager
 
     private function updateSortVal(int $id, int $newSortVal): void
     {
-        $sql = "UPDATE {$this->tableName} SET sortVal = :sortVal WHERE id = :id";
+        $sql = "UPDATE {$this->tableName} SET sortVal = :sortVal WHERE {$this->colIdName} = :id";
         DB::qwe($sql, ['sortVal' => $newSortVal, 'id' => $id]);
     }
 
-    private function reorder(): void
+    public function reorder(): void
     {
         if(empty($this->colName)) {
-            $sql = "SELECT id FROM {$this->tableName} ORDER BY sortVal";
+            $sql = "SELECT {$this->colIdName} FROM {$this->tableName} ORDER BY sortVal";
             $rows = DB::qwe($sql)->fetchAll();
-        }elseif(!empty($this->colVal)){
-            $sql = "SELECT id FROM {$this->tableName} WHERE {$this->colName} = :colVal ORDER BY sortVal";
+        }elseif($this->colVal !== null){
+            $sql = "SELECT {$this->colIdName} FROM {$this->tableName} WHERE {$this->colName} = :colVal ORDER BY sortVal";
             $rows = DB::qwe($sql, ['colVal' => $this->colVal])->fetchAll();
         }
 
@@ -109,9 +123,7 @@ class SortManager
         $sortVal = 1;
 
         foreach ($rows as $row) {
-            $this->updateSortVal($row['id'], $sortVal++);
-            //$sql = "UPDATE {$this->tableName} SET sortVal = :sortVal WHERE id = :id";
-            //DB::qwe($sql, ['sortVal' => $sortVal++, 'id' => $row['id']]);
+            $this->updateSortVal($row[$this->colIdName], $sortVal++);
         }
     }
 }
