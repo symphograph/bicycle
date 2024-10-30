@@ -26,6 +26,7 @@ class SortManager
             throw new AppErr("Col Value can't be empty");
         }
         $this->colIdName = $colIdName;
+
     }
 
     public function moveUp(int $id, int $sortVal): void
@@ -50,7 +51,11 @@ class SortManager
             ? $this->getPrev($sortVal)
             : $this->getNext($sortVal);
 
-        if (!$neighbor) return;
+        if (!$neighbor) {
+            $this->reorder();
+            return;
+        }
+
 
         DB::pdo()->beginTransaction();
 
@@ -118,7 +123,6 @@ class SortManager
             $sql = "SELECT {$this->colIdName} FROM {$this->tableName} WHERE {$this->colName} = :colVal ORDER BY sortVal";
             $rows = DB::qwe($sql, ['colVal' => $this->colVal])->fetchAll();
         }
-
 
         $sortVal = 1;
 
