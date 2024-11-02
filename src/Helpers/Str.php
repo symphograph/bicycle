@@ -20,4 +20,28 @@ class Str
         $restOfString = mb_substr($str, 1, null, $encoding);
         return mb_strtoupper($firstChar, $encoding) . $restOfString;
     }
+
+    public static function isContainsNumber(string $str): bool
+    {
+        return !!preg_match('/\d/', $str);
+    }
+
+    /**
+     * @param string $str
+     * @return bool - Проверка на наличие акцентированных символов
+     */
+    public static function isAccent(string $str): bool
+    {
+        return !!preg_match('/[^\x20-\x7E]/', $str);
+    }
+
+    public static function isCamelCase(string $str): bool
+    {
+        return !!preg_match('/\b([A-Z][a-z]*[A-Z][a-z]*)\b/', $str);
+    }
+
+    public static function isTitleCase(string $str): bool
+    {
+        return !!preg_match('/\b([A-Z][a-z]+(?: [A-Z][a-z]+)*)\b/', $str);
+    }
 }
