@@ -9,7 +9,7 @@ class Arr
 {
     public static function filter(array $Array, string $propName, string|int|float|bool $propValue, int $len = 0): array
     {
-        $elements = array_filter($Array, fn($el) => $el->$elName === $elValue);
+        $elements = array_filter($Array, fn($el) => $el->$propName === $propValue);
         if($len === 0) {
             return $elements;
         }
