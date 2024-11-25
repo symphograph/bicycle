@@ -7,6 +7,8 @@ use DateTime;
 class Date
 {
     const array formats = [
+        'Y',
+        'Y-y',
         'Y-m-d',
         'd.m.Y',
         'Y-m-d H:i:s',
@@ -30,6 +32,14 @@ class Date
         'c', // ISO 8601 формат
         'r', // RFC 2822 формат
         'U'
+    ];
+
+    const array regExprFormats = [
+        'Y'           => '/^\d{4}$/',                                      // 2023
+        'Y-y'         => '/^\d{4}-\d{2}$/',                              // 2023-23
+        'Y (F)'       => '/^\d{4} \([A-Za-z]+\)$/',                   // 2023 (November)
+        'Y F'         => '/^\d{4} [A-Za-z]+$/',                          // 2023 November
+        'Y (F d)'     => '/^\d{4} \([A-Za-z]+ \d{1,2}\)$/',         // 2023 (November 11)
     ];
 
     /**
@@ -285,13 +295,14 @@ class Date
      * /
      * @return false|string
      */
-    public static function dateFormatFeel(string $inputDate, string $outputFormat = 'Y-m-d H:i:s'): false|string
+    public static function dateFormatFeel(string $inputDate, string $outputFormat = 'Y-m-d H:i:s', array $addFormats = []): false|string
     {
         if(empty($outputFormat)){
             $outputFormat = 'Y-m-d H:i:s';
         }
+        $formats = array_merge($addFormats, self::formats);
 
-        foreach (self::formats as $format) {
+        foreach ($formats as $format) {
             $date = date_create_from_format($format, $inputDate);
 
             if ($date !== false) {
@@ -343,6 +354,18 @@ class Date
         }
         $date = self::extractDate($date);
         return (new DateTime($date))->modify('-1 day')->format($outputFormat);
+    }
+
+    public static function findFormat(string $dateString, array $addFormats = []): ?string
+    {
+        $formats = array_merge($addFormats, self::regExprFormats);
+        foreach ($formats as $format => $regex) {
+            if (preg_match($regex, $dateString)) {
+                return $format;
+            }
+        }
+
+        return null;
     }
 
 }

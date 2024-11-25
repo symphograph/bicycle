@@ -13,13 +13,13 @@ class ApiActionDTO {
     public string $method;
     public string $controller;
     public string $createdAt;
-    public int    $persId;
+    public ?int    $persId;
     public string $postData;
 
     public static function newInstance(
         string $method,
         string $controller,
-        int    $persId,
+        ?int    $persId,
         array $postData
     ): static
     {

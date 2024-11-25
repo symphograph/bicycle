@@ -57,7 +57,7 @@ class Helpers
     {
         if(empty($str)) return '';
         $str = trim($str);
-        $str = preg_replace('/[^a-zA-ZА-Яа-я\-\s]/ui','',$str);
+        $str = preg_replace('/[^a-zA-ZА-Яа-яёЁ\-\s]/ui','',$str);
         $str = str_replace('&amp;', '&', $str);
         $str = str_replace('&nbsp;', ' ', $str);
         $str = preg_replace('/\s+/', ' ', $str);
