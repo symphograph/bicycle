@@ -5,8 +5,6 @@ namespace Symphograph\Bicycle;
 use Exception;
 use Symphograph\Bicycle\Env\Env;
 use Symphograph\Bicycle\Env\Server\ServerEnv;
-use Symphograph\Bicycle\Errors\AppErr;
-use TypeError;
 
 class Helpers
 {
@@ -24,11 +22,7 @@ class Helpers
         if(!is_array($format)){
             return date($format, strtotime($date)) === $date;
         }
-        foreach ($format as $f){
-            if(date($f, strtotime($date)) === $date)
-                return true;
-        }
-        return false;
+        return array_any($format, fn($f) => date($f, strtotime($date)) === $date);
     }
 
     public static function isMyClassExist(string $className): bool
@@ -67,11 +61,7 @@ class Helpers
     public static function monthDaysList(int $year, int $month): array
     {
         $countMonthDays = cal_days_in_month(CAL_GREGORIAN, $month, $year);
-        $monthDays = [];
-        for($i = 1; $i <= $countMonthDays;$i++){
-            $monthDays[$i] = 0;
-        }
-        return $monthDays;
+        return array_fill(1, $countMonthDays - 1 + 1, 0);
     }
 
     public static function weekDaysOfMonth(int $year, int $month): array
@@ -133,10 +123,7 @@ class Helpers
      */
     public static function isArrayString(array $array): bool
     {
-        foreach ($array as $value){
-            if(!is_string($value)) return false;
-        }
-        return true;
+        return array_all($array, fn($value) => is_string($value));
     }
 
     public static function isIntInRange($value, int $min, int $max): bool

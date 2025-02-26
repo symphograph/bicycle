@@ -24,9 +24,6 @@ class JsonDecoder
 
                 $typeInClass = self::getTypeInClass($className, $propName);
                 if ($typeInClass === 'array' || $typeInClass === 'object') {
-                    if($propName === 'structure'){
-                        //var_dump($propValue);
-                    }
                     $Recipient->$propName = $propValue;
                     continue;
                 }
@@ -43,7 +40,7 @@ class JsonDecoder
 
     private static function getTypeInClass(string $className, string $propName): string
     {
-        $Reflection =  (new ReflectionProperty($className, $propName))->getType();
+        $Reflection =  new ReflectionProperty($className, $propName)->getType();
 
         if($Reflection::class === 'ReflectionNamedType'){
             return $Reflection->getName();

@@ -5,13 +5,10 @@ namespace Symphograph\Bicycle\Api;
 use Curl\Curl;
 use Symphograph\Bicycle\Env\Env;
 use Symphograph\Bicycle\Env\Server\ServerEnv;
-use Symphograph\Bicycle\Errors\ApiErr;
 use Symphograph\Bicycle\Errors\CurlErr;
 use Symphograph\Bicycle\Errors\NoContentErr;
-use Symphograph\Bicycle\Errors\ValidationErr;
-use Symphograph\Bicycle\Logs\ErrorLog;
 use Symphograph\Bicycle\Token\CurlToken;
-use Throwable;
+
 
 class CurlAPI
 {

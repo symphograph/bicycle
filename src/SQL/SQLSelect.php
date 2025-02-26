@@ -3,7 +3,6 @@
 namespace Symphograph\Bicycle\SQL;
 
 use JetBrains\PhpStorm\ExpectedValues;
-use PDOStatement;
 use Symphograph\Bicycle\PDO\DB;
 
 /**
@@ -145,15 +144,13 @@ class SQLSelect
     public function exe(): ?object
     {
         $qwe = DB::qwe($this->getQuery(), $this->params);
-        if(isset($this->className)) {
 
-            /** @var T $result */
+        /** @var T $result */
+        if(isset($this->className)) {
             $result = $qwe->fetchObject($this->className);
-            return $result;
         } else {
-            /** @var T $result */
             $result = $qwe->fetchObject();
-            return $result;
         }
+        return $result;
     }
 }

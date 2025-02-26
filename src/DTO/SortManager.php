@@ -78,13 +78,13 @@ class SortManager
     {
         $lessSortVal = $sortVal - 1;
         if(empty($this->colName)) {
-            $sql = "SELECT * FROM {$this->tableName} WHERE sortVal = :sortVal";
+            $sql = "SELECT * FROM $this->tableName WHERE sortVal = :sortVal";
             $params = ['sortVal' => $lessSortVal];
         } elseif($this->colVal !== null) {
             $sql = "
-            SELECT * FROM {$this->tableName} 
+            SELECT * FROM $this->tableName 
              WHERE sortVal = :sortVal
-             AND {$this->colName} = :colVal";
+             AND $this->colName = :colVal";
             $params = ['sortVal' => $lessSortVal, 'colVal' => $this->colVal];
         }
 
@@ -94,33 +94,40 @@ class SortManager
     private function getNext(int $sortVal): array|false
     {
         if(empty($this->colName)) {
-            $sql = "SELECT * FROM {$this->tableName} WHERE sortVal = :sortVal";
+            $sql = "SELECT * FROM $this->tableName WHERE sortVal = :sortVal";
             $params = ['sortVal' => $sortVal + 1];
 
         } elseif($this->colVal !== null) {
             $sql = "
-            SELECT * FROM {$this->tableName} 
+            SELECT * FROM $this->tableName 
              WHERE sortVal = :sortVal
-             AND {$this->colName} = :colVal";
+             AND $this->colName = :colVal";
             $params = ['sortVal' => $sortVal + 1, 'colVal' => $this->colVal];
         }
-        return DB::qwe($sql, $params)->fetch();
 
+        if(empty($sql)) {
+            throw new AppErr("Sql is empty");
+        }
+        if (empty($params)) {
+            throw new AppErr("params is empty");
+        }
+
+        return DB::qwe($sql, $params)->fetch();
     }
 
     private function updateSortVal(int $id, int $newSortVal): void
     {
-        $sql = "UPDATE {$this->tableName} SET sortVal = :sortVal WHERE {$this->colIdName} = :id";
+        $sql = "UPDATE $this->tableName SET sortVal = :sortVal WHERE $this->colIdName = :id";
         DB::qwe($sql, ['sortVal' => $newSortVal, 'id' => $id]);
     }
 
     public function reorder(): void
     {
         if(empty($this->colName)) {
-            $sql = "SELECT {$this->colIdName} FROM {$this->tableName} ORDER BY sortVal";
+            $sql = "SELECT $this->colIdName FROM $this->tableName ORDER BY sortVal";
             $rows = DB::qwe($sql)->fetchAll();
         }elseif($this->colVal !== null){
-            $sql = "SELECT {$this->colIdName} FROM {$this->tableName} WHERE {$this->colName} = :colVal ORDER BY sortVal";
+            $sql = "SELECT $this->colIdName FROM $this->tableName WHERE $this->colName = :colVal ORDER BY sortVal";
             $rows = DB::qwe($sql, ['colVal' => $this->colVal])->fetchAll();
         }
 

@@ -28,7 +28,7 @@ class DB
     /**
      * Конструктор класса. Устанавливает соединение с базой данных.
      *
-     * @param string $charset Кодировка для соединения.
+     * @param string $connectName
      */
     public function __construct(string $connectName = 'default')
     {
@@ -261,7 +261,7 @@ class DB
             is_bool($value) => PDO::PARAM_BOOL,
             is_null($value) => PDO::PARAM_NULL,
             is_resource($value) => PDO::PARAM_LOB,
-            default => throw new \TypeError('invalid type for DB')
+            default => throw new TypeError('invalid type for DB')
         };
     }
 
@@ -313,11 +313,9 @@ class DB
 
     private static function castingTypes(array $props): array
     {
-        $params = [];
-        foreach ($props as $propName => $value) {
-            $params[$propName] = self::castValueType($value);
-        }
-        return $params;
+        return array_map(function ($value) {
+            return self::castValueType($value);
+        }, $props);
     }
 
     private static function castValueType(mixed $value): mixed

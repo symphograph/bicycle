@@ -3,7 +3,6 @@
 namespace Symphograph\Bicycle\Errors\Upload;
 
 use Symphograph\Bicycle\Errors\MyErrors;
-use Symphograph\Bicycle\Helpers;
 
 class UploadErr extends MyErrors
 {

@@ -9,7 +9,7 @@ use Symphograph\Bicycle\PDO\DB;
 class DiscordUser extends SocialAccountDTO
 {
     use DTOTrait;
-    const tableName = 'user_discord';
+    const string tableName = 'user_discord';
     public int     $id;
     public string  $username;
     public ?string $display_name;

@@ -2,6 +2,7 @@
 
 namespace Symphograph\Bicycle\Files;
 
+use Override;
 use Symphograph\Bicycle\Worker\ExecCommandBuilder;
 use Symphograph\Bicycle\DTO\AbstractList;
 use Symphograph\Bicycle\Env\Server\ServerEnv;
@@ -15,7 +16,7 @@ class ImgList extends AbstractList
     protected array $list = [];
 
 
-    #[\Override] public static function getItemClass() : string
+    #[Override] public static function getItemClass() : string
     {
         return FileIMG::class;
     }
@@ -55,7 +56,7 @@ class ImgList extends AbstractList
     {
         $path = dirname(ServerEnv::DOCUMENT_ROOT()) . '/workers/imgWorker.php';
         $log = dirname(ServerEnv::DOCUMENT_ROOT()) . '/logs/worker.txt';
-        $execCommand = (new ExecCommandBuilder($path))
+        $execCommand = new ExecCommandBuilder($path)
             //->addArgument($FList->getList())
             ->setOutputRedirection($log)
             ->runInBackground();

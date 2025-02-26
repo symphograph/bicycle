@@ -84,11 +84,7 @@ class Arr
 
     public static function isInts(array $arr): bool
     {
-        foreach ($arr as $a){
-            if(!is_int($a))
-                return false;
-        }
-        return true;
+        return array_all($arr, fn($a) => is_int($a));
     }
 
     public static function arrayConcat(array $array1, array $array2, string $glue = ' '): array
@@ -123,10 +119,7 @@ class Arr
      */
     public static function isStrings(array $array): bool
     {
-        foreach ($array as $value){
-            if(!is_string($value)) return false;
-        }
-        return true;
+        return array_all($array, fn($value) => is_string($value));
     }
 
     /**
@@ -140,12 +133,6 @@ class Arr
             throw new TypeError('$array is not string[]');
         }
         $classVars = get_class_vars($className);
-        foreach ($array as $var){
-            if(!array_key_exists($var, $classVars)){
-                $className = self::class;
-                return false;
-            }
-        }
-        return true;
+        return array_all($array, fn($var) => array_key_exists($var, $classVars));
     }
 }

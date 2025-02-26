@@ -4,6 +4,7 @@ namespace Symphograph\Bicycle\DTO;
 
 
 
+use Iterator;
 use PDO;
 
 use Symphograph\Bicycle\Errors\AppErr;
@@ -11,7 +12,7 @@ use Symphograph\Bicycle\Helpers\Arr;
 use Symphograph\Bicycle\PDO\DB;
 use Symphograph\Bicycle\SQL\SQLBuilder;
 
-abstract class AbstractList implements ListITF, \Iterator
+abstract class AbstractList implements ListITF, Iterator
 {
     protected const int MaxLimit = 1000000;
 
@@ -267,9 +268,5 @@ abstract class AbstractList implements ListITF, \Iterator
         $arr = array_values($arr);
         return $arr[0] ?? null;
     }
-    
-    public function elsByProps(array $prop): ?object
-    {
-        
-    }
+
 }

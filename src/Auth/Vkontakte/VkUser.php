@@ -12,8 +12,8 @@ use Symphograph\Bicycle\PDO\DB;
 class VkUser extends SocialAccountDTO
 {
     use DTOTrait;
-    const colId = 'uid';
-    const tableName = 'user_vkontakte';
+    const string colId     = 'uid';
+    const string tableName = 'user_vkontakte';
 
     public int    $uid;
     public string $domain;

@@ -50,7 +50,7 @@ class Log
     {
         try {
             $data = json_encode($this, JSON_PARTIAL_OUTPUT_ON_ERROR | JSON_THROW_ON_ERROR);
-        }catch (Throwable $exception) {
+        }catch (Throwable) {
             return '{}' . PHP_EOL;
         }
         return $data;

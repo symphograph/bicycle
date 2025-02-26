@@ -161,14 +161,8 @@ trait DTOTrait
 
     public function getDtoProps(): array
     {
-        $props = [];
-        foreach (get_object_vars($this) as $key => $value) {
-            // Проверяем, что свойство определено в классе DTO
-            if (property_exists(self::class, $key)) {
-                $props[$key] = $value;
-            }
-        }
-        return $props;
+        // Проверяем, что свойство определено в классе DTO
+        return array_filter(get_object_vars($this), fn($key) => property_exists(self::class, $key), ARRAY_FILTER_USE_KEY);
     }
 
     public static function createTable(): void

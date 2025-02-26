@@ -44,6 +44,7 @@ class Date
 
     /**
      *  Format a time/date from any format to any format
+     * @param string $inputDate
      * @param string $outputFormat <p>
      *  The format of the outputted date string. See the formatting
      *  options below.
@@ -289,11 +290,10 @@ class Date
      *  </tr>
      *  </table>
      *  </p>
-     * @param string $inputDate
+     * @param array $addFormats
      * @return string|false a formatted date string.
      * If $inputDate have invalid format return false
      * /
-     * @return false|string
      */
     public static function dateFormatFeel(string $inputDate, string $outputFormat = 'Y-m-d H:i:s', array $addFormats = []): false|string
     {
@@ -321,13 +321,8 @@ class Date
         $dateRegex = '/(\d{1,4}[._-]\d{1,2}[._-]\d{2,4})/';
         preg_match_all($dateRegex, $inputString, $matches);
 
-        foreach ($matches[1] as $match) {
-            if (self::isDate($match, $formats)) {
-                return $match;
-            }
-        }
+        return array_find($matches[1], fn($match) => self::isDate($match, $formats));
 
-        return null;
     }
 
     public static function isDate(string $date, string|array|null $formats = null): bool
@@ -353,19 +348,13 @@ class Date
             $date = self::extractDate($date);
         }
         $date = self::extractDate($date);
-        return (new DateTime($date))->modify('-1 day')->format($outputFormat);
+        return new DateTime($date)->modify('-1 day')->format($outputFormat);
     }
 
     public static function findFormat(string $dateString, array $addFormats = []): ?string
     {
         $formats = array_merge($addFormats, self::regExprFormats);
-        foreach ($formats as $format => $regex) {
-            if (preg_match($regex, $dateString)) {
-                return $format;
-            }
-        }
-
-        return null;
+        return array_find_key($formats, fn($regex) => preg_match($regex, $dateString));
     }
 
 }

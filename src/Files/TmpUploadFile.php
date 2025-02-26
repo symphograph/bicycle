@@ -2,10 +2,10 @@
 
 namespace Symphograph\Bicycle\Files;
 
-use Symphograph\Bicycle\Env\Server\ServerEnv;
 use Symphograph\Bicycle\Errors\Upload\EmptyFilesErr;
 use Symphograph\Bicycle\Errors\Upload\UploadErr;
 use Symphograph\Bicycle\FileHelper;
+use Throwable;
 
 class TmpUploadFile
 {
@@ -28,7 +28,7 @@ class TmpUploadFile
     {
         try {
             $fileData = file_get_contents($externalUrl);
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return false;
         }
 

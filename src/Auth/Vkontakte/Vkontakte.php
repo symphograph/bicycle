@@ -2,9 +2,6 @@
 
 namespace Symphograph\Bicycle\Auth\Vkontakte;
 
-use Symphograph\Bicycle\Env\Env;
-use Symphograph\Bicycle\Env\Server\ServerEnv;
-
 class Vkontakte
 {
     public static function widgetPage(string $title, int $appId, string $callbackUrl): string

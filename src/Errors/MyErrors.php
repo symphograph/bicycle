@@ -2,11 +2,9 @@
 
 namespace Symphograph\Bicycle\Errors;
 
-use Symphograph\Bicycle\Api\Response;
 use Symphograph\Bicycle\Env\Config;
 use Symphograph\Bicycle\Env\Server\ServerEnv;
 use Symphograph\Bicycle\Helpers;
-use Symphograph\Bicycle\Logs\ErrorLog;
 use Exception;
 use Symphograph\Bicycle\Env\Env;
 

@@ -142,7 +142,7 @@ class SQLBuilder
             }
         }
 
-        // If the primary key field is specified in colId and it is not 'id', add it as the primary key
+        // If the primary key field is specified in colId, and it is not 'id', add it as the primary key
         if ($hasPrimaryKey && $colId !== 'id') {
             $fields[] = "PRIMARY KEY ($colId)";
         }

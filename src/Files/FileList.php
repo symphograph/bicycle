@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Files;
+
+use Override;
 use Symphograph\Bicycle\DTO\AbstractList;
 use Symphograph\Bicycle\Errors\AppErr;
 use Symphograph\Bicycle\Files\FileDoc;
@@ -14,7 +16,7 @@ class FileList extends AbstractList
      */
     protected array $list = [];
 
-    #[\Override] public static function getItemClass() : string
+    #[Override] public static function getItemClass() : string
     {
         return FileDTO::class;
     }

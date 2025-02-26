@@ -52,27 +52,27 @@ class CompositeKeySorter
 
     private function getPrev(int $sortVal, int $val1): array|false
     {
-        $sql = "SELECT * FROM {$this->tableName} WHERE sortVal = :sortVal AND {$this->col1} = :val1";
+        $sql = "SELECT * FROM $this->tableName WHERE sortVal = :sortVal AND $this->col1 = :val1";
         $params = ['sortVal' => $sortVal - 1, 'val1' => $val1];
         return DB::qwe($sql, $params)->fetch();
     }
 
     private function getNext(int $sortVal, int $val1): array|false
     {
-        $sql = "SELECT * FROM {$this->tableName} WHERE sortVal = :sortVal AND {$this->col1} = :val1";
+        $sql = "SELECT * FROM $this->tableName WHERE sortVal = :sortVal AND $this->col1 = :val1";
         $params = ['sortVal' => $sortVal + 1, 'val1' => $val1];
         return DB::qwe($sql, $params)->fetch();
     }
 
     private function updateSortVal(int $val2, int $newSortVal, int $val1): void
     {
-        $sql = "UPDATE {$this->tableName} SET sortVal = :sortVal WHERE {$this->col1} = :val1 AND {$this->col2} = :val2";
+        $sql = "UPDATE $this->tableName SET sortVal = :sortVal WHERE $this->col1 = :val1 AND $this->col2 = :val2";
         DB::qwe($sql, ['sortVal' => $newSortVal, 'val1' => $val1, 'val2' => $val2]);
     }
 
     public function reorder(int $val1): void
     {
-        $sql = "SELECT {$this->col2} FROM {$this->tableName} WHERE {$this->col1} = :val1 ORDER BY sortVal";
+        $sql = "SELECT $this->col2 FROM $this->tableName WHERE $this->col1 = :val1 ORDER BY sortVal";
         $rows = DB::qwe($sql, ['val1' => $val1])->fetchAll();
 
         $sortVal = 1;

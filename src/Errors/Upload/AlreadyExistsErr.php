@@ -2,8 +2,6 @@
 
 namespace Symphograph\Bicycle\Errors\Upload;
 
-use Symphograph\Bicycle\Helpers;
-
 class AlreadyExistsErr extends UploadErr
 {
     public function __construct(

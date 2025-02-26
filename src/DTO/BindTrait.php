@@ -2,6 +2,8 @@
 
 namespace Symphograph\Bicycle\DTO;
 
+use ReflectionObject;
+
 trait BindTrait
 {
     public function bindSelf(object|array $object): void
@@ -77,7 +79,7 @@ trait BindTrait
             return false; // Свойства нет в объекте
         }
 
-        $refObject = new \ReflectionObject($object);
+        $refObject = new ReflectionObject($object);
         if (!$refObject->hasProperty($property)) {
             return false;
         }

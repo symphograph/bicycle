@@ -1,8 +1,6 @@
 <?php
 namespace Symphograph\Bicycle\Auth\Telegram;
 use Symphograph\Bicycle\Env\Env;
-use Symphograph\Bicycle\Env\Server\ServerEnv;
-use Symphograph\Bicycle\Env\Services\Client;
 use Symphograph\Bicycle\Errors\Auth\AuthErr;
 
 class Telegram
@@ -90,8 +88,8 @@ class Telegram
         sort($data_check_arr);
         $data_check_string = implode("\n", $data_check_arr);
         $secret_key        = hash('sha256', $token, true);
-        $hash              = hash_hmac('sha256', $data_check_string, $secret_key);
-        return $hash;
+
+        return hash_hmac('sha256', $data_check_string, $secret_key);
     }
 
     public function saveTelegramUserData($auth_data) : bool
@@ -111,7 +109,7 @@ class Telegram
                 <title>$title</title>
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
               </head>
-              <body><center>$script</center></body>
+              <body><div style="text-align: center;">$script</div></body>
             </html>
         HTML;
     }

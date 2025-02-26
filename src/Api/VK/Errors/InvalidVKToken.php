@@ -3,7 +3,6 @@
 namespace Symphograph\Bicycle\Api\VK\Errors;
 
 use Symphograph\Bicycle\Errors\MyErrors;
-use Symphograph\Bicycle\Helpers;
 
 class InvalidVKToken extends MyErrors
 {

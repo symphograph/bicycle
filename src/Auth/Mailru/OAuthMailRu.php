@@ -12,14 +12,14 @@ use Symphograph\Bicycle\Errors\Auth\AuthErr;
 
 class OAuthMailRu
 {
-    const authUrl  = 'https://oauth.mail.ru/login';
-    const tokenUrl = 'https://oauth.mail.ru/token';
-    const userUrl  = 'https://oauth.mail.ru/userinfo';
-    const callback = '/tauth/login/mailru/callback.php';
+    const string authUrl  = 'https://oauth.mail.ru/login';
+    const string tokenUrl = 'https://oauth.mail.ru/token';
+    const string userUrl  = 'https://oauth.mail.ru/userinfo';
+    const string callback = '/tauth/login/mailru/callback.php';
 
     private static string    $token;
     public static string|int $user_id;
-    public static            $userData;
+    public static mixed      $userData;
 
     #[NoReturn] public static function goToAuth($secret): void
     {

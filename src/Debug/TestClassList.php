@@ -2,6 +2,7 @@
 
 namespace Symphograph\Bicycle\Debug;
 
+use Override;
 use Symphograph\Bicycle\DTO\AbstractList;
 
 class TestClassList extends AbstractList
@@ -11,7 +12,7 @@ class TestClassList extends AbstractList
      */
     protected array $list = [];
 
-    #[\Override] public static function getItemClass(): string
+    #[Override] public static function getItemClass(): string
     {
         return TestClass::class;
     }

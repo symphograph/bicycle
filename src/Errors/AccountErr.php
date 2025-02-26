@@ -2,9 +2,6 @@
 
 namespace Symphograph\Bicycle\Errors;
 
-use Symphograph\Bicycle\Api\Response;
-use Symphograph\Bicycle\Logs\ErrorLog;
-
 class AccountErr extends MyErrors
 {
     protected string $type = 'AccountErr';

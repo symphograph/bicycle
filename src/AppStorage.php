@@ -7,13 +7,13 @@ class AppStorage
     /**
      * @var static
      */
-    public static $self;
-    public static array $warnings = [];
+    public static AppStorage $self;
+    public static array      $warnings = [];
 
     /**
      * @return static
      */
-    public static function getSelf()
+    public static function getSelf(): static
     {
         if(!isset(static::$self)){
             static::$self = new static();

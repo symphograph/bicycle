@@ -3,8 +3,6 @@
 namespace Symphograph\Bicycle\HTTP;
 
 use JetBrains\PhpStorm\ExpectedValues;
-use Symphograph\Bicycle\Env\Env;
-use Symphograph\Bicycle\Env\Server\ServerEnv;
 use Throwable;
 
 class Cookie
@@ -36,10 +34,6 @@ class Cookie
         bool $partitioned = false
     ): self
     {
-        if (Env::isDebugMode()){
-            //$secure = false;
-        }
-
        return new self($expires, $path, $samesite, $secure, $httponly, $domain, $partitioned);
 
     }

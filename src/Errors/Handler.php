@@ -10,7 +10,6 @@ use Symphograph\Bicycle\AppStorage;
 use Symphograph\Bicycle\Env\Config;
 use Symphograph\Bicycle\Env\Env;
 use Symphograph\Bicycle\Logs\ErrorLog;
-use Symphograph\Bicycle\Logs\Log;
 use Throwable;
 
 class Handler
@@ -107,22 +106,15 @@ class Handler
     {
         if (ini_get('display_errors')) {
             return $err->getMessage();
-            //return $err->getMessage() . PHP_EOL . $err->getFile() . '(' . $err->getLine() . ')';
         }
         $reflectClass = new ReflectionClass($err::class);
-        if ($reflectClass->hasMethod('getResponseMsg')) {
-            return $err->getResponseMsg();
-        }
-        return '';
+        return $reflectClass->hasMethod('getResponseMsg') ? $err->getResponseMsg() : '';
     }
 
     protected static function getHttpStatus(Throwable $err): int
     {
         $reflectClass = new ReflectionClass($err::class);
-        if ($reflectClass->hasMethod('getHttpStatus')) {
-            return $err->getHttpStatus();
-        }
-        return 500;
+        return $reflectClass->hasMethod('getHttpStatus') ? $err->getHttpStatus() : 500;
     }
 
 }

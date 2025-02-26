@@ -4,7 +4,6 @@ namespace Symphograph\Bicycle\Env;
 
 use Symphograph\Bicycle\Env\Server\ServerEnv;
 use Symphograph\Bicycle\Env\Services\Client;
-use Symphograph\Bicycle\Errors\Auth\InvalidOriginErr;
 use Symphograph\Bicycle\Errors\ConfigErr;
 use Symphograph\Bicycle\Errors\ValidationErr;
 

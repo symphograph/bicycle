@@ -49,10 +49,10 @@ class ExecCommandBuilder
     /**
      * Добавляет аргумент к команде.
      *
-     * @param mixed $argument Аргумент для передачи в скрипт.
+     * @param string | array | object $argument Аргумент для передачи в скрипт.
      * @return self Возвращает текущий объект для цепочного вызова.
      */
-    public function addArgument($argument): self
+    public function addArgument(string | array | object $argument): self
     {
         if (is_array($argument) || is_object($argument)) {
             $argument = urlencode(serialize($argument));

@@ -9,6 +9,7 @@ use Symphograph\Bicycle\Errors\AppErr;
 use Symphograph\Bicycle\Errors\Files\FileProcessErr;
 use Symphograph\Bicycle\FileHelper;
 use Symphograph\Bicycle\Logs\Log;
+use Throwable;
 
 
 class FileIMG extends FileDTO
@@ -40,7 +41,7 @@ class FileIMG extends FileDTO
                 $this->makeSize($width);
             }
             $this->updateStatus(FileStatus::Completed);
-        } catch (\Throwable $err) {
+        } catch (Throwable $err) {
             $this->updateStatus(FileStatus::Failed);
             throw new FileProcessErr($err->getMessage());
         }

@@ -43,7 +43,6 @@ class VKAuth
         $response = file_get_contents("$url?$query");
         if (empty($response)) return null;
 
-        $data = json_decode($response, true);
-        return $data;
+        return json_decode($response, true);
     }
 }

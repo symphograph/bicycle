@@ -6,7 +6,7 @@ use Symphograph\Bicycle\Env\Server\ServerEnv;
 
 class ConnectDB
 {
-    const envPath = '/includes/env.php';
+    const string envPath = '/includes/env.php';
     public function __construct(
         public string $host,
         public string $name,

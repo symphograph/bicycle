@@ -38,7 +38,7 @@ class DB_old
         $this->pdo = new PDO($dsn, $con->user, $con->pass, $this->opt);
     }
 
-    public function qwe(string $sql, array $args = NULL): bool|PDOStatement
+    public function qwe(string $sql, ?array $args): bool|PDOStatement
     {
         if (!$args) {
             return self::query($sql);
@@ -152,10 +152,10 @@ class DB_old
     {
         $parNames = array_keys($params);
         $phArr = [];
-        foreach ($params as $parName => $param) {
+        foreach ($params as $param) {
             $i = 0;
             $phArr = [];
-            foreach ($param as $p) {
+            foreach ($param as $ignored) {
                 $phArr[] = self::paramNamer($parNames, $i);
                 $i++;
             }

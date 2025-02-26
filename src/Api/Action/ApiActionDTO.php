@@ -27,4 +27,4 @@ class ApiActionDTO {
         $vars = get_defined_vars();
         return static::byBind($vars);
     }
-};
+}

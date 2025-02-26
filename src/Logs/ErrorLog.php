@@ -44,7 +44,7 @@ class ErrorLog extends Log
         $this->ip = ServerEnv::REMOTE_ADDR();
         $this->script = ServerEnv::SCRIPT_NAME();
         $this->level = 'error';
-        $this->type = (new ReflectionClass($err))->getShortName();
+        $this->type = new ReflectionClass($err)->getShortName();
         $this->agent = Agent::getSelf();
         $this->method = ServerEnv::REQUEST_METHOD();
         $this->queryString = ServerEnv::QUERY_STRING();
