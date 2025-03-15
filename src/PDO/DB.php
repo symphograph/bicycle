@@ -37,7 +37,7 @@ class DB
         $this->pdo = new PDO($dsn, $dbConnect->user, $dbConnect->pass, self::options);
     }
 
-    public static function lastId($connectName = 'default'): false|string
+    public static function lastId($connectName = 'default'): ?string
     {
         return self::pdo($connectName)->lastInsertId();
     }
@@ -72,12 +72,12 @@ class DB
         return self::$instances[$connectName];
     }
 
-    public static function fetchClass(false|PDOStatement $qwe, string $class): object|false
+    public static function fetchClass(false|PDOStatement $qwe, string $class): ?object
     {
         if (!$qwe) {
-            return false;
+            return null;
         }
-        return $qwe->fetchAll(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, $class)[0] ?? false;
+        return $qwe->fetchAll(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, $class)[0] ?? null;
     }
 
     /**
@@ -112,27 +112,6 @@ class DB
 
         $DB->stmt->execute();
 
-    }
-
-    /**
-     * Вставляет одну строку в таблицу или обновляет существующую, если запись уже существует.
-     *
-     * @param string $tableName Имя таблицы.
-     * @param array $params Ассоциативный массив с данными для вставки/обновления.
-     */
-    public static function replace(string $tableName, array $params, $connectName = 'default'): void
-    {
-        $propsSting = self::propsSting($params);
-        $valuesString = self::rowInsertPHolders($params);
-        $paramsForUpdateStr = self::rowUpdatePHolders($params);
-        $params = self::castingTypes($params);
-        $params = self::addParamsWithSuffixUpd($params);
-        $sql = "INSERT INTO $tableName $propsSting VALUES $valuesString on duplicate key update $paramsForUpdateStr";
-
-        $DB = self::getSelf($connectName);
-        $DB->stmt = $DB->pdo->prepare($sql);
-        $DB->bindValues($params);
-        $DB->stmt->execute();
     }
 
     /**
@@ -185,6 +164,40 @@ class DB
         }, array_keys($firstRow));
 
         return implode(', ', $updateParts);
+    }
+
+    public static function insert(string $tableName, array $params, $connectName = 'default'): void
+    {
+        $propsSting = self::propsSting($params);
+        $valuesString = self::rowInsertPHolders($params);
+        $params = self::castingTypes($params);
+        $sql = "INSERT INTO $tableName $propsSting VALUES $valuesString";
+
+        $DB = self::getSelf($connectName);
+        $DB->stmt = $DB->pdo->prepare($sql);
+        $DB->bindValues($params);
+        $DB->stmt->execute();
+    }
+
+    /**
+     * Вставляет одну строку в таблицу или обновляет существующую, если запись уже существует.
+     *
+     * @param string $tableName Имя таблицы.
+     * @param array $params Ассоциативный массив с данными для вставки/обновления.
+     */
+    public static function replace(string $tableName, array $params, $connectName = 'default'): void
+    {
+        $propsSting = self::propsSting($params);
+        $valuesString = self::rowInsertPHolders($params);
+        $paramsForUpdateStr = self::rowUpdatePHolders($params);
+        $params = self::castingTypes($params);
+        $params = self::addParamsWithSuffixUpd($params);
+        $sql = "INSERT INTO $tableName $propsSting VALUES $valuesString on duplicate key update $paramsForUpdateStr";
+
+        $DB = self::getSelf($connectName);
+        $DB->stmt = $DB->pdo->prepare($sql);
+        $DB->bindValues($params);
+        $DB->stmt->execute();
     }
 
     /**
@@ -271,9 +284,9 @@ class DB
      * @param string $sql SQL-запрос.
      * @param array $args Параметры запроса.
      *
-     * @return false|PDOStatement Объект PDOStatement с результатами запроса.
+     * @return PDOStatement|null Объект PDOStatement с результатами запроса.
      */
-    private function execute(string $sql, array $args): false|PDOStatement
+    private function execute(string $sql, array $args): ?PDOStatement
     {
         $this->stmt = $this->pdo->prepare($sql);
         $this->bindValues($args);
@@ -281,18 +294,7 @@ class DB
         return $this->stmt;
     }
 
-    public static function insert(string $tableName, array $params, $connectName = 'default'): void
-    {
-        $propsSting = self::propsSting($params);
-        $valuesString = self::rowInsertPHolders($params);
-        $params = self::castingTypes($params);
-        $sql = "INSERT INTO $tableName $propsSting VALUES $valuesString";
 
-        $DB = self::getSelf($connectName);
-        $DB->stmt = $DB->pdo->prepare($sql);
-        $DB->bindValues($params);
-        $DB->stmt->execute();
-    }
 
     /**
      * Генерирует строку для использования в SQL-запросе при обновлении записи.
@@ -370,7 +372,7 @@ class DB
         #[Language('SQL')] string $sql,
         array                     $args = [],
                                   $connectName = 'default'
-    ): false|PDOStatement
+    ): null|PDOStatement
     {
         $DB = self::getSelf($connectName);
         if (empty($args)) {
@@ -407,9 +409,9 @@ class DB
      *
      * @return false|PDOStatement Объект PDOStatement с результатами запроса.
      */
-    private function query(#[Language('SQL')] string $sql): false|PDOStatement
+    private function query(#[Language('SQL')] string $sql): ?PDOStatement
     {
-        return $this->pdo->query($sql);
+        return $this->pdo->query($sql) ?: null;
     }
 
     public static function implodeIntIn(array $ids): string

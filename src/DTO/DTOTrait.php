@@ -17,7 +17,7 @@ trait DTOTrait
 
     const int maxId = 9223372036854775807;
 
-    public static function byId(int $id): static|false
+    public static function byId(int $id): ?static
     {
         $tableName = self::tableName;
         $colId = self::getColId();
@@ -61,7 +61,7 @@ trait DTOTrait
         }
     }
 
-    public static function byProp(string $propName, int|float|string $propValue): self|bool
+    public static function byProp(string $propName, int|float|string $propValue): ?self
     {
         $tableName = self::tableName;
 
@@ -71,7 +71,7 @@ trait DTOTrait
 
         $result = $qwe->fetchAll(PDO::FETCH_CLASS|PDO::FETCH_PROPS_LATE, self::class);
         if(empty($result)) {
-            return false;
+            return null;
         }
         if(count($result) > 1) {
             throw new AppErr("$propName is not unique in table $tableName");
@@ -79,14 +79,14 @@ trait DTOTrait
         return $result[0];
     }
 
-    public static function byAccountId(int $accountId): self|bool
+    public static function byAccountId(int $accountId): ?self
     {
         $tableName = self::tableName;
 
         $sql = "select * from $tableName where accountId = :accountId";
         $params = ['accountId'=> $accountId];
         $qwe = DB::qwe($sql, $params);
-        return $qwe->fetchObject(self::class);
+        return $qwe->fetchObject(self::class) ?? null;
     }
 
     public function putToDB(PutMode $mode = PutMode::safeReplace): void

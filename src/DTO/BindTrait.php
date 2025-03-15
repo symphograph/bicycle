@@ -48,12 +48,22 @@ trait BindTrait
         return get_object_vars($this);
     }
 
-    public function unsetEmptyProps(): void
+    public function unsetNulls(): static
+    {
+        foreach ($this as $k => $v) {
+            if($v !== null) continue;
+            unset($this->$k);
+        }
+        return $this;
+    }
+
+    public function unsetEmptyProps(): static
     {
         foreach ($this as $k => $v) {
             if(!empty($v)) continue;
             unset($this->$k);
         }
+        return $this;
     }
 
     public function unsetAllProps(): void

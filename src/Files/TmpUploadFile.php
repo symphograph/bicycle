@@ -5,10 +5,12 @@ namespace Symphograph\Bicycle\Files;
 use Symphograph\Bicycle\Errors\Upload\EmptyFilesErr;
 use Symphograph\Bicycle\Errors\Upload\UploadErr;
 use Symphograph\Bicycle\FileHelper;
+use Symphograph\Bicycle\ImgHelper;
 use Throwable;
 
 class TmpUploadFile
 {
+    protected const string tmpFolder = '/uploadtmp/';
     public string $error;
     public string $tmpFullPath;
     public string $name;
@@ -33,8 +35,18 @@ class TmpUploadFile
         }
 
         $fileName = md5($fileData);
-        $fullPath = FileHelper::fullPath('/uploadtmp/' . $fileName, false);
+        $fullPath = FileHelper::fullPath(static::tmpFolder . $fileName, false);
         FileHelper::fileForceContents($fullPath, $fileData);
+        return static::newInstance($fullPath, $fileName);
+    }
+
+    public static function byBase64(string $base64): ?static
+    {
+        $data = base64_decode($base64);
+        if ($data === false) return null;
+        $fileName = md5($data);
+        $fullPath = FileHelper::fullPath(static::tmpFolder . $fileName, false);
+        FileHelper::fileForceContents($fullPath, $data);
         return static::newInstance($fullPath, $fileName);
     }
 

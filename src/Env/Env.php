@@ -37,6 +37,7 @@ readonly class Env
     private bool   $isTest;
     private array $powerManagers;
     private array $curlLocations;
+    private array $telegramBots;
 
     public function __construct()
     {
@@ -118,6 +119,16 @@ readonly class Env
     {
         $Env = self::getMyEnv();
         $tg = $Env->telegram[ServerEnv::SERVER_NAME()];
+        return new TelegramSecrets(
+            $tg->token,
+            $tg->bot_name
+        );
+    }
+
+    public static function getTelebot(string $botName): TelegramSecrets
+    {
+        $Env = self::getMyEnv();
+        $tg = $Env->telegramBots[$botName];
         return new TelegramSecrets(
             $tg->token,
             $tg->bot_name

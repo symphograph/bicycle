@@ -21,6 +21,7 @@ class FileDTO implements FileITF
     public string $type;
     public string $createdAt;
     public string $status;
+    public ?string $prosessStartedAt;
 
     public static function byUploaded(TmpUploadFile $file): static
     {

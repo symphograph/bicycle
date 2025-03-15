@@ -5,6 +5,8 @@ namespace Symphograph\Bicycle\Files;
 
 use Symphograph\Bicycle\Errors\ImgErr;
 use Symphograph\Bicycle\Errors\Upload\UploadErr;
+use Symphograph\Bicycle\FileHelper;
+use Symphograph\Bicycle\ImgHelper;
 use Throwable;
 
 class UploadedImg extends TmpUploadFile
@@ -18,6 +20,23 @@ class UploadedImg extends TmpUploadFile
     {
         parent::__construct($file);
         $this->initExtAndSize();
+    }
+
+    public static function byExternal(string $externalUrl): static|false
+    {
+        $tmpFile = parent::byExternal($externalUrl);
+        if(!$tmpFile) return false;
+
+        $tmpFile->initExtAndSize();
+        return $tmpFile;
+    }
+
+    public static function byBase64(string $base64): ?static
+    {
+        $tmpFile = parent::byBase64($base64);
+        if(!$tmpFile) return null;
+        $tmpFile->initExtAndSize();
+        return $tmpFile;
     }
 
     private function initExtAndSize(): void

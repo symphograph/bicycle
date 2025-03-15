@@ -27,15 +27,16 @@ class ImgList extends AbstractList
         return self::bySql($sql, ['type' => self::type]);
     }
 
-    public static function unSized($limit = 10): self
+    public static function unSized($limit = 11): self
     {
         $sql = "
             select * from Files 
                 WHERE type = :type 
-            and status = :status 
+                and status != :status 
+                AND (processStartedAt IS NULL OR processStartedAt < NOW() - INTERVAL 5 MINUTE)
             order by createdAt, id
             limit :limit";
-        $params = ['type' => self::type, 'status' => 'uploaded', 'limit'=> $limit];
+        $params = ['type' => self::type, 'status' => 'completed', 'limit'=> $limit];
         return self::bySql($sql, $params);
     }
 

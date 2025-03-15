@@ -8,19 +8,19 @@ trait ModelTrait
 {
     use BindTrait;
 
-    public static function byAccountID(int $accountId): self|false
+    public static function byAccountID(int $accountId): ?self
     {
         $ObjectDTO = parent::byAccountId($accountId);
-        if(!$ObjectDTO) return false;
+        if(empty($ObjectDTO)) return null;
         $selfObject = new self();
         $selfObject->bindSelf($ObjectDTO);
         return $selfObject;
     }
 
-    public static function byIdAndInit(int $id): self|bool
+    public static function byIdAndInit(int $id): ?self
     {
         $selfObject = self::byId($id);
-        if(!$selfObject) return false;
+        if(empty($selfObject)) return null;
         if(method_exists(self::class, 'initData')){
             $selfObject->initData();
         }
