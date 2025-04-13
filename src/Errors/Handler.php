@@ -10,6 +10,7 @@ use Symphograph\Bicycle\AppStorage;
 use Symphograph\Bicycle\Env\Config;
 use Symphograph\Bicycle\Env\Env;
 use Symphograph\Bicycle\Logs\ErrorLog;
+use Symphograph\Bicycle\PDO\DB;
 use Throwable;
 
 class Handler
@@ -76,6 +77,8 @@ class Handler
 
     public static function myExceptionHandler(Throwable $err): void
     {
+        DB::safeRollback();
+
         $httpStatus = self::getHttpStatus($err);
         if(!isset($err->loggable) || !!$err->loggable){
             ErrorLog::writeToLog($err);

@@ -25,11 +25,13 @@ class Client
         return $service;
     }
 
-    public static function byOrigin(): static
+    /**
+     * @throws EmptyOriginErr
+     * @throws InvalidOriginErr
+     */
+    public static function byOrigin(string $origin): static
     {
-        $origin = ServerEnv::HTTP_ORIGIN();
-        //$origin = 'https://dev.aa.dllib.ru:9300';
-        if(empty($origin)) throw new EmptyOriginErr();
+
 
         $domain = pathinfo($origin)['basename'];
         $services = ClientList::byEnv()->getList();

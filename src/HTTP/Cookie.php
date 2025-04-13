@@ -45,7 +45,7 @@ class Cookie
         try {
             setcookie($name,$value, $opts);
         } catch (Throwable $err) {
-            printr($opts);
+            //printr($opts);
             throw $err;
         }
     }

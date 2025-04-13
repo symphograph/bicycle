@@ -4,6 +4,8 @@ namespace Symphograph\Bicycle\Env;
 
 use Symphograph\Bicycle\Env\Server\ServerEnv;
 use Symphograph\Bicycle\Env\Services\Client;
+use Symphograph\Bicycle\Errors\Auth\EmptyOriginErr;
+use Symphograph\Bicycle\Errors\Auth\InvalidOriginErr;
 use Symphograph\Bicycle\Errors\ConfigErr;
 use Symphograph\Bicycle\Errors\ValidationErr;
 
@@ -105,13 +107,19 @@ class Config
         return php_sapi_name() === 'cli';
     }
 
+    /**
+     * @throws EmptyOriginErr
+     * @throws InvalidOriginErr
+     */
     protected static function checkOrigin(): void
     {
         if(!self::isApi() && !self::isCurl()){
             return;
         }
+        $origin = ServerEnv::HTTP_ORIGIN();
+        if(empty($origin)) throw new EmptyOriginErr();
 
-        Client::byOrigin();
+        Client::byOrigin($origin);
     }
 
     public static function postHandler(): void

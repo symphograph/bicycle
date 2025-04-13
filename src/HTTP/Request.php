@@ -34,7 +34,10 @@ class Request
         }
     }
 
-    public static function checkEmpty(array $required,#[ExpectedValues(['post', 'get', 'files'])] string $method='post'): void
+    /**
+     * @throws ValidationErr
+     */
+    public static function checkEmpty(array $required, #[ExpectedValues(['post', 'get', 'files'])] string $method='post'): void
     {
         $methods = ['post' => $_POST,'get' => $_GET, 'files' => $_FILES];
         $method = $methods[$method];

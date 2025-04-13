@@ -7,6 +7,7 @@ use JetBrains\PhpStorm\Language;
 use PDO;
 use PDOStatement;
 use Symphograph\Bicycle\ConnectDB;
+use Symphograph\Bicycle\Errors\AppErr;
 use Symphograph\Bicycle\Errors\MyErrors;
 use Symphograph\Bicycle\Helpers\Arr;
 use TypeError;
@@ -37,9 +38,9 @@ class DB
         $this->pdo = new PDO($dsn, $dbConnect->user, $dbConnect->pass, self::options);
     }
 
-    public static function lastId($connectName = 'default'): ?string
+    public static function lastId(string $connectName = 'default'): ?string
     {
-        return self::pdo($connectName)->lastInsertId();
+        return self::pdo($connectName)->lastInsertId() ?: null;
     }
 
     /**
@@ -47,9 +48,28 @@ class DB
      *
      * @return PDO Объект PDO.
      */
-    public static function pdo($connectName = 'default'): PDO
+    public static function pdo(string $connectName = 'default'): PDO
     {
         return self::getSelf($connectName)->pdo;
+    }
+
+    public static function safeTransaction(string $connectName = 'default'): void
+    {
+        if(self::pdo($connectName)->inTransaction()) return;
+        self::pdo($connectName)->beginTransaction()
+            ?: throw new AppErr('Transaction failed');
+    }
+
+    public static function safeRollback(string $connectName = 'default'): void
+    {
+        if(!self::pdo($connectName)->inTransaction()) return;
+        self::pdo($connectName)->rollBack();
+    }
+
+    public static function safeCommit(string $connectName = 'default'): void
+    {
+        if(!self::pdo($connectName)->inTransaction()) return;
+        self::pdo($connectName)->commit();
     }
 
     /**
@@ -192,7 +212,8 @@ class DB
         $paramsForUpdateStr = self::rowUpdatePHolders($params);
         $params = self::castingTypes($params);
         $params = self::addParamsWithSuffixUpd($params);
-        $sql = "INSERT INTO $tableName $propsSting VALUES $valuesString on duplicate key update $paramsForUpdateStr";
+        $sql = "INSERT INTO $tableName $propsSting VALUES $valuesString 
+                on duplicate key update $paramsForUpdateStr";
 
         $DB = self::getSelf($connectName);
         $DB->stmt = $DB->pdo->prepare($sql);
@@ -294,8 +315,6 @@ class DB
         return $this->stmt;
     }
 
-
-
     /**
      * Генерирует строку для использования в SQL-запросе при обновлении записи.
      *
@@ -366,13 +385,13 @@ class DB
      * @param string $sql SQL-запрос.
      * @param array $args Параметры запроса (по умолчанию пустой массив).
      *
-     * @return false|PDOStatement Объект PDOStatement с результатами запроса.
+     * @return null|PDOStatement Объект PDOStatement с результатами запроса.
      */
     public static function qwe(
         #[Language('SQL')] string $sql,
         array                     $args = [],
                                   $connectName = 'default'
-    ): null|PDOStatement
+    ): ?PDOStatement
     {
         $DB = self::getSelf($connectName);
         if (empty($args)) {
@@ -407,7 +426,7 @@ class DB
      *
      * @param string $sql SQL-запрос.
      *
-     * @return false|PDOStatement Объект PDOStatement с результатами запроса.
+     * @return null|PDOStatement Объект PDOStatement с результатами запроса.
      */
     private function query(#[Language('SQL')] string $sql): ?PDOStatement
     {

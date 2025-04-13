@@ -19,38 +19,39 @@ use Throwable;
 
 class Token
 {
-    public string             $jwt;
+    public string $jwt;
+
+    public string             $jti; // (JWT id) идентификатор токена
     public string             $iss; // (issuer) издатель токена
     private DateTimeImmutable $iat; // (issued at) время создания токена
     private DateTimeImmutable $exp; // (expire time) срок действия токена
     private DateTimeImmutable $nbf; // (not before) срок, до которого токен не действителен
 
     public function __construct(
-        public string  $jti, // (JWT id) идентификатор токена
         public ?string $sub = 'auth', // (subject) "тема", назначение токена
         public ?int    $uid = null,
-        public ?int    $accountId = null,
         public ?array  $aud = [], // (audience) аудитория, получатели токена
         public string  $createdAt = 'now',
         public string  $expireDuration = '+1 hour',
-        public array   $powers = [],
-        public string  $authType = 'default',
-        public string  $avaFileName = 'init_ava.jpg',
         string         $iss = '', // (issuer) издатель токена
-        public ?int    $persId = null
+        public array   $claims = [],
     )
     {
+
         try {
+            $this->jti = bin2hex(random_bytes(32));
             $this->iss = !empty($iss) ? $iss : ServerEnv::SERVER_NAME();
             self::buildDatetime();
             self::initJWT();
-            //self::validation($this->jvt, ignoreExpire: true);
         } catch (Throwable $e) {
             throw new AuthErr($e->getMessage(), 'Ошибка генерации токена', 500);
         }
 
     }
 
+    /**
+     * @throws \DateMalformedStringException
+     */
     private function buildDatetime(): void
     {
         $this->iat = new DateTimeImmutable($this->createdAt);
@@ -60,25 +61,22 @@ class Token
 
     private function initJWT(): void
     {
-        $tokenBuilder = (new Builder(new JoseEncoder(), ChainedFormatter::default()));
 
-        $Token = $tokenBuilder
+        $tokenBuilder = (new Builder(new JoseEncoder(), ChainedFormatter::default()));
+        $tokenBuilder = $tokenBuilder
             ->issuedBy($this->iss) // iss (issuer) издатель токена
             ->permittedFor(...$this->aud) // aud (audience) аудитория, получатели токена
             ->identifiedBy($this->jti) // jti (JWT id) идентификатор токена
             ->relatedTo($this->sub ?? 'auth')
             ->issuedAt($this->iat) // iat (issued at) время создания токена
             ->canOnlyBeUsedAfter($this->nbf) // nbf (not before) срок, до которого токен не действителен
-            ->expiresAt($this->exp) // exp (expire time) срок действия токена
-            ->withClaim('uid', $this->uid)
-            ->withClaim('accountId', $this->accountId)
-            ->withClaim('powers', $this->powers)
-            ->withClaim('authType', $this->authType)
-            ->withClaim('avaFileName', $this->avaFileName)
-            ->withClaim('persId', $this->persId ?? null)
-            ->withHeader('foo', 'bar')
-            ->getToken(new Sha256(), self::getKey());
+            ->expiresAt($this->exp); // exp (expire time) срок действия токена
 
+        foreach ($this->claims as $claimName => $claimValue) {
+            $tokenBuilder = $tokenBuilder->withClaim($claimName, $claimValue);
+        }
+        $tokenBuilder = $tokenBuilder->withClaim('uid', $this->uid);
+        $Token = $tokenBuilder->getToken(new Sha256(), self::getKey());
 
         $this->jwt = $Token->toString();
     }
@@ -91,13 +89,11 @@ class Token
 
     public static function validation(
         string  $jwt,
-        array   $needPowers = [],
         ?string $expectedSubject = null,
         bool    $ignoreExpire = false
     ): void
     {
         $token = self::parse($jwt);
-        $tokenArray = self::toArray($jwt);
         $validator = new Validator();
 
         match (false) {
@@ -116,23 +112,20 @@ class Token
             $validator->validate($token, new PermittedFor(ServerEnv::SERVER_NAME()))
             => throw new AuthErr('Invalid token audience'),
 
-            self::validatePowers($tokenArray['powers'], $needPowers)
-            => throw new AccessErr('Token has not required Powers'),
-
             default => true
         };
     }
 
-    private static function parse(string $jvt): UnencryptedToken
+    private static function parse(string $jwt): UnencryptedToken
     {
         $parser = new Parser(new JoseEncoder());
-        return $parser->parse($jvt);
+        return $parser->parse($jwt);
     }
 
-    public static function toArray(string $jvt): array
+    public static function toArray(string $jwt): array
     {
         $parser = new Parser(new JoseEncoder());
-        $token = $parser->parse($jvt);
+        $token = $parser->parse($jwt);
         assert($token instanceof UnencryptedToken);
         return $token->claims()->all();
     }
@@ -145,16 +138,8 @@ class Token
         return $token->isExpired(new DateTimeImmutable()) && !$ignoreExpire;
     }
 
-    private static function validatePowers(array $tokenPowers, array $needPowers = []): bool
-    {
-        if (empty($needPowers)) return true;
-        $intersect = array_intersect($needPowers, $tokenPowers);
-        return !!count($intersect);
-    }
 
-    private static function getPowers(string $jwt)
-    {
-        return self::toArray($jwt)['powers'] ?? [];
-    }
+
+
 
 }

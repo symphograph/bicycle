@@ -3,6 +3,7 @@
 namespace Symphograph\Bicycle\Helpers;
 
 use Symphograph\Bicycle\Errors\AppErr;
+use Symphograph\Bicycle\Errors\Auth\AuthErr;
 use TypeError;
 
 class Arr
@@ -84,7 +85,7 @@ class Arr
 
     public static function isInts(array $arr): bool
     {
-        return array_all($arr, fn($a) => is_int($a));
+        return !empty($arr) && array_all($arr, fn($a) => is_int($a));
     }
 
     public static function arrayConcat(array $array1, array $array2, string $glue = ' '): array
@@ -119,7 +120,7 @@ class Arr
      */
     public static function isStrings(array $array): bool
     {
-        return array_all($array, fn($value) => is_string($value));
+        return !empty($array) && array_all($array, fn($value) => is_string($value));
     }
 
     /**
@@ -129,10 +130,21 @@ class Arr
      */
     public static function isArrayPropsOfClass(array $array, string $className): bool
     {
+        if(empty($array)) return false;
+
         if(!self::isStrings($array)){
             throw new TypeError('$array is not string[]');
         }
         $classVars = get_class_vars($className);
         return array_all($array, fn($var) => array_key_exists($var, $classVars));
+    }
+
+    public static function isEqual(array $array1, array $array2): bool
+    {
+        if(count($array1) !== count($array2)) return false;
+
+        ksort($array1);
+        ksort($array2);
+        return $array1 === $array2;
     }
 }

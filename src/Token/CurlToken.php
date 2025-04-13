@@ -14,16 +14,18 @@ class CurlToken
         $jwtEnv = Env::getJWT();
         $audience = $jwtEnv->audience;
 
+        $claims = [
+            'powers'      => $powers,
+            'authType'    => 'server',
+        ];
+
         $audience[] = ServerEnv::SERVER_NAME();
         $Token = new Token(
-            jti: 'any',
             uid: $jwtEnv->uid,
-            accountId: $jwtEnv->accountId,
             aud: $audience,
             expireDuration: '+1 min',
-            powers: $powers,
-            authType: 'server',
-            iss: ServerEnv::SERVER_NAME()
+            iss: ServerEnv::SERVER_NAME(),
+            claims: $claims
         );
         return $Token->jwt;
     }

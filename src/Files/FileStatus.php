@@ -9,6 +9,5 @@ enum FileStatus: string
     case Completed = 'completed';
     case Failed    = 'failed';
     case Trash     = 'trash';
-    case Public    = 'public';
 }
 

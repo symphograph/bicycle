@@ -5,8 +5,7 @@ namespace Symphograph\Bicycle\Files;
 
 use Symphograph\Bicycle\Errors\ImgErr;
 use Symphograph\Bicycle\Errors\Upload\UploadErr;
-use Symphograph\Bicycle\FileHelper;
-use Symphograph\Bicycle\ImgHelper;
+
 use Throwable;
 
 class UploadedImg extends TmpUploadFile

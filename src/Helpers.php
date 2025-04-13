@@ -123,7 +123,7 @@ class Helpers
      */
     public static function isArrayString(array $array): bool
     {
-        return array_all($array, fn($value) => is_string($value));
+        return !empty($array) && array_all($array, fn($value) => is_string($value));
     }
 
     public static function isIntInRange($value, int $min, int $max): bool

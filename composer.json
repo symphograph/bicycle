@@ -22,7 +22,8 @@
     "php-curl-class/php-curl-class": "^9.17",
     "ext-exif" : "*",
     "ext-imagick": "*",
-    "ext-simplexml": "*"
+    "ext-simplexml": "*",
+    "ext-fileinfo" : "*"
   },
   "autoload": {
     "psr-4": {

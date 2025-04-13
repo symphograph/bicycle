@@ -3,22 +3,27 @@
 namespace Symphograph\Bicycle\Files;
 
 use Override;
+use Symphograph\Bicycle\Errors\Files\FileProcessErr;
+use Symphograph\Bicycle\Img\SizeManager;
+use Symphograph\Bicycle\PDO\DB;
 use Symphograph\Bicycle\Worker\ExecCommandBuilder;
 use Symphograph\Bicycle\DTO\AbstractList;
 use Symphograph\Bicycle\Env\Server\ServerEnv;
+use Throwable;
 
 class ImgList extends AbstractList
 {
     const string type = 'img';
+
     /**
-     * @var FileIMG[]
+     * @var FileDTO[]
      */
     protected array $list = [];
 
 
     #[Override] public static function getItemClass() : string
     {
-        return FileIMG::class;
+        return FileDTO::class;
     }
 
     public static function all(): self
@@ -27,26 +32,39 @@ class ImgList extends AbstractList
         return self::bySql($sql, ['type' => self::type]);
     }
 
-    public static function unSized($limit = 11): self
+    public static function unSized($limit = 10): self
     {
         $sql = "
             select * from Files 
                 WHERE type = :type 
-                and status != :status 
-                AND (processStartedAt IS NULL OR processStartedAt < NOW() - INTERVAL 5 MINUTE)
+                and status in (:statuses)
+                AND (processStartedAt IS NULL OR processStartedAt < NOW() - INTERVAL 5 SECOND)
             order by createdAt, id
-            limit :limit";
-        $params = ['type' => self::type, 'status' => 'completed', 'limit'=> $limit];
+            limit :limit
+            FOR UPDATE SKIP LOCKED";
+        $params = [
+            'type' => self::type,
+            'statuses' => [FileStatus::Uploaded->value, FileStatus::Failed->value],
+            'limit'=> $limit
+        ];
         return self::bySql($sql, $params);
     }
 
     public function makeSizes(array $sizes = []): void
     {
-        foreach ($this->list as $fileIMG) {
-            if($fileIMG->status !== 'uploaded'){
+        foreach ($this->list as $fileDTO) {
+            if($fileDTO->status === 'completed'){
                 continue;
             }
-            $fileIMG->makeSizes($sizes);
+            DB::safeTransaction();
+            try {
+                $file = FileManager::byFileDTO($fileDTO);
+                new SizeManager($file)->run($sizes);
+            } catch (Throwable $err) {
+                DB::safeRollback();
+                $fileDTO->updateStatus(FileStatus::Failed);
+                continue;
+            }
         }
     }
 
@@ -64,5 +82,13 @@ class ImgList extends AbstractList
 
         $command = $execCommand->getCommand();
         exec($command);
+    }
+
+    /**
+     * @return FileDTO[]
+     */
+    public function getList(): array
+    {
+        return $this->list;
     }
 }

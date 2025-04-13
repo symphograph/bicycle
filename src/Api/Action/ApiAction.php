@@ -3,7 +3,7 @@
 namespace Symphograph\Bicycle\Api\Action;
 
 use Symphograph\Bicycle\DTO\ModelTrait;
-use Symphograph\Bicycle\Token\AccessTokenData;
+use Symphograph\Bicycle\Token\AccessToken;
 
 class ApiAction extends ApiActionDTO
 {
@@ -15,7 +15,7 @@ class ApiAction extends ApiActionDTO
         ?int $persId = null,
         array $postData = []
     ): static {
-        $persId = AccessTokenData::persId();
+        $persId = AccessToken::userId(AccessToken::byHTTP());
         return parent::newInstance($method, $controller, $persId, $_POST ?? []);
     }
 

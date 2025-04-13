@@ -86,7 +86,7 @@ trait DTOTrait
         $sql = "select * from $tableName where accountId = :accountId";
         $params = ['accountId'=> $accountId];
         $qwe = DB::qwe($sql, $params);
-        return $qwe->fetchObject(self::class) ?? null;
+        return $qwe->fetchObject(self::class) ?: null;
     }
 
     public function putToDB(PutMode $mode = PutMode::safeReplace): void

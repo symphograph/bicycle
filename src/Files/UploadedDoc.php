@@ -34,7 +34,7 @@ class UploadedDoc extends TmpUploadFile
     public static function getFullPath(string $fileName): string
     {
         $relPath = self::getRelPath($fileName);
-        return FileHelper::fullPath($relPath, true);
+        return FileHelper::fullPath($relPath);
     }
 
 }

@@ -3,88 +3,39 @@
 namespace Symphograph\Bicycle\Files;
 
 use Symphograph\Bicycle\DTO\DTOTrait;
-use Symphograph\Bicycle\Errors\Files\InvalidMD5;
-use Symphograph\Bicycle\Errors\Files\UnknownTypeErr;
-use Symphograph\Bicycle\FileHelper;
 use Symphograph\Bicycle\PDO\DB;
 
-class FileDTO implements FileITF
+class FileDTO
 {
     use DTOTrait;
 
+    // Методы для обмена данными с бд
+
     const string tableName = 'Files';
-    const array  types     = ['img', 'doc'];
 
-    public int    $id;
-    public string $md5;
-    public string $ext;
-    public string $type;
-    public string $createdAt;
-    public string $status;
-    public ?string $prosessStartedAt;
+    public int             $id;
+    public string          $hash;
+    public string          $ext;
+    public readonly string $type;
+    public string          $createdAt;
+    public string          $status;
+    public ?string         $processStartedAt;
+    public bool            $isPublic = false;
 
-    public static function byUploaded(TmpUploadFile $file): static
+    public static function newInstance(FileHDD $fileHDD): static
     {
-        $md5 = $file->getMd5();
-        $ext = $file->getExtension();
-        return static::newInstance($md5, $ext);
-    }
+        $object = new static();
+        $object->hash = $fileHDD->hash;
+        $object->ext = $fileHDD->ext->value;
+        $object->type = $fileHDD->type->value;
 
-    public static function newInstance(string $md5, string $ext): static
-    {
-        $props = get_defined_vars();
-        $hackIDENotice = func_num_args();
-
-        $object = static::byBind($props);
-        $object->validate();
-        $object->fixExt();
         return $object;
     }
 
-    public function validate(): void
+    public function fileName(): string
     {
-        if (!$this->isValidMD5()) {
-            throw new InvalidMD5();
-        }
-
-        if (!in_array($this->type, self::types)) {
-            throw new UnknownTypeErr();
-        }
-    }
-
-    private function isValidMD5(): bool
-    {
-        return preg_match('/^[a-f0-9]{32}$/', $this->md5) === 1;
-    }
-
-    private function fixExt(): void
-    {
-        $this->ext = strtolower($this->ext);
-        if ($this->ext === 'jpeg') $this->ext = 'jpg';
-    }
-
-    public static function byNameWithMD5(string $baseName): static
-    {
-        $md5 = pathinfo($baseName, PATHINFO_FILENAME);
-        $ext = pathinfo($baseName, PATHINFO_EXTENSION);
-        return static::newInstance($md5, $ext);
-    }
-
-    public function getFullPath(): string
-    {
-        $relPath = $this->getRelPath();
-        return FileHelper::fullPath($relPath, false);
-    }
-
-    public function getRelPath(): string
-    {
-        $md5Path = FileHelper::getMD5Path($this->md5);
-        return static::mainFolder . '/' . $md5Path . '/' . $this->nameByMD5();
-    }
-
-    public function nameByMD5(): string
-    {
-        return $this->md5 . ($this->ext ? '.' . $this->ext : '');
+        $ext = !empty($this->ext->value) ? ".{$this->ext->value}" : '';
+        return $this->hash . $ext;
     }
 
     public function getType(): string
@@ -94,64 +45,40 @@ class FileDTO implements FileITF
 
     public function updateStatus(FileStatus $status): void
     {
-        $sql = "update Files set status = :status where id = :id";
-        $params = ['status' => $status->value, 'id' => $this->id];
+        $processStartedAt = $status->value === FileStatus::Uploaded->value ? null : date('Y-m-d H:i:s');
+        $sql = "update Files set status = :status, processStartedAt = :processStartedAt where id = :id";
+        $params = [
+            'status'           => $status->value,
+            'processStartedAt' => $processStartedAt,
+            'id'               => $this->id
+        ];
         DB::qwe($sql, $params);
         $this->status = $status->value;
     }
 
     protected function afterPut(): void
     {
-        $this->id = self::idByPut();
+        $this->id = DB::lastId() ?? self::byHash($this->hash)->id;
     }
 
-    public function idByPut(): int
+    public static function byHash($hash): ?static
     {
-        $lastId = DB::lastId();
-        if ($lastId) {
-            return $lastId;
-        }
-
-        $file = self::byMD5($this->md5);
-        return $file->id;
-    }
-
-    public static function byMD5($md5): static|false
-    {
-        $sql = "select * from Files where md5 = :md5";
-        $params = ['md5' => $md5];
+        $sql = "select * from Files where hash = :hash";
+        $params = ['hash' => $hash];
         $qwe = DB::qwe($sql, $params);
-        return $qwe->fetchObject(static::class);
+        return $qwe->fetchObject(static::class) ?? null;
     }
 
-    protected function beforePut(): void
+    public function setAsPublic(): void
     {
-        $this->validate();
+        $this->isPublic = true;
+        $this->putToDB();
     }
 
-    protected function beforeDel()
+    public function setAsPrivate(): void
     {
+        $this->isPublic = false;
+        $this->putToDB();
     }
 
-    protected function afterDel()
-    {
-    }
-
-    public static function createTable(): void
-    {
-        $sql = "create table if not exists Files
-            (
-                id        bigint unsigned auto_increment
-                    primary key,
-                md5       char(32) charset ascii                              not null,
-                ext       char(4) charset ascii     default ''                not null,
-                type      varchar(16) charset ascii                           not null,
-                createdAt timestamp                 default CURRENT_TIMESTAMP not null,
-                status    varchar(32) charset ascii default 'uploaded'        not null,
-                constraint md5
-                    unique (md5, ext)
-            )
-                engine = InnoDB;";
-        DB::qwe($sql);
-    }
 }

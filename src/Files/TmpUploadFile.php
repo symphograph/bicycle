@@ -5,7 +5,6 @@ namespace Symphograph\Bicycle\Files;
 use Symphograph\Bicycle\Errors\Upload\EmptyFilesErr;
 use Symphograph\Bicycle\Errors\Upload\UploadErr;
 use Symphograph\Bicycle\FileHelper;
-use Symphograph\Bicycle\ImgHelper;
 use Throwable;
 
 class TmpUploadFile
@@ -24,30 +23,6 @@ class TmpUploadFile
         $this->name = $file['name'] ?? '';
         $this->size = $file['size'] ?? 0;
         $this->validate();
-    }
-
-    public static function byExternal(string $externalUrl): static|false
-    {
-        try {
-            $fileData = file_get_contents($externalUrl);
-        } catch (Throwable) {
-            return false;
-        }
-
-        $fileName = md5($fileData);
-        $fullPath = FileHelper::fullPath(static::tmpFolder . $fileName, false);
-        FileHelper::fileForceContents($fullPath, $fileData);
-        return static::newInstance($fullPath, $fileName);
-    }
-
-    public static function byBase64(string $base64): ?static
-    {
-        $data = base64_decode($base64);
-        if ($data === false) return null;
-        $fileName = md5($data);
-        $fullPath = FileHelper::fullPath(static::tmpFolder . $fileName, false);
-        FileHelper::fileForceContents($fullPath, $data);
-        return static::newInstance($fullPath, $fileName);
     }
 
     public static function newInstance(string $tmpFullPath, string $name): static

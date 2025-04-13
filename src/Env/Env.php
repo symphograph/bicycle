@@ -3,11 +3,11 @@
 namespace Symphograph\Bicycle\Env;
 
 use stdClass;
-use Symphograph\Bicycle\Auth\Discord\DiscordSecrets;
-use Symphograph\Bicycle\Auth\Mailru\MailruSecrets;
-use Symphograph\Bicycle\Auth\Telegram\TelegramSecrets;
-use Symphograph\Bicycle\Auth\Vkontakte\VKSecrets;
-use Symphograph\Bicycle\Auth\Yandex\YandexSecrets;
+use Symphograph\Bicycle\Auth\Account\Profile\Discord\DiscordSecrets;
+use Symphograph\Bicycle\Auth\Account\Profile\Mailru\MailruSecrets;
+use Symphograph\Bicycle\Auth\Account\Profile\Telegram\TelegramSecrets;
+use Symphograph\Bicycle\Auth\Account\Profile\Vkontakte\VKSecrets;
+use Symphograph\Bicycle\Auth\Account\Profile\Yandex\YandexSecrets;
 use Symphograph\Bicycle\Env\Server\ServerEnv;
 use Symphograph\Bicycle\Errors\AppErr;
 
@@ -38,6 +38,9 @@ readonly class Env
     private array $powerManagers;
     private array $curlLocations;
     private array $telegramBots;
+    private object $storageFolder;
+    private string $salt;
+    private object $emailNotify;
 
     public function __construct()
     {
@@ -149,15 +152,13 @@ readonly class Env
         );
     }
 
-    public static function getYandexSecrets(): YandexSecrets
+    public static function yandexSecrets(): YandexSecrets
     {
         $Env = self::getMyEnv();
         return new YandexSecrets(
-            $Env->yandexSecrets->clientId ?? '',
-            $Env->yandexSecrets->clientSecret ?? '',
-            $Env->yandexSecrets->callback ?? '',
-            $Env->vkSecrets->loginPageTitle ?? 'Вход',
-            $Env->yandexSecrets->suggestKey ?? ''
+            $Env->yandexSecrets->clientId,
+            $Env->yandexSecrets->clientSecret,
+            $Env->yandexSecrets->suggestKey
         );
     }
 
@@ -234,6 +235,32 @@ readonly class Env
     {
         $Env = self::getMyEnv();
         return $Env->isTest;
+    }
+
+    public static function getStorageFolder(): StorageFolder
+    {
+        $Env = self::getMyEnv();
+        if(empty($Env->storageFolder)) {
+            throw new AppErr('StorageFolder not set');
+        }
+
+        return new StorageFolder(
+            $Env->storageFolder->data,
+            $Env->storageFolder->public,
+            $Env->storageFolder->tmp,
+        );
+    }
+
+    public static function salt(): string
+    {
+        $Env = self::getMyEnv();
+        return $Env->salt;
+    }
+
+    public static function emailNotify(): EmailSecret
+    {
+        $Env = self::getMyEnv();
+        return new EmailSecret($Env->emailNotify->email, $Env->emailNotify->password);
     }
 
 }

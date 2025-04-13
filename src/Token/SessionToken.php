@@ -3,22 +3,40 @@
 namespace Symphograph\Bicycle\Token;
 
 use Symphograph\Bicycle\Env\Server\ServerEnv;
+use Symphograph\Bicycle\Errors\Auth\AccessErr;
+use Symphograph\Bicycle\Errors\Auth\AuthErr;
 
 class SessionToken
 {
-    public static function create(string $sessionId, string $createdAt = 'now'): string
+    /**
+     * @throws AuthErr
+     */
+    public static function create(string $sessionMark, string $createdAt = 'now'): string
     {
+        $claims = [
+            'sessionMark' => $sessionMark,
+        ];
+
         $Token = new Token(
-            jti: $sessionId,
             aud: [ServerEnv::SERVER_NAME()],
             createdAt: $createdAt,
-            expireDuration: '+1 month'
+            expireDuration: '+1 month',
+            claims: $claims
         );
         return $Token->jwt;
     }
 
+    /**
+     * @throws AccessErr
+     * @throws AuthErr
+     */
     public static function validation(string $jwt): void
     {
         Token::validation(jwt: $jwt);
+    }
+
+    public static function marker(string $jwt): string
+    {
+        return Token::toArray($jwt)['sessionMark'];
     }
 }

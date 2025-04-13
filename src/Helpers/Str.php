@@ -152,4 +152,9 @@ class Str
         );
     }
 
+    public static function isValidMD5($md5): bool
+    {
+        return preg_match('/^[a-f0-9]{32}$/', $md5) === 1;
+    }
+
 }

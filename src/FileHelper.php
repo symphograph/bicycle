@@ -12,6 +12,9 @@ use Symphograph\Bicycle\Helpers\TextHelper;
 
 class FileHelper
 {
+    /**
+     * @return string[]
+     */
     public static function FileList(string $dir): array
     {
         $dir = self::fullPath($dir);
@@ -24,18 +27,46 @@ class FileHelper
         $skip = ['.', '..'];
         $files2 = [];
         foreach ($files as $file) {
-            if (in_array($file, $skip) or is_dir($dir . '/' . $file))
+            if (in_array($file, $skip) or is_dir("$dir/$file"))
                 continue;
             $files2[] = $file;
         }
         return $files2;
     }
 
-    public static function fullPath(string $relOrFullPath, bool $isPublic = true): string
+    /**
+     * @return string[]
+     */
+    public static function FileListInSegmentedFolders(string $baseDir): array
+    {
+        $baseDir = self::fullPath($baseDir);
+        if (!file_exists($baseDir) || !is_dir($baseDir)) {
+            return [];
+        }
+
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($baseDir, FilesystemIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::LEAVES_ONLY
+        );
+
+        $files = [];
+        foreach ($iterator as $fileInfo) {
+            if ($fileInfo->isFile()) {
+                $fullPath = $fileInfo->getPathname();
+                $relativePath = substr($fullPath, strlen($baseDir) + 1);
+                $relativePath = str_replace(DIRECTORY_SEPARATOR, '/', $relativePath);
+                $files[] = $fullPath;
+            }
+        }
+
+        return $files;
+    }
+
+    public static function fullPath(string $relOrFullPath): string
     {
         if (!self::isRootPath($relOrFullPath)) {
-            $root = $isPublic ? ServerEnv::DOCUMENT_ROOT() : dirname(ServerEnv::DOCUMENT_ROOT());
-            $fullPath = $root . '/' . $relOrFullPath;
+            $root = dirname(ServerEnv::DOCUMENT_ROOT());
+            $fullPath = "$root/$relOrFullPath";
         } else {
             $fullPath = $relOrFullPath;
         }
@@ -67,7 +98,7 @@ class FileHelper
         $skip = ['.', '..'];
         $folders = [];
         foreach ($files as $file) {
-            if (!in_array($file, $skip) and is_dir($dir . '/' . $file))
+            if (!in_array($file, $skip) and is_dir("$dir/$file"))
                 $folders[] = $file;
         }
         return ($folders);
@@ -76,7 +107,7 @@ class FileHelper
     public static function fileExists(string $dir): bool
     {
         $dir = self::fullPath($dir);
-        $dir = self::cleanPath($dir);
+
         return file_exists($dir) && !is_dir($dir);
     }
 
@@ -89,7 +120,7 @@ class FileHelper
      * @param string $data
      * @param int $permissions
      * @return int
-     * @throws MyErrors
+     * @throws FileErr
      */
     public static function fileForceContents(string $fullPath, string $data, int $permissions = 0775): int
     {
@@ -124,7 +155,13 @@ class FileHelper
             return;
         }
         mkdir($dir, $permissions, true) or
-        throw new FileErr("error on create dir: $dir", "Не удалось создать папку для файла");
+        throw new FileErr("error on create dir: $dir", "Не удалось создать папку");
+    }
+
+    public static function symlink(string $target, string $linkPath): void
+    {
+        self::forceDir($linkPath);
+        symlink($target, $linkPath);
     }
 
     public static function copy(string $from, string $to): bool
@@ -156,6 +193,27 @@ class FileHelper
         }
 
         return rmdir($dir);
+    }
+
+    /**
+     * Delete file or symlink with empty parent dirs
+     */
+    public static function deleteAndCleanup(string $filePath): void
+    {
+        if (file_exists($filePath) || is_link($filePath)) {
+            unlink($filePath);
+        } else {
+            return;
+        }
+
+        $currentDir = dirname($filePath);
+
+        for($i = 0; $i < 2; $i++) {
+            $files = scandir($currentDir);
+            if (count($files) > 2) break;
+            rmdir($currentDir);
+            $currentDir = dirname($currentDir);
+        }
     }
 
     public static function delAllExtensions(string $fileName, array $exts = ['jpg', 'png', 'jpeg', 'svg']): void
@@ -264,10 +322,10 @@ class FileHelper
         return $englishFilename;
     }
 
-    public static function getMD5Path(string $md5): string
+    public static function getSegmentedFolders(string $hash): string
     {
-        $subDir1 = substr($md5, 0, 2);
-        $subDir2 = substr($md5, 2, 2);
+        $subDir1 = substr($hash, 0, 2);
+        $subDir2 = substr($hash, 2, 2);
         return $subDir1 . '/' . $subDir2;
     }
 }

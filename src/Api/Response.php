@@ -6,7 +6,7 @@ use JetBrains\PhpStorm\NoReturn;
 use Symphograph\Bicycle\AppStorage;
 use Symphograph\Bicycle\DTO\BindTrait;
 use Symphograph\Bicycle\Env\Env;
-use Symphograph\Bicycle\Errors\Files\FileDoesNotExistsErr;
+use Symphograph\Bicycle\Errors\Files\FileNotExistsInPathErr;
 use Symphograph\Bicycle\Errors\Handler;
 use Symphograph\Bicycle\FileHelper;
 
@@ -62,7 +62,7 @@ class Response
         }
 
         if(!FileHelper::fileExists($fullPath)){
-            throw new FileDoesNotExistsErr($fullPath);
+            throw new FileNotExistsInPathErr($fullPath);
         }
 
         $mimeType = 'image/jpeg';
