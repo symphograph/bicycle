@@ -66,6 +66,8 @@ class Device extends DeviceDTO
         $Device->ismobiledevice = $agent->ismobiledevice;
         $Device->browser = $agent->browser;
         $Device->device_type = $agent->device_type;
+        $Device->firstIp = $_SERVER['REMOTE_ADDR'];
+        $Device->lastIp = $_SERVER['REMOTE_ADDR'];
         $Device->putToDB(PutMode::insert);
         $Device->id = DB::lastId();
         return $Device;
@@ -82,6 +84,7 @@ class Device extends DeviceDTO
     {
         $this->visitedAt = date('Y-m-d H:i:s');
         $this->fingerPrint = self::createFingerPrint();
+        $this->lastIp = $_SERVER['REMOTE_ADDR'];
         $this->putToDB();
         $this->setCookieDevice();
     }

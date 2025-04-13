@@ -24,6 +24,8 @@ class DeviceDTO
     public string $browser;
     public string $fingerPrint;
     public string $device_type;
+    public string $firstIp;
+    public string $lastIp;
 
     public static function bySessId(int $sessId): static
     {
