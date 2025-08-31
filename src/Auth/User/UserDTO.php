@@ -15,8 +15,6 @@ class UserDTO
     public int     $id;
     public string  $createdAt;
     public string  $visitedAt;
-    public ?string $email;
-    public ?string $emailConfirmedAt;
-    public ?string $firstAuthType;
-
+    public ?string  $publicNick;
+    public int $cpu;
 }

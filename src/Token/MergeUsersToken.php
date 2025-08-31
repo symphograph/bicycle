@@ -6,30 +6,27 @@ use Symphograph\Bicycle\Env\Server\ServerEnv;
 use Symphograph\Bicycle\Errors\Auth\AuthErr;
 
 
-readonly class AuthToken
+readonly class MergeUsersToken
 {
-    private function __construct(
-        public string $jwt,
-        public string $origin,
-        public string $state,
-        public string $hash
-    )
-    {
-    }
 
-    public static function create(string $hash = ''): self
+    private function __construct(
+        public int    $fromUserId,
+        public int    $toUserId,
+        public string $jwt,
+    ){}
+
+    public static function create(int $fromUserId, int $toUserId): self
     {
         $claims = [
-            'origin' => ServerEnv::HTTP_ORIGIN(),
-            'state' => bin2hex(random_bytes(16)),
-            'hash' => $hash,
+            'fromUserId' => $fromUserId,
+            'toUserId' => $toUserId
         ];
         $Token = new Token(
             aud: [ServerEnv::SERVER_NAME()],
-            expireDuration: "+10 min",
+            expireDuration: "+5 min",
             claims: $claims,
         );
-        return new self($Token->jwt, $claims['origin'], $claims['state'], $claims['hash']);
+        return new self($fromUserId, $toUserId, $Token->jwt);
     }
 
     /**
@@ -39,6 +36,7 @@ readonly class AuthToken
     {
         Token::validation($jwt);
         $arr = Token::toArray($jwt);
-        return new self($jwt, $arr['origin'], $arr['state'], $arr['hash']);
+        return new self($arr['fromUserId'], $arr['toUserId'], $jwt);
     }
+
 }

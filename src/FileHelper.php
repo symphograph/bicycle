@@ -8,7 +8,7 @@ use RecursiveIteratorIterator;
 use Symphograph\Bicycle\Env\Server\ServerEnv;
 use Symphograph\Bicycle\Errors\Files\FileErr;
 use Symphograph\Bicycle\Errors\MyErrors;
-use Symphograph\Bicycle\Helpers\TextHelper;
+use Symphograph\Bicycle\Helpers\Text;
 
 class FileHelper
 {
@@ -297,7 +297,7 @@ class FileHelper
 
 
         foreach ($filteredWords as $word) {
-            $transliteratedWord = TextHelper::transliterate($word);
+            $transliteratedWord = Text::transliterate($word);
             $wordLength = mb_strlen($transliteratedWord);
 
             if ($currentLength + $wordLength + 1 <= $maxLength || $word === $lastWord) {

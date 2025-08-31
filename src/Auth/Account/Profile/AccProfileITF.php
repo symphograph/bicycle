@@ -2,6 +2,9 @@
 
 namespace Symphograph\Bicycle\Auth\Account\Profile;
 
+
+use Symphograph\Bicycle\Auth\Account\AccountType;
+use Symphograph\Bicycle\Contact\Contact;
 use Symphograph\Bicycle\PDO\PutMode;
 
 interface AccProfileITF
@@ -16,4 +19,7 @@ interface AccProfileITF
 
     public function nickName(): string;
 
+    public function getAuthType(): AccountType;
+
+    public function getContact(): Contact;
 }

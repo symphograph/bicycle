@@ -11,7 +11,7 @@ class AccountDTO
     const string tableName = 'accounts';
 
     public int     $id;
-    public int     $userId;
+    public ?int     $userId;
     public string  $authType;
     public string  $createdAt;
     public string  $visitedAt;

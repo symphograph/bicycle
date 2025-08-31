@@ -61,6 +61,9 @@ trait DTOTrait
         }
     }
 
+    /**
+     * @throws AppErr
+     */
     public static function byProp(string $propName, int|float|string $propValue): ?self
     {
         $tableName = self::tableName;
@@ -71,7 +74,7 @@ trait DTOTrait
 
         $result = $qwe->fetchAll(PDO::FETCH_CLASS|PDO::FETCH_PROPS_LATE, self::class);
         if(empty($result)) {
-            return null;
+                return null;
         }
         if(count($result) > 1) {
             throw new AppErr("$propName is not unique in table $tableName");
@@ -101,6 +104,10 @@ trait DTOTrait
         }
 
         $mode->execute(self::tableName, $this->getAllProps());
+
+        if($mode === PutMode::insertAuto){
+            $this->id = DB::lastId();
+        }
 
         if(method_exists(self::class, 'afterPut')){
             $this->afterPut();
@@ -187,4 +194,5 @@ trait DTOTrait
         $sql .= " from $tableName ";
         return $sql;
     }
+
 }

@@ -52,4 +52,18 @@ class DeviceDTO
         $params = ['deviceId' => $this->id, 'userId' => $userId];
         DB::qwe($sql, $params);
     }
+
+    public function linkToAccount(int $accountId): void
+    {
+        $sql = "REPLACE INTO device_account (deviceId, accountId) VALUES (:deviceId, :accountId)";
+        $params = ['deviceId' => $this->id, 'accountId' => $accountId];
+        DB::qwe($sql, $params);
+    }
+
+    public function unlinkFromAccount(int $accountId): void
+    {
+        $sql = "DELETE FROM device_account WHERE deviceId = :deviceId AND accountId = :accountId";
+        $params = ['deviceId' => $this->id, 'accountId' => $accountId];
+        DB::qwe($sql, $params);
+    }
 }

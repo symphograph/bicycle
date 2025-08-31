@@ -2,9 +2,6 @@
 
 namespace Symphograph\Bicycle\Errors;
 
-
-use Symphograph\Bicycle\Helpers;
-
 class ImgErr extends MyErrors
 {
     public function __construct(
@@ -13,7 +10,6 @@ class ImgErr extends MyErrors
         int $httpStatus = 500
     )
     {
-        $this->type = Helpers::classBasename(self::class);
         parent::__construct($message, $pubMsg, $httpStatus);
     }
 }

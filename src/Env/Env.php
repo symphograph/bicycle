@@ -8,6 +8,8 @@ use Symphograph\Bicycle\Auth\Account\Profile\Mailru\MailruSecrets;
 use Symphograph\Bicycle\Auth\Account\Profile\Telegram\TelegramSecrets;
 use Symphograph\Bicycle\Auth\Account\Profile\Vkontakte\VKSecrets;
 use Symphograph\Bicycle\Auth\Account\Profile\Yandex\YandexSecrets;
+use Symphograph\Bicycle\Contact\ContactPowered;
+use Symphograph\Bicycle\Contact\ContactType;
 use Symphograph\Bicycle\Env\Server\ServerEnv;
 use Symphograph\Bicycle\Errors\AppErr;
 
@@ -41,6 +43,7 @@ readonly class Env
     private object $storageFolder;
     private string $salt;
     private object $emailNotify;
+    private array $poweredContacts;
 
     public function __construct()
     {
@@ -261,6 +264,23 @@ readonly class Env
     {
         $Env = self::getMyEnv();
         return new EmailSecret($Env->emailNotify->email, $Env->emailNotify->password);
+    }
+
+    /**
+     * @return ContactPowered[]
+     */
+    public static function poweredContacts(): array
+    {
+        $Env = self::getMyEnv();
+        $arr = [];
+        foreach($Env->poweredContacts as $contact) {
+            $arr[] = ContactPowered::NewPoweredInstance(
+                $contact->strValue,
+                ContactType::from($contact->type),
+                $contact->powerIds
+            );
+        }
+        return $arr;
     }
 
 }

@@ -104,7 +104,8 @@ class FileHDD
     {
         $fullPath = $this->privatePath();
         FileHelper::fileForceContents($fullPath,'');
-        rename(self::tmpPath($this->hash), $fullPath);
+        $tmpPath = self::tmpPath($this->hash);
+        rename($tmpPath, $fullPath);
         $this->isTmp = false;
     }
 

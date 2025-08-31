@@ -8,12 +8,12 @@ use Symphograph\Bicycle\Auth\ModelCookieTrait;
 use Symphograph\Bicycle\DTO\ModelTrait;
 use Symphograph\Bicycle\Env\Server\ServerEnv;
 use Symphograph\Bicycle\Env\Services\Client;
+use Symphograph\Bicycle\Errors\Auth\AccessErr;
 use Symphograph\Bicycle\Errors\Auth\AuthErr;
 use Symphograph\Bicycle\Errors\Auth\EmptyOriginErr;
 use Symphograph\Bicycle\PDO\DB;
 use Symphograph\Bicycle\Token\AccessToken;
 use Symphograph\Bicycle\Token\SessionToken;
-use Symphograph\Bicycle\Token\Token;
 use Throwable;
 
 class Session extends SessionDTO
@@ -48,27 +48,33 @@ class Session extends SessionDTO
         }
     }
 
+    /**
+     * @throws AuthErr
+     * @throws AccessErr
+     */
     public static function byAccessToken(): self
     {
-        $jwt = AccessToken::byHTTP();
-        return Session::byMarker(AccessToken::sessionMark($jwt))
+        $jwt = AccessToken::byHTTP([]);
+        return Session::byMarker($jwt->sessionMark)
             ?? throw new AuthErr('session does not exist');
     }
 
+    /**
+     * @throws AccessErr
+     * @throws AuthErr
+     */
     public static function byJWT(): self
     {
         if (empty($_SERVER['HTTP_SESSIONTOKEN']) || empty($_SERVER['HTTP_ACCESSTOKEN'])) {
             throw new AuthErr('tokens is empty');
         }
         SessionToken::validation(jwt: $_SERVER['HTTP_SESSIONTOKEN']);
-        AccessToken::validation(jwt: $_SERVER['HTTP_ACCESSTOKEN'], ignoreExpire: true);
-
-        $accessTokenArr = Token::toArray($_SERVER['HTTP_ACCESSTOKEN']);
 
         $Session = self::byMarker(SessionToken::marker($_SERVER['HTTP_SESSIONTOKEN']))
             ?? throw new AuthErr('Session does not exist', 'Session does not exist');
 
-        $accessTokenTime = $accessTokenArr['iat']->getTimestamp();
+        $accessToken = AccessToken::byHTTP(needPowers: [], ignoreExpire: true);
+        $accessTokenTime = $accessToken->arr()['iat']->getTimestamp();
         $sessionTokenTime = strtotime($Session->visitedAt);
         $diff = $sessionTokenTime - $accessTokenTime;
         if (abs($diff) > 60 * 15) {
@@ -86,5 +92,12 @@ class Session extends SessionDTO
 
         return self::byMarker($_COOKIE[self::cookieName])
             ?? throw new AuthErr('session does not exist');
+    }
+
+    public static function delByDevice(int $deviceId): void
+    {
+        $sql = "DELETE FROM sessions WHERE deviceId = :deviceId";
+        $params = ['deviceId' => $deviceId];
+        DB::qwe($sql, $params);
     }
 }

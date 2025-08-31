@@ -65,4 +65,9 @@ class Math
         }
         return round(($arr[$middle - 1] + $arr[$middle]) / 2);
     }
+
+    public static function isBetween(int $value, int $min, int $max): bool
+    {
+        return $min <= $value && $value <= $max;
+    }
 }

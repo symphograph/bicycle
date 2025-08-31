@@ -3,6 +3,8 @@
 namespace Symphograph\Bicycle\Auth\Account\Profile\Yandex;
 
 use Symphograph\Bicycle\Auth\Account\Profile\AccProfileDTO;
+use Symphograph\Bicycle\Contact\Contact;
+use Symphograph\Bicycle\Contact\ContactType;
 use Symphograph\Bicycle\DTO\DTOTrait;
 use Symphograph\Bicycle\Errors\AppErr;
 use Symphograph\Bicycle\PDO\DB;
@@ -65,5 +67,10 @@ class YandexProfileDTO extends AccProfileDTO
         $userData = json_decode($response, true);
 
         return YandexProfileDTO::byBind($userData);
+    }
+
+    public function getContact(): Contact
+    {
+        return Contact::NewInstance($this->default_email, ContactType::Email);
     }
 }

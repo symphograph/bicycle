@@ -2,6 +2,9 @@
 
 namespace Symphograph\Bicycle\Auth\Account\Profile\Discord;
 
+
+use Symphograph\Bicycle\Contact\Contact;
+use Symphograph\Bicycle\Contact\ContactType;
 use Symphograph\Bicycle\DTO\DTOTrait;
 use Symphograph\Bicycle\Auth\Account\Profile\AccProfileDTO;
 use Symphograph\Bicycle\PDO\DB;
@@ -50,5 +53,10 @@ class DiscordUser extends AccProfileDTO
     public function nickName(): string
     {
         return $this->display_name ?? '' ?: $this->username;
+    }
+
+    public function getContact(): Contact
+    {
+        return Contact::NewInstance($this->username, ContactType::Discord);
     }
 }

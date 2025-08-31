@@ -20,9 +20,16 @@ class Response
     public array $warnings;
     public int $httpStatus;
 
-    #[NoReturn] public static function error(string $msg, int $httpStatus = 500, array $trace = []): void
+    #[NoReturn] public static function error(
+        string $msg,
+        int $httpStatus = 500,
+        array $trace = [],
+        string $type = 'Err',
+        array $payload = []
+    ): void
     {
-        self::jsonResponse(['error' => $msg, 'trace' => $trace], $httpStatus);
+        $data = ['type' => $type,'error' => $msg, 'trace' => $trace, 'payload' => $payload];
+        self::jsonResponse($data, $httpStatus);
     }
 
     #[NoReturn] public static function data(array|object $data, string $msg = 'Готово', int $httpStatus = 200): void

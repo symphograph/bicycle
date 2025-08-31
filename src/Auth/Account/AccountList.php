@@ -20,20 +20,20 @@ class AccountList extends AbstractList
         return Account::class;
     }
 
-    /**
-     * @param Contact[] $contacts
-     * @return self
-     */
-    public static function byContacts(array $contacts): self
+    public static function all(): static
     {
-        $AccountList = new self();
-        foreach ($contacts as $contact){
-            $Account = Account::byContact($contact);
-            if($Account) {
-                $AccountList->list[] = $Account;
-            }
-        }
-        return $AccountList;
+        $sql = "SELECT * FROM accounts";
+        return static::bySql($sql);
+    }
+
+    public static function allNoDefaults(): static
+    {
+        $sql = <<<SQL
+            SELECT * FROM accounts  
+            WHERE authType <> 'default'
+            ORDER BY userId, visitedAt DESC;
+        SQL;
+        return static::bySql($sql);
     }
 
     /**
@@ -44,9 +44,9 @@ class AccountList extends AbstractList
     {
         $sql = "
             select accounts.* from accounts 
-            inner join device_user 
-                on accounts.userId = device_user.userId
-                and device_user.deviceId = :deviceId";
+            inner join device_account 
+                on accounts.id = device_account.accountId
+                and device_account.deviceId = :deviceId";
 
         $params = compact('deviceId');
         return self::bySql($sql, $params);
@@ -101,16 +101,10 @@ class AccountList extends AbstractList
         }
     }
 
-    public function getFirstUserId(): int|false
+    public function isContainsUser(int $userId): bool
     {
-        $this->sortByCreatedAt();
-        foreach ($this->list as $account) {
-            if(!empty($account->userId)) {
-                return $account->userId;
-            }
-        }
-        return false;
+        $fn = fn($account) => $account->userId === $userId;
+        return array_any($this->list, $fn);
     }
-
 
 }

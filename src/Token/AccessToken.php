@@ -3,25 +3,40 @@
 namespace Symphograph\Bicycle\Token;
 
 
+use Symphograph\Bicycle\Auth\Account\AccountType;
 use Symphograph\Bicycle\Env\Env;
 use Symphograph\Bicycle\Env\Server\ServerEnv;
 use Symphograph\Bicycle\Errors\Auth\AccessErr;
 use Symphograph\Bicycle\Errors\Auth\AuthErr;
 
-class AccessToken
+readonly class AccessToken
 {
+
+    private function __construct(
+        public string $jwt,
+        public string $sessionMark,
+        public int $userId,
+        public int $accountId,
+        public array $powers,
+        public AccountType $authType
+    ){}
+
+    public function arr(): array
+    {
+        return Token::toArray($this->jwt);
+    }
 
     /**
      * @throws AuthErr
      */
     public static function create(
         string $sessionMark,
-        int    $uid,
+        int    $userId,
         int    $accountId,
         array  $powers,
         string $createdAt = 'now',
-        string $authType = 'default',
-    ): string
+        AccountType $authType = AccountType::Default,
+    ): self
     {
         $audience = Env::getJWT()->audience;
 
@@ -31,69 +46,69 @@ class AccessToken
             'accountId'   => $accountId,
             'sessionMark' => $sessionMark,
             'powers'      => $powers,
-            'authType'    => $authType,
+            'authType'    => $authType->value,
         ];
 
         $Token = new Token(
-            uid: $uid,
+            uid: $userId,
             aud: $audience,
             createdAt: $createdAt,
-            expireDuration: '+1 day',
+            expireDuration: '+30 minutes',
             claims: $claims
         );
-        return $Token->jwt;
+        return new self($Token->jwt, $sessionMark, $userId, $accountId, $powers, $authType);
     }
 
     /**
      * @throws AuthErr
      * @throws AccessErr
      */
-    public static function validation(string $jwt, $needPowers = [], bool $ignoreExpire = false): void
+    private function validation($needPowers = [], bool $ignoreExpire = false): void
     {
         Token::validation(
-            jwt: $jwt,
+            jwt: $this->jwt,
             ignoreExpire: $ignoreExpire
         );
 
-        self::checkPowers($jwt, $needPowers);
+        $this->checkPowers($needPowers);
     }
 
     /**
      * @throws AccessErr
      */
-    private static function checkPowers(string $jwt, array $needPowers): void
+    private function checkPowers(array $needPowers): void
     {
         if (empty($needPowers)) return;
-        $tokenPowers = self::powers($jwt);
-        $intersect = array_intersect($needPowers, $tokenPowers);
+
+        $intersect = array_intersect($needPowers, $this->powers);
         if (!count($intersect)) throw new AccessErr('Token has not required Powers');
+        if(in_array(1, $needPowers)){
+            if(!Env::isDebugIp()) throw new AccessErr();
+        }
     }
 
-    private static function powers(string $jwt): array
+    /**
+     * @throws AccessErr
+     * @throws AuthErr
+     */
+    public static function byJwt(string $jwt, $needPowers, bool $ignoreExpire = false): self
     {
-        return Token::toArray($jwt)['powers'] ?? [];
+        $arr = Token::toArray($jwt);
+        $authType = AccountType::from($arr['authType']);
+        $token = new self($jwt, $arr['sessionMark'], $arr['uid'], $arr['accountId'], $arr['powers'], $authType);
+        $token->validation($needPowers, $ignoreExpire);
+        return $token;
     }
 
-    public static function userId(string $jwt): int
+    /**
+     * @throws AuthErr
+     * @throws AccessErr
+     */
+    public static function byHTTP($needPowers, bool $ignoreExpire = false): self
     {
-        return Token::toArray($jwt)['uid'];
-    }
-
-    public static function accountId(string $jwt): int
-    {
-        return Token::toArray($jwt)['accountId'];
-    }
-
-    public static function byHTTP(): string
-    {
-        return $_SERVER['HTTP_ACCESSTOKEN']
+         $jwt = $_SERVER['HTTP_ACCESSTOKEN']
             ?? throw new AuthErr('Unauthorized');
-    }
-
-
-    public static function sessionMark(string $jwt): string
-    {
-        return Token::toArray($jwt)['sessionMark'];
+         return self::byJwt($jwt, $needPowers, $ignoreExpire);
     }
 
 }

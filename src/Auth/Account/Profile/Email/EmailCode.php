@@ -16,7 +16,7 @@ use Symphograph\Bicycle\Token\Token;
 class EmailCode
 {
     const int minsBeforeExpired = 15;
-    const int minsCooldown      = 1;
+    const int minsCooldown      = 3;
 
     public string  $email;
     public string  $hash;
@@ -24,14 +24,16 @@ class EmailCode
     public ?string $lastTryAt;
     public int     $tryCount;
     public string  $code;
+    public string $fingerPrint;
 
-    public static function create(string $email): EmailCode
+    public static function create(string $email, string $fingerPrint): EmailCode
     {
         $emailCode = new EmailCode();
         $emailCode->email = $email;
         $emailCode->createdAt = date('Y-m-d H:i:s');
         $emailCode->code = Secure::createShortCode();
         $emailCode->hash = $emailCode->hash($emailCode->code);
+        $emailCode->fingerPrint = $fingerPrint;
         return $emailCode;
     }
 
@@ -55,12 +57,12 @@ class EmailCode
      * @throws AccessErr
      * @throws AuthErr
      */
-    public static function verifyCode(string $jwt, string $code): void
+    public static function verifyCode(string $jwt, string $code, string $fingerPrint): void
     {
         Token::validation(jwt: $jwt); // throw err
 
         $email = self::emailByJWT($jwt);
-        $emailCode = EmailCodeRepoDB::getLastActiveCode($email)
+        $emailCode = EmailCodeRepoDB::getLastActiveCode($email, $fingerPrint)
             ?? throw  new CodeExpiredErr();
 
         if ($emailCode->tryCount >= 3) {
@@ -83,24 +85,21 @@ class EmailCode
     /**
      * @throws CooldownNotExpiredErr
      */
-    public static function ensureCooldown(string $email): void
+    public static function ensureCooldown(string $email, string $fingerPrint): void
     {
         // Проверяем последний активный код
-        $lastCode = EmailCodeRepoDB::getLastActiveCode($email);
-        if ($lastCode) {
-            // Если попытки исчерпаны
-            if ($lastCode->tryCount >= 3) {
-                $lastTryTime = strtotime($lastCode->lastTryAt ?? $lastCode->createdAt);
-                $blockDuration = EmailCode::minsCooldown * 60; // Блокировка на x минут
-                $blockUntil = $lastTryTime + $blockDuration;
+        $lastCode = EmailCodeRepoDB::getLastActiveCode($email, $fingerPrint);
+        if(empty($lastCode)) return;
 
-                // Если блокировка еще активна
-                if (time() < $blockUntil) {
-                    $remaining = $blockUntil - time();
-                    $mins = ceil($remaining / 60);
-                    throw new CooldownNotExpiredErr($mins);
-                }
-            }
+        $lastTryTime = strtotime($lastCode->lastTryAt ?? $lastCode->createdAt);
+        $blockDuration = EmailCode::minsCooldown * 60; // Блокировка на x минут
+        $blockUntil = $lastTryTime + $blockDuration;
+
+        // Если блокировка еще активна
+        if (time() < $blockUntil) {
+            $remaining = $blockUntil - time();
+            $mins = ceil($remaining / 60);
+            throw new CooldownNotExpiredErr($mins);
         }
     }
 }

@@ -4,14 +4,17 @@ namespace Symphograph\Bicycle\Auth\Account;
 
 
 use Symphograph\Bicycle\Auth\Account\Profile\Discord\DiscordUser;
+use Symphograph\Bicycle\Auth\Account\Profile\Email\EmailUserDTO;
 use Symphograph\Bicycle\Auth\Account\Profile\Mailru\MailruUser;
 use Symphograph\Bicycle\Auth\Account\Profile\Telegram\TeleUser;
 use Symphograph\Bicycle\Auth\Account\Profile\Vkontakte\VkUser;
 use Symphograph\Bicycle\Auth\Account\Profile\Yandex\YandexProfileDTO;
-use Symphograph\Bicycle\Auth\Contact\Contact;
 use Symphograph\Bicycle\DTO\ModelTrait;
-use Symphograph\Bicycle\Errors\AccountErr;
+use Symphograph\Bicycle\Errors\Auth\AccessErr;
+use Symphograph\Bicycle\Errors\Auth\Account\AccountNoExistsErr;
+use Symphograph\Bicycle\Errors\Auth\AuthErr;
 use Symphograph\Bicycle\Helpers\Date;
+use Symphograph\Bicycle\PDO\DB;
 use Symphograph\Bicycle\Token\AccessToken;
 
 class Account extends AccountDTO
@@ -40,21 +43,6 @@ class Account extends AccountDTO
         return $Account;
     }
 
-    public static function byContact(Contact $contact): self|false
-    {
-        $socialProfile = match ($contact->type) {
-            'telegram' => TeleUser::byContact($contact->value),
-            'discord' => DiscordUser::byContact($contact->value),
-            'vkontakte' => VkUser::byContact($contact->value),
-            'mailru' => MailruUser::byContact($contact->value),
-            default => false
-        };
-        if (!$socialProfile) {
-            return false;
-        }
-        return self::byIdAndInit($socialProfile->accountId);
-    }
-
     public function initData(): static
     {
         $this->initProfileValues();
@@ -68,9 +56,13 @@ class Account extends AccountDTO
         $this->visitedAt = Date::dateFormatFeel($this->visitedAt, 'c');
     }
 
+    /**
+     * @throws AccessErr
+     * @throws AuthErr
+     */
     public static function byJwt(string $jwt): ?self
     {
-        $accountId = AccessToken::accountId($jwt);
+        $accountId = AccessToken::byJwt($jwt,[])->accountId;
         return Account::byId($accountId);
     }
 
@@ -83,6 +75,7 @@ class Account extends AccountDTO
             AccountType::Discord->value => $this->initDiscordUser(),
             AccountType::VKontakte->value => $this->initVkUser(),
             AccountType::Yandex->value => $this->initYandexUser(),
+            AccountType::Email->value => $this->initEmailUser(),
             default => null
         };
         return $this;
@@ -96,7 +89,7 @@ class Account extends AccountDTO
     private function initTeleUser(): void
     {
         $profile = TeleUser::byAccountId($this->id)
-            ?? throw new AccountErr('Profile does not exist', 'Профиль не найден');
+            ?? throw new AccountNoExistsErr($this->id);
 
         $this->externalAvaUrl = $profile->externalAvaUrl();
         $this->nickName = $profile->nickName();
@@ -106,17 +99,17 @@ class Account extends AccountDTO
     private function initYandexUser(): void
     {
         $profile = YandexProfileDTO::byAccountId($this->id)
-            ?? throw new AccountErr('Profile does not exist', 'Профиль не найден');
+            ?? throw new AccountNoExistsErr($this->id);
 
         $this->externalAvaUrl = "https://avatars.yandex.net/get-yapic/$profile->default_avatar_id/islands-50";
-        $this->nickName = $profile->display_name;
+        $this->nickName = $profile->nickName();
         //$this->contactValue = $profile->default_email;
     }
 
     private function initMailruUser(): void
     {
         $profile = MailruUser::byAccountId($this->id)
-        or throw new AccountErr('Profile does not exist', 'Профиль не найден');
+        or throw new AccountNoExistsErr($this->id);
 
         $this->externalAvaUrl = $profile->externalAvaUrl();
         $this->nickName = $profile->nickName();
@@ -126,7 +119,7 @@ class Account extends AccountDTO
     private function initDiscordUser(): void
     {
         $profile = DiscordUser::byAccountId($this->id)
-        or throw new AccountErr('Profile does not exist', 'Профиль не найден');
+        or throw new AccountNoExistsErr($this->id);
 
         $this->externalAvaUrl = $profile->externalAvaUrl();
         $this->nickName = $profile->nickName();
@@ -136,24 +129,35 @@ class Account extends AccountDTO
     private function initVkUser(): void
     {
         $profile = VkUser::byAccountId($this->id)
-        or throw new AccountErr('Profile does not exist', 'Профиль не найден');
+        or throw new AccountNoExistsErr($this->id);
 
         $this->externalAvaUrl = $profile->externalAvaUrl();
         $this->nickName = $profile->nickName();
         //$this->contactValue = $profile->domain;
     }
 
-    public function getPowers(): array
+    private function initEmailUser(): void
     {
-        //TODO mast have
-        if ($this->authType === 'default') {
-            return [];
-        }
+        $profile = EmailUserDTO::byAccountId($this->id)
+        or throw new AccountNoExistsErr($this->id);
+        $this->nickName = $profile->nickName();
+    }
 
-        $powers = [];
-        $persId = null;
+    public function isDefault(): bool
+    {
+        return $this->authType === AccountType::Default->value;
+    }
 
-        return compact('powers', 'persId');
+    public function unlinkFromUser(): void
+    {
+        $sql = "update accounts set userId = null where id = :id";
+        $params = ['id' => $this->id];
+        DB::qwe($sql, $params);
+    }
+
+    public function authType(): AccountType
+    {
+        return AccountType::from($this->authType);
     }
 
 }

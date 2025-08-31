@@ -59,8 +59,8 @@ class CallBack
 
         Client::byOrigin($origin);
 
-        AccessToken::validation($_POST['AccessToken'] ?? '');
-        SessionToken::validation($_POST['SessionToken'] ?? '');
+        AccessToken::byJwt($_POST['AccessToken'], []);
+        SessionToken::validation($_POST['SessionToken']);
 
         $marker = SessionToken::marker($_POST['SessionToken']);
         Session::byMarker($marker)

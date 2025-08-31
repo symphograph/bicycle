@@ -7,6 +7,7 @@ use JetBrains\PhpStorm\NoReturn;
 use ReflectionClass;
 use Symphograph\Bicycle\Api\Response;
 use Symphograph\Bicycle\AppStorage;
+use Symphograph\Bicycle\Auth\User\UserCpuTracker;
 use Symphograph\Bicycle\Env\Config;
 use Symphograph\Bicycle\Env\Env;
 use Symphograph\Bicycle\Logs\ErrorLog;
@@ -42,6 +43,9 @@ class Handler
     public function myShutdownHandler(): void
     {
         $error = error_get_last();
+
+        UserCpuTracker::handleShutdown();
+
         if(empty($error)) {
             return;
         }
@@ -72,7 +76,9 @@ class Handler
                 'line' => $err->getLine()
             ]);
         }
-        Response::error(self::getErrorMsg($err), $httpStatus, $trace);
+        $type = $err->type ?? 'Err';
+        $payload = $err->payload ?? [];
+        Response::error(self::getErrorMsg($err), $httpStatus, $trace, $type, $payload);
     }
 
     public static function myExceptionHandler(Throwable $err): void
@@ -88,13 +94,14 @@ class Handler
             self::apiResponse($err, $httpStatus);
         }
 
-        if (!Config::isCLI()) {
+        if (!Config::isCLI() && !headers_sent())  {
             http_response_code($httpStatus);
         }
 
         if (ini_get('display_errors')) {
             echo PHP_EOL;
             echo $err;
+            vd($err);
             return;
         }
         if (!empty($msg = self::getErrorMsg($err))) {

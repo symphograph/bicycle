@@ -3,6 +3,8 @@
 namespace Symphograph\Bicycle\Auth\Account\Profile\Email;
 
 use Symphograph\Bicycle\Auth\Account\Profile\AccProfileDTO;
+use Symphograph\Bicycle\Contact\Contact;
+use Symphograph\Bicycle\Contact\ContactType;
 use Symphograph\Bicycle\DTO\DTOTrait;
 use Symphograph\Bicycle\PDO\DB;
 
@@ -45,5 +47,10 @@ class EmailUserDTO extends AccProfileDTO
     public function nickName(): string
     {
         return explode('@', $this->email)[0];
+    }
+
+    public function getContact(): Contact
+    {
+        return Contact::NewInstance($this->email, ContactType::Email);
     }
 }

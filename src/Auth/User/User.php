@@ -5,7 +5,7 @@ namespace Symphograph\Bicycle\Auth\User;
 use Symphograph\Bicycle\Auth\Account\Account;
 use Symphograph\Bicycle\Auth\ModelCookieTrait;
 use Symphograph\Bicycle\DTO\ModelTrait;
-use Symphograph\Bicycle\Env\Server\ServerEnv;
+use Symphograph\Bicycle\Errors\Auth\AccessErr;
 use Symphograph\Bicycle\Errors\Auth\AuthErr;
 use Symphograph\Bicycle\PDO\DB;
 use Symphograph\Bicycle\Token\AccessToken;
@@ -40,16 +40,37 @@ class User extends UserDTO
         return self::byId($account->userId);
     }
 
-    public static function auth(array $allowedPowers = []): void
+    /**
+     * @throws AuthErr
+     * @throws AccessErr
+     */
+    public static function byAccessToken(): static
     {
-        AccessToken::validation(ServerEnv::HTTP_ACCESSTOKEN(), $allowedPowers);
+        $token = AccessToken::byHTTP([]);
+        $account = Account::byId($token->accountId);
+        if(empty($account)) throw new AuthErr();
+        if($account->userId !== $token->userId) throw new AuthErr('userId not correct');
+        return self::byId($account->userId);
     }
 
-    public static function byJWT(): ?self
+    /**
+     * @throws AuthErr
+     * @throws AccessErr
+     */
+    public static function auth(array $allowedPowers = []): void
     {
-        if(empty(ServerEnv::HTTP_ACCESSTOKEN())) return null;
-        $id = AccessTokenData::userId();
-        return self::byId($id);
+        AccessToken::byHTTP($allowedPowers);
+    }
+
+    public static function merge($fromUserId, int $toUserId): void
+    {
+    }
+
+    public function delDefaultAccounts(): void
+    {
+        $sql = "DELETE FROM accounts WHERE userId = :userId AND authType = 'default'";
+        $params = ['userId' => $this->id];
+        DB::qwe($sql, $params);
     }
 
 }

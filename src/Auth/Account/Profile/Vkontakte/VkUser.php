@@ -3,6 +3,8 @@
 namespace Symphograph\Bicycle\Auth\Account\Profile\Vkontakte;
 
 
+use Symphograph\Bicycle\Contact\Contact;
+use Symphograph\Bicycle\Contact\ContactType;
 use Symphograph\Bicycle\DTO\DTOTrait;
 use Symphograph\Bicycle\Auth\Account\Profile\AccProfileDTO;
 use Symphograph\Bicycle\Env\Env;
@@ -85,5 +87,10 @@ class VkUser extends AccProfileDTO
     public function nickName(): string
     {
         return static::nickByNames();
+    }
+
+    public function getContact(): Contact
+    {
+        return Contact::NewInstance($this->uid, ContactType::Vkontakte);
     }
 }

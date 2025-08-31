@@ -10,9 +10,10 @@ use Symphograph\Bicycle\Env\Env;
 
 class MyErrors extends Exception
 {
-    protected string $type     = 'Err';
+    public readonly string $type;
     public bool   $loggable = true;
     public string $logFolder = 'errors';
+    public array $payload;
 
     public function __construct(
         string $message = '',

@@ -1,26 +1,36 @@
 <?php
 
-namespace App\Auth\Account;
+namespace Symphograph\Bicycle\Auth\Account;
 
-use App\Auth\Contact\Contact;
-use App\Auth\Device\Device;
 use JetBrains\PhpStorm\NoReturn;
 use Symphograph\Bicycle\Api\Response;
+use Symphograph\Bicycle\Auth\Device\Device;
+use Symphograph\Bicycle\Auth\User\User;
 use Symphograph\Bicycle\Env\Services\Client;
-use Symphograph\Bicycle\Errors\AccountErr;
+use Symphograph\Bicycle\Errors\AppErr;
+use Symphograph\Bicycle\Errors\Auth\AccessErr;
+use Symphograph\Bicycle\Errors\Auth\Account\AccountNoExistsErr;
+use Symphograph\Bicycle\Errors\Auth\AuthErr;
 use Symphograph\Bicycle\Errors\NoContentErr;
 use Symphograph\Bicycle\Errors\ValidationErr;
-use Symphograph\Bicycle\Token\AccessTokenData;
+use Symphograph\Bicycle\HTTP\Request;
+use Symphograph\Bicycle\Token\AccessToken;
 
 class AccountCTRL
 {
+    /**
+     * @throws AuthErr
+     * @throws AccessErr
+     * @throws AccountNoExistsErr
+     */
     public static function get(): void
     {
-        $accountId = AccessTokenData::accountId();
-        $Account = Account::byIdAndInit($accountId)
-            or throw new AccountErr('not exist', 'Аккаунт не найден');
+        User::auth();
+        $accessToken = AccessToken::byHTTP([]);
+        $Account = Account::byId($accessToken->accountId)
+            or throw new AccountNoExistsErr($accessToken->accountId);
 
-        Response::data($Account);
+        Response::data($Account->initData());
     }
 
     public static function byId(): void
@@ -31,13 +41,62 @@ class AccountCTRL
         Response::data($Account);
     }
 
-    #[NoReturn] public static function list(): void
+    /**
+     * @throws AccessErr
+     * @throws AuthErr
+     * @throws ValidationErr
+     * @throws AppErr
+     */
+    public static function unlinkFromUser(): void
     {
-        $Device = Device::byCookie();
-        $AccountList = AccountList::byDevice($Device->id);
-        $AccountList->initData();
+        User::auth();
+        Request::checkEmpty(['accountId']);
 
-        Response::data($AccountList->getList());
+        $token = AccessToken::byHTTP([]);
+        $account = Account::byId($_POST['accountId']);
+        if($account->userId !== $token->userId){
+            throw new AppErr("Invalid userId");
+        }
+
+        $account->unlinkFromUser();
+
+        Response::success();
+    }
+
+    /**
+     * @throws AuthErr
+     * @throws AccessErr
+     */
+    #[NoReturn] public static function listByDevice(): void
+    {
+        User::auth();
+        $Device = Device::byCookie();
+        $accList = AccountList::byDevice($Device->id)
+            ->excludeDefaults()
+            ->initData();
+
+        $userId = AccessToken::byHTTP([])->userId;
+        if(!$accList->isContainsUser($userId)){
+            throw new AccessErr();
+        }
+
+        Response::data($accList->getList());
+    }
+
+    /**
+     * @throws AuthErr
+     * @throws AccessErr
+     */
+    #[NoReturn] public static function selfList(): void
+    {
+        User::auth();
+
+        $userId = AccessToken::byHTTP([])->userId;
+        $accList = AccountList::byUser($userId)
+            ->excludeDefaults()
+            ->initData();
+
+        Response::data($accList->getList());
     }
 
     #[NoReturn] public static function transfer(): void
@@ -48,29 +107,32 @@ class AccountCTRL
         Response::success();
     }
 
-    public static function getByContact(): void
+    /**
+     * @throws AuthErr
+     * @throws AccessErr
+     * @throws ValidationErr
+     */
+    #[NoReturn] public static function listByUserId(): void
     {
-        Client::authServer();
-        $contact = new Contact();
-        $contact->type = $_POST['contactType'] ?? throw new ValidationErr();
-        $contact->value = $_POST['contactValue'] ?? throw new ValidationErr();
+        User::auth([1]);
+        Request::checkEmpty(['userId']);
 
-        $Account = Account::byContact($contact)
-        or throw new NoContentErr();
-        Response::data($Account);
+        $accList = AccountList::byUser($_POST["userId"])
+            ->excludeDefaults()
+            ->initData();
+
+        Response::data($accList->getList());
     }
 
-    public static function listByContacts(): void
+    #[NoReturn] public static function groupedByUser(): void
     {
-        Client::authServer();
-        $contactList = $_POST['contactList'] ?? throw new ValidationErr();
-        if(!is_array($contactList)){
-            throw new ValidationErr();
+        User::auth([1]);
+        $accList = AccountList::allNoDefaults();
+        $users = [];
+        foreach($accList->getList() as $account){
+            $users[$account->userId][] = $account->initData();
         }
-
-        $contacts = Contact::listByBind($contactList);
-        $AccountList = AccountList::byContacts($contacts);
-        Response::data($AccountList->getList());
+        Response::data(array_values($users));
     }
 
 }

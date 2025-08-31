@@ -147,4 +147,27 @@ class Arr
         ksort($array2);
         return $array1 === $array2;
     }
+
+    public static function unique(array $arr, bool $saveKeys = false): array
+    {
+        $map = [];
+        $result = [];
+
+        foreach ($arr as $key => $item) {
+            $hash = is_object($item)
+                ? spl_object_hash($item)
+                : md5(serialize($item));
+
+            if (isset($map[$hash])) continue;
+
+            $map[$hash] = true;
+            if ($saveKeys) {
+                $result[$key] = $item;
+            } else {
+                $result[] = $item;
+            }
+        }
+
+        return $result;
+    }
 }

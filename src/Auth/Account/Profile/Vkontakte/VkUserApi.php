@@ -34,7 +34,7 @@ class VkUserApi extends VkUser
         $json = json_encode([
             'status' => 'success',
             'profile'    => $profile,
-            'token' => AuthToken::create(10, $profile->knownHash()),
+            'token' => AuthToken::create($profile->knownHash())->jwt,
         ]);
         echo <<<HTML
             <script>

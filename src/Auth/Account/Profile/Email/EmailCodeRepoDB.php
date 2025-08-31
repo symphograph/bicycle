@@ -6,18 +6,21 @@ use Symphograph\Bicycle\PDO\DB;
 
 class EmailCodeRepoDB
 {
-    public static function getLastActiveCode(string $email): ?EmailCode
+    public static function getLastActiveCode(string $email, string $fingerPrint): ?EmailCode
     {
         $mins = EmailCode::minsBeforeExpired;
         $sql = "SELECT * 
             FROM emailCodes 
             WHERE 
                 email = :email 
+                AND fingerPrint = :fingerPrint
                 AND createdAt > NOW() - INTERVAL $mins MINUTE 
             ORDER BY createdAt DESC 
             LIMIT 1";
 
-        $result = DB::qwe($sql, ['email' => $email]);
+        $params = ['email' => $email, 'fingerPrint' => $fingerPrint];
+
+        $result = DB::qwe($sql, $params);
         return $result->fetchObject(EmailCode::class) ?: null;
     }
 
@@ -41,11 +44,16 @@ class EmailCodeRepoDB
 
     public static function insert(EmailCode $emailCode): void
     {
-        $sql = "INSERT INTO emailCodes (email, hash, createdAt) VALUES (:email, :hash, :createdAt)";
+        $sql = "INSERT INTO emailCodes 
+            (email, hash, createdAt, fingerPrint) 
+            VALUES 
+            (:email, :hash, :createdAt, :fingerPrint)";
+
         $params = [
             'email' => $emailCode->email,
             'hash' => $emailCode->hash,
             'createdAt' => $emailCode->createdAt,
+            'fingerPrint' => $emailCode->fingerPrint
         ];
         DB::qwe($sql, $params);
     }
@@ -63,4 +71,5 @@ class EmailCodeRepoDB
         $params = ['email' => $email];
         DB::qwe($sql, $params);
     }
+
 }

@@ -2,6 +2,8 @@
 
 namespace Symphograph\Bicycle\Auth\Account\Profile\Telegram;
 
+use Symphograph\Bicycle\Contact\Contact;
+use Symphograph\Bicycle\Contact\ContactType;
 use Symphograph\Bicycle\PDO\DB;
 use Symphograph\Bicycle\DTO\DTOTrait;
 use Symphograph\Bicycle\Auth\Account\Profile\AccProfileDTO;
@@ -38,5 +40,10 @@ class TeleUserDTO extends AccProfileDTO
     public function nickName(): string
     {
         return static::nickByNames() ?: $this->username;
+    }
+
+    public function getContact(): Contact
+    {
+        return Contact::NewInstance($this->username, ContactType::Telegram);
     }
 }

@@ -19,13 +19,16 @@ use Symphograph\Bicycle\Env\Env;
 use Symphograph\Bicycle\Env\Server\ServerEnv;
 use Symphograph\Bicycle\Errors\Auth\AuthErr;
 use Symphograph\Bicycle\Token\AccessToken;
+use Symphograph\Bicycle\Token\MergeUsersToken;
 use Symphograph\Bicycle\Token\SessionToken;
 use Symphograph\Bicycle\Token\Token;
 
 class OAuthManager
 {
     public Account $account;
-    public User $user;
+    public User     $user;
+    public bool     $isNewLinkToUser = false;
+    private ?string $mergeToken;
 
     public function __construct(
         public Session $sess,
@@ -44,24 +47,62 @@ class OAuthManager
         return $this;
     }
 
-    public function loginOrRegister(AccountType $authType, AccProfileITF $responseProfile): void
+    public function loginOrRegister(AccProfileITF $responseProfile): void
     {
-        $sess = $this->sess;
-
+        $authType = $responseProfile->getAuthType();
         $existingProfile = self::getExistingProfile($authType, $responseProfile);
 
-        if(empty($existingProfile)) {
-            $this->user = User::byAccount($sess->accountId) // Берем юзера с прошлой сессии.
-                ?? throw new AuthErr('user does not exist');
-            $this->account = AccountManager::create($authType, $this->user->id, $responseProfile)->account;
-        }else{
-            $this->account = Account::byId($existingProfile->accountId);
-            $this->user = User::byAccount($this->account->id);
+        if (!empty($existingProfile)) {
+            $this->handleLogin($existingProfile, $responseProfile);
+        } else {
+            $this->handleRegister($authType, $responseProfile);
         }
 
         $responseProfile->setAccountId($this->account->id);
         $responseProfile->putToDB();
         $this->updateData();
+    }
+
+
+    private function handleLogin(AccProfileITF $existingProfile): void
+    {
+        $this->account = Account::byId($existingProfile->accountId);
+
+        if (!empty($this->account->userId)) {
+            $this->user = User::byAccount($this->account->id);
+        } else {
+            $this->user = User::byAccount($this->sess->accountId);
+            $this->account->userId = $this->user->id;
+            //$this->isNewLinkToUser = true;
+        }
+
+        $this->checkForMerge();
+    }
+
+    private function checkForMerge(): void
+    {
+        $prevAccount = Account::byId($this->sess->accountId);
+        if ($prevAccount->isDefault()) return;
+
+        $prevUser = User::byAccount($this->sess->accountId);
+
+        if ($prevUser->id !== $this->user->id) {
+            $fromUser = $this->user;
+            $this->user = $prevUser;
+            $this->account->userId = $this->user->id;
+
+            $this->mergeToken = MergeUsersToken::create($fromUser->id, $this->user->id)->jwt;
+        }
+    }
+
+    private function handleRegister(AccountType $authType, AccProfileITF $responseProfile): void
+    {
+        $this->user = User::byAccount($this->sess->accountId);
+        $this->account = AccountManager::create($authType, $this->user->id, $responseProfile)->account;
+
+        if(!$this->account->isDefault()){
+            $this->isNewLinkToUser = true;
+        }
     }
 
     public function updateData(): void
@@ -78,14 +119,25 @@ class OAuthManager
         $sess->visitedAt = $datetime;
         $sess->putToDB();
 
+
         $account->visitedAt = $datetime;
         $account->putToDB();
 
         $user->visitedAt = $datetime;
+        if(empty($user->publicNick) && !$account->isDefault()) {
+            $user->publicNick = $account->initData()->nickName;
+        }
         $user->putToDB();
 
         $device->linkToUser($user->id);
+        $device->linkToAccount($account->id);
         $device->update();
+        $device->setCookie();
+        $sess->setCookie();
+
+        if(!$account->isDefault()) {
+            $user->delDefaultAccounts();
+        }
     }
 
     private static function getExistingProfile(
@@ -103,51 +155,69 @@ class OAuthManager
         };
     }
 
-    public function getAccessToken(): string
+    /**
+     * @param int[] $powers
+     * @return AccessToken
+     * @throws AuthErr
+     */
+    private function getAccessToken(array $powers): AccessToken
     {
         $sess = $this->sess;
         $account = $this->account;
 
         return AccessToken::create(
             sessionMark: $sess->marker,
-            uid: $account->userId ?? 0,
+            userId: $account->userId,
             accountId: $account->id,
-            powers: [],
+            powers: $powers,
             createdAt: $sess->visitedAt,
-            authType: $account->authType,
+            authType: AccountType::from($account->authType),
         );
     }
 
-    public function getSessionToken(): string
+    private function getSessionToken(): string
     {
         $sess = $this->sess;
         return SessionToken::create($sess->marker, $sess->visitedAt);
     }
 
-    public function getTokensForResponse(): array
+    private function getDebugData(string $AccessToken, string $SessionToken): array
     {
-        $SessionToken = $this->getSessionToken();
-        $AccessToken = $this->getAccessToken();
-
-        $data = [
-            'SessionToken' => $SessionToken,
-            'AccessToken'  => $AccessToken
-        ];
-        $data['curAccount'] = $this->account->initData();
-
-        if(Env::isDebugMode()){
-            $data['Session'] = $this->sess;
-            $data['Device'] = $this->device;
-            $data['accessTokenData'] = Token::toArray($AccessToken);
-            $data['sessionTokenData'] = Token::toArray($SessionToken);
-            $data['accounts'] = AccountList::byDevice($this->device->id)
-                ->excludeDefaults()
-                ->initData()
-                ->getList();
-
-        }
+        $data['Session'] = $this->sess;
+        $data['accessTokenData'] = Token::toArray($AccessToken);
+        $data['sessionTokenData'] = Token::toArray($SessionToken);
+        $data['accounts'] = AccountList::byDevice($this->device->id)
+            ->excludeDefaults()
+            ->initData()
+            ->getList();
         return $data;
     }
 
 
+    /**
+     * @param int[] $powers
+     * @return array
+     * @throws AuthErr
+     */
+    public function getTokensForResponse(array $powers): array
+    {
+        $SessionToken = $this->getSessionToken();
+        $AccessToken = $this->getAccessToken($powers)->jwt;
+
+        $data = [
+            'SessionToken' => $SessionToken,
+            'AccessToken'  => $AccessToken,
+            'device' => $this->device,
+            'curAccount' => $this->account->initData(),
+        ];
+
+        if(!empty($this->mergeToken)){
+            $data['mergeToken'] = $this->mergeToken;
+        }
+
+        if(Env::isDebugMode()){
+            $data += $this->getDebugData($AccessToken, $SessionToken);
+        }
+        return $data;
+    }
 }

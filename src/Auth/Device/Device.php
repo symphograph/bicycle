@@ -99,11 +99,13 @@ class Device extends DeviceDTO
     {
         $userAgent = $_SERVER['HTTP_USER_AGENT'];
         $ipAddress = $_SERVER['REMOTE_ADDR'];
+        $clientFingerPrint = $_SERVER['HTTP_FINGERPRINT'];
 
         $acceptLanguage = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '';
         $encoding = $_SERVER['HTTP_ACCEPT_ENCODING'] ?? '';
 
-        $fingerprintData = $userAgent . $ipAddress . $acceptLanguage . $encoding;
+
+        $fingerprintData = $userAgent . $ipAddress . $acceptLanguage . $encoding . $clientFingerPrint;
 
         return hash('sha256', $fingerprintData);
     }

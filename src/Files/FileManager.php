@@ -107,46 +107,39 @@ class FileManager
         $fileHDD = FileHDD::create($data); // return FileHDD or make error
         $fileDTO = FileDTO::newInstance($fileHDD);
 
-        DB::safeTransaction();
         $fileDTO->putToDB();
         $fileHDD->moveFromTmp();
-        DB::safeCommit();
 
         return new self($fileHDD, $fileDTO);
     }
 
     public function delete(): void
     {
-        DB::pdo()->beginTransaction();
         if($this->fileHDD->type->value === FileType::Img->value) {
             SizeManager::delSizes($this->fileHDD);
         }
         $this->fileDTO->del();
         $this->fileHDD->delete();
-        DB::pdo()->commit();
+
     }
 
     public function setAsPublic(): static
     {
-        DB::pdo()->beginTransaction();
         $this->fileDTO->setAsPublic();
         $this->fileHDD->setAsPublic();
         if($this->fileHDD->type->value === FileType::Img->value) {
             SizeManager::setAsPublic($this->fileHDD);
         }
-        DB::pdo()->commit();
         return $this;
     }
 
     public function setAsPrivate(): static
     {
-        DB::pdo()->beginTransaction();
         $this->fileDTO->setAsPublic();
         $this->fileHDD->setAsPublic();
         if($this->fileHDD->type->value === FileType::Img->value) {
             SizeManager::setAsPrivate($this->fileHDD);
         }
-        DB::pdo()->commit();
         return $this;
     }
 }

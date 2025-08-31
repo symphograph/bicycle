@@ -2,7 +2,7 @@
 
 namespace Symphograph\Bicycle\Helpers;
 
-class TextHelper
+class Text
 {
     public static function transliterate($string): string
     {
