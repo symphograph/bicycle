@@ -8,10 +8,12 @@ use Symphograph\Bicycle\Auth\Account\Profile\Mailru\MailruSecrets;
 use Symphograph\Bicycle\Auth\Account\Profile\Telegram\TelegramSecrets;
 use Symphograph\Bicycle\Auth\Account\Profile\Vkontakte\VKSecrets;
 use Symphograph\Bicycle\Auth\Account\Profile\Yandex\YandexSecrets;
+use Symphograph\Bicycle\ConnectDB;
 use Symphograph\Bicycle\Contact\ContactPowered;
 use Symphograph\Bicycle\Contact\ContactType;
 use Symphograph\Bicycle\Env\Server\ServerEnv;
 use Symphograph\Bicycle\Errors\AppErr;
+use Symphograph\Bicycle\Repo\Redis\RedisConfig;
 
 readonly class Env
 {
@@ -37,13 +39,16 @@ readonly class Env
     private array  $services;
     private array  $clients;
     private bool   $isTest;
-    private array $powerManagers;
-    private array $curlLocations;
-    private array $telegramBots;
+    private string $mode;
+    private array  $powerManagers;
+    private array  $curlLocations;
+    private array  $telegramBots;
     private object $storageFolder;
     private string $salt;
     private object $emailNotify;
-    private array $poweredContacts;
+    private array  $poweredContacts;
+    private object $redis;
+    private array  $dbConnects;
 
     public function __construct()
     {
@@ -86,15 +91,6 @@ readonly class Env
     {
         $Env = self::getMyEnv();
         return in_array(ServerEnv::REMOTE_ADDR(), $Env->serverIPs);
-    }
-
-    public static function isDebugMode(): bool
-    {
-        if (PHP_SAPI === 'cli') {
-            return true;
-        }
-        $Env = self::getMyEnv();
-        return $Env->debugMode && in_array(ServerEnv::REMOTE_ADDR(), $Env->debugIPs);
     }
 
     public static function getAdminAccountId(): int
@@ -228,7 +224,7 @@ readonly class Env
     public static function getPowerServiceName(): string
     {
         $Env = self::getMyEnv();
-        if(empty($Env->powerManagers)) {
+        if (empty($Env->powerManagers)) {
             throw new AppErr('powerManagers not set');
         }
         return $Env->powerManagers[ServerEnv::SERVER_NAME()];
@@ -243,7 +239,7 @@ readonly class Env
     public static function getStorageFolder(): StorageFolder
     {
         $Env = self::getMyEnv();
-        if(empty($Env->storageFolder)) {
+        if (empty($Env->storageFolder)) {
             throw new AppErr('StorageFolder not set');
         }
 
@@ -273,7 +269,7 @@ readonly class Env
     {
         $Env = self::getMyEnv();
         $arr = [];
-        foreach($Env->poweredContacts as $contact) {
+        foreach ($Env->poweredContacts as $contact) {
             $arr[] = ContactPowered::NewPoweredInstance(
                 $contact->strValue,
                 ContactType::from($contact->type),
@@ -281,6 +277,54 @@ readonly class Env
             );
         }
         return $arr;
+    }
+
+    public static function redis(): RedisConfig
+    {
+        $env = self::getMyEnv();
+        $redis = $env->redis;
+        return new RedisConfig(
+            $redis->host,
+            $redis->port,
+            $redis->database,
+        );
+    }
+
+    public static function mode(): EnvMode
+    {
+        $env = self::getMyEnv();
+        return EnvMode::from($env->mode);
+    }
+
+    public static function isDev(): bool
+    {
+        return EnvMode::dev === Env::mode();
+    }
+
+    public static function isProd(): bool
+    {
+        return EnvMode::prod === Env::mode();
+    }
+
+    /**
+     * @return ConnectDB[]
+     */
+    public static function dbConnects(): array
+    {
+        $env = self::getMyEnv();
+        $connects = [];
+        foreach ($env->dbConnects as $conName => $con) {
+            $connects[$conName] = new ConnectDB(
+                $con->host,
+                $con->port,
+                $con->name,
+                $con->user,
+                $con->pass,
+                $con->dbType,
+                $con->charset ?? null,
+            );
+        }
+        return $connects;
     }
 
 }

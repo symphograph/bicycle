@@ -38,7 +38,7 @@ class MyErrors extends Exception
 
     public function getResponseMsg(): string
     {
-        return (Env::isDebugMode() || Config::isCurl())
+        return (!Env::isProd() || Config::isCurl())
             ? $this->getMessage()
             : $this->getPubMsg();
     }

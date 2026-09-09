@@ -4,11 +4,12 @@ namespace Symphograph\Bicycle\DTO;
 
 use ReflectionObject;
 
+
 trait BindTrait
 {
-    public function bindSelf(object|array $object): void
+    public function bindSelf(object|array $data): void
     {
-        $object = (object) $object;
+        $object = (object) $data;
 
         foreach ($object as $property => $value) {
             if (property_exists($this, $property)) {
@@ -17,10 +18,15 @@ trait BindTrait
         }
     }
 
-    public static function byArr(object|array $object): self
+    public static function byArr(object|array $data): self
     {
-        $self = new self();
-        $self->bindSelf($object);
+        return static::fromArray($data);
+    }
+
+    private static function fromArray(object|array $data): static
+    {
+        $self = new static();
+        $self->bindSelf($data);
         return $self;
     }
 
@@ -105,4 +111,18 @@ trait BindTrait
         return false;
     }
 
+    public function toArray(): array {
+        return $this->getAllProps();
+    }
+
+    public function toJson(int $options = 0): string
+    {
+        return json_encode($this->toArray(), $options);
+    }
+
+    public static function byJson(string $json): static
+    {
+        $arr = json_decode($json, true);
+        return static::byArr($arr);
+    }
 }

@@ -13,7 +13,9 @@ use Symphograph\Bicycle\Auth\Account\Profile\Telegram\TeleUser;
 use Symphograph\Bicycle\Auth\Account\Profile\Vkontakte\VkUser;
 use Symphograph\Bicycle\Auth\Account\Profile\Yandex\YandexProfileDTO;
 use Symphograph\Bicycle\Auth\Device\Device;
+use Symphograph\Bicycle\Auth\Device\DeviceList;
 use Symphograph\Bicycle\Auth\Session\Session;
+use Symphograph\Bicycle\Auth\User\NickGenITF;
 use Symphograph\Bicycle\Auth\User\User;
 use Symphograph\Bicycle\Env\Env;
 use Symphograph\Bicycle\Env\Server\ServerEnv;
@@ -33,6 +35,7 @@ class OAuthManager
     public function __construct(
         public Session $sess,
         public Device $device,
+        private readonly NickGenITF $nickGenerator
     ){}
 
     public function setAccount(Account $account): static
@@ -124,8 +127,8 @@ class OAuthManager
         $account->putToDB();
 
         $user->visitedAt = $datetime;
-        if(empty($user->publicNick) && !$account->isDefault()) {
-            $user->publicNick = $account->initData()->nickName;
+        if($user->isDefaultNick() && !$account->isDefault()) {
+            $user->publicNick = $this->nickGenerator->newNick();
         }
         $user->putToDB();
 
@@ -169,6 +172,7 @@ class OAuthManager
             sessionMark: $sess->marker,
             userId: $account->userId,
             accountId: $account->id,
+            deviceId: $sess->deviceId,
             powers: $powers,
             createdAt: $sess->visitedAt,
             authType: AccountType::from($account->authType),
@@ -186,10 +190,7 @@ class OAuthManager
         $data['Session'] = $this->sess;
         $data['accessTokenData'] = Token::toArray($AccessToken);
         $data['sessionTokenData'] = Token::toArray($SessionToken);
-        $data['accounts'] = AccountList::byDevice($this->device->id)
-            ->excludeDefaults()
-            ->initData()
-            ->getList();
+
         return $data;
     }
 
@@ -201,22 +202,24 @@ class OAuthManager
      */
     public function getTokensForResponse(array $powers): array
     {
-        $SessionToken = $this->getSessionToken();
-        $AccessToken = $this->getAccessToken($powers)->jwt;
+        $sessionToken = $this->getSessionToken();
+        $accessToken = $this->getAccessToken($powers)->jwt;
 
         $data = [
-            'SessionToken' => $SessionToken,
-            'AccessToken'  => $AccessToken,
-            'device' => $this->device,
-            'curAccount' => $this->account->initData(),
+            'sessionToken' => $sessionToken,
+            'accessToken'  => $accessToken,
+            'devices' => DeviceList::byUserId($this->user->id)->getList(),
+            'accounts' => AccountList::byUser($this->user->id)
+                ->initData()
+                ->getList()
         ];
 
         if(!empty($this->mergeToken)){
             $data['mergeToken'] = $this->mergeToken;
         }
 
-        if(Env::isDebugMode()){
-            $data += $this->getDebugData($AccessToken, $SessionToken);
+        if(Env::isDev()){
+            $data += $this->getDebugData($accessToken, $sessionToken);
         }
         return $data;
     }

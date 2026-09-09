@@ -9,21 +9,24 @@
     }
   ],
   "require": {
-    "php": ">=8.4",
+    "php": ">=8.5",
     "ext-json": "*",
     "ext-mysqli": "*",
     "ext-iconv": "*",
     "ext-gmp": "*",
     "ext-curl": "*",
-    "ext-bcmath": "*",
     "ext-pdo": "*",
     "ext-calendar" : "*",
-    "lcobucci/jwt": "^5.0",
+    "lcobucci/jwt": "5.6.0.0",
     "php-curl-class/php-curl-class": "^9.17",
     "ext-exif" : "*",
-    "ext-imagick": "*",
     "ext-simplexml": "*",
-    "ext-fileinfo" : "*"
+    "ext-fileinfo" : "*",
+    "whichbrowser/parser": "^2.1",
+    "ext-redis" : "*",
+    "workerman/workerman": "^5.2",
+    "workerman/channel": "^1.0",
+    "workerman/redis": "^1.0"
   },
   "autoload": {
     "psr-4": {

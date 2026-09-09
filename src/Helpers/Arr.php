@@ -51,26 +51,40 @@ class Arr
         return $array;
     }
 
-
     /**
-     * @param Object[] $List
+     * @param (object|array)[] $items
      * @param string $key
-     * @return Object[]
-     *  Принимает массив объектов и меняет его ключи на значения указанного поля
+     * @return (object|array)[]
+     * Принимает массив объектов и меняет его ключи на значения указанного поля
      */
-    public static function colAsKey(array $List, string $key): array
+    public static function colAsKey(array $items, string $key): array
     {
-        if(empty($List)) return [];
+        $result = [];
 
-        $arr = [];
-        foreach ($List as $Object){
-            if(!isset($Object->$key)){
-                throw new AppErr("Prop $key not found in Object");
+        foreach ($items as $item) {
+            $value = is_array($item)
+                ? ($item[$key] ?? null)
+                : ($item->$key ?? null);
+
+            if ($value === null) {
+                throw new \InvalidArgumentException("Key '$key' not found in item");
             }
 
-            $arr[$Object->$key] = $Object;
+            $result[$value] = $item;
         }
-        return $arr;
+
+        return $result;
+    }
+
+    public static function index(array $items, string $key): array
+    {
+        if(empty($items)) return [];
+        $keys = array_column($items, $key);
+        if (count($keys) !== count(array_unique($keys))) {
+            throw new AppErr('Duplicate values in array');
+        }
+
+        return array_flip($keys);
     }
 
     public static function isMulti(array $array): bool
@@ -169,5 +183,19 @@ class Arr
         }
 
         return $result;
+    }
+
+    public static function intvalStrict(array $array): array
+    {
+        return array_map(
+            fn($n) => (int)$n,
+            array_filter($array, function($v) {
+                return $v !== '' && is_numeric($v);
+            })
+        );
+    }
+
+    public static function flatMap(callable $callback, array $array): array {
+        return array_reduce($array, fn($carry, $item) => array_merge($carry, $callback($item)), []);
     }
 }

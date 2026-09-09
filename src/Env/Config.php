@@ -38,7 +38,7 @@ class Config
 
     public static function initDisplayErrors(): void
     {
-        if (Env::isDebugMode()) {
+        if (!Env::isProd()) {
             ini_set('display_errors', 1);
             error_reporting(E_ALL);
         }
@@ -46,7 +46,7 @@ class Config
 
     public static function checkPermission(): void
     {
-        if (Env::isDebugMode() || Env::isDebugIp()) {
+        if (Env::isDev() || Env::isDebugIp()) {
             return;
         }
         $folders = Env::getDebugOnlyFolders();
@@ -57,9 +57,17 @@ class Config
         }
     }
 
-    protected static function initEndPoint(string $path, array $allowedMethods, array $expectedHeaders = []): void
+    /**
+     * @throws ConfigErr
+     * @throws ValidationErr
+     */
+    protected static function initEndPoint(
+        string $path,
+        array $allowedMethods,
+        array $expectedHeaders = []
+    ): void
     {
-        if(!str_starts_with(ServerEnv::SCRIPT_NAME(), $path)){
+        if(!str_starts_with(self::apiPath(), $path)){
             return;
         }
 
@@ -93,13 +101,12 @@ class Config
 
     public static function isApi(): bool
     {
-        $sn = ServerEnv::SCRIPT_NAME();
-        return str_starts_with($sn, '/epoint/');
+        return str_starts_with(self::apiPath(), '/epoint/');
     }
 
     public static function isCurl(): bool
     {
-        return str_starts_with(ServerEnv::SCRIPT_NAME(), '/curl/');
+        return str_starts_with(self::apiPath(), '/curl/');
     }
 
     public static function isCLI(): bool
@@ -161,6 +168,11 @@ class Config
             'httponly' => $httponly,
             'samesite' => $samesite // None || Lax  || Strict
         ];
+    }
+
+    protected static function apiPath(): string
+    {
+        return $_SERVER['API_INTERNAL_PATH'] ?? ServerEnv::SCRIPT_NAME();
     }
 
 }

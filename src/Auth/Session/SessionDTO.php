@@ -17,7 +17,6 @@ class SessionDTO
     public int     $accountId;
     public int     $deviceId;
     public string  $client;
-    public ?string $token;
     public ?string $firstIp;
     public ?string $lastIp;
     public ?string $createdAt;

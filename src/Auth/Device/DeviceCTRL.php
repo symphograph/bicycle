@@ -28,7 +28,7 @@ class DeviceCTRL extends Device
             throw new AccessErr();
         }
         $devices = DeviceList::byUserId($_POST['userId'])->getList();
-        Response::data($devices);
+        Response::data(['list' => $devices]);
     }
 
 
@@ -62,7 +62,6 @@ class DeviceCTRL extends Device
 
     public static function exit(): void
     {
-        printr($_COOKIE);
         return;
     }
 }

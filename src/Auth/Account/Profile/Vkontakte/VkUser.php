@@ -29,6 +29,7 @@ class VkUser extends AccProfileDTO
         if (empty($_GET)) {
             throw new AuthErr('VkData is empty');
         }
+
         $vkUser = self::byArray($_GET);
         $vkUser->checkHash($_GET['hash']);
         return $vkUser;

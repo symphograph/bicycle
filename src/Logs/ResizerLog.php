@@ -29,6 +29,6 @@ class ResizerLog
 
     private static function write(string $msg): void
     {
-        Log::msg(msg: $msg, logFolder: 'resizer');
+        //Log::msg(msg: $msg, logFolder: 'resizer');
     }
 }

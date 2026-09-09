@@ -28,19 +28,7 @@ class Response
         array $payload = []
     ): void
     {
-        $data = ['type' => $type,'error' => $msg, 'trace' => $trace, 'payload' => $payload];
-        self::jsonResponse($data, $httpStatus);
-    }
-
-    #[NoReturn] public static function data(array|object $data, string $msg = 'Готово', int $httpStatus = 200): void
-    {
-        $data = ['result'=>$msg,'data' => $data];
-        self::jsonResponse($data, $httpStatus);
-    }
-
-    #[NoReturn] public static function success(string $msg = 'Готово', int $httpStatus = 200): void
-    {
-        $data = ['result'=>$msg];
+        $data = ['type' => $type,'message' => $msg, 'trace' => $trace, 'payload' => $payload];
         self::jsonResponse($data, $httpStatus);
     }
 
@@ -53,13 +41,27 @@ class Response
         http_response_code($httpStatus);
 
         $buffer = ob_get_clean();
-        echo json_encode($data,JSON_UNESCAPED_UNICODE);
-        if(!empty($buffer) && Env::isDebugMode()){
-            echo PHP_EOL.$buffer;
+
+        if(!empty($buffer) && Env::isDev()){
+            //echo PHP_EOL.$buffer;
+            $data['buffer'] = $buffer;
         }
+        echo json_encode($data,JSON_UNESCAPED_UNICODE);
 
         die();
 
+    }
+
+    #[NoReturn] public static function data(array|object $data, string $msg = 'Готово', int $httpStatus = 200): void
+    {
+        $data = ['result'=>$msg,'data' => $data];
+        self::jsonResponse($data, $httpStatus);
+    }
+
+    #[NoReturn] public static function success(string $msg = 'Готово', int $httpStatus = 200): void
+    {
+        $data = ['result'=>$msg];
+        self::jsonResponse($data, $httpStatus);
     }
 
     public static function download(string $fullPath, ?string $fileName = null): void
@@ -86,10 +88,66 @@ class Response
         flush();
 
         // Отправить файл пользователю
-        //readfile($fullPath);
         $file = fopen($fullPath, 'rb');
         fpassthru($file);
         fclose($file);
+        exit;
+    }
+
+    public static function zip(string $fullPath, ?string $fileName = null): void
+    {
+        if (!FileHelper::fileExists($fullPath)) {
+            throw new FileNotExistsInPathErr($fullPath);
+        }
+
+        if ($fileName === null) {
+            $fileName = basename($fullPath);
+        }
+
+        $mtime = filemtime($fullPath);
+        $size  = filesize($fullPath);
+        $etag  = sha1($size . ':' . $mtime);
+
+        // === Conditional request === я не понимаю зачем это надо
+        if (
+            isset($_SERVER['HTTP_IF_NONE_MATCH']) &&
+            trim($_SERVER['HTTP_IF_NONE_MATCH'], '"') === $etag
+        ) {
+            http_response_code(304);
+            return;
+        }
+
+        if (
+            isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) &&
+            strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) >= $mtime
+        ) {
+            http_response_code(304);
+            return;
+        }
+
+        //ini_set('output_buffering', '0');
+        //ini_set('zlib.output_compression', '0');
+
+        if (ob_get_level()) {
+            ob_end_clean();
+        }
+
+        // === Headers ===
+        header_remove();
+        header('X-Accel-Buffering: no'); // Для nginx
+        header('Content-Type: application/zip');
+        header('Cache-Control: public, max-age=61, must-revalidate');
+        header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $mtime) . ' GMT');
+        header('ETag: "' . $etag . '"');
+        header('Content-Length: ' . $size);
+
+        //ob_clean();
+        //flush();
+
+        //$fp = fopen($fullPath, 'rb');
+        //fpassthru($fp);
+        //fclose($fp);
+        readfile($fullPath);
         exit;
     }
 }

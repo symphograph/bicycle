@@ -25,9 +25,14 @@ class Log
     public static function msg(string $msg, array $data = [], string $logFolder = 'tmpLog'): void
     {
         $datetime = date('Y-m-d H:i:s');
-        foreach ($data as $k => $v){
+
+        foreach ($data as $k => $v) {
+            if (is_array($v) || is_object($v)) {
+                $v = json_encode($v, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+            }
             $msg .= PHP_EOL . $k . ' - ' . $v;
         }
+
         $msg = "[$datetime UTC] - $msg";
         self::writeData($msg, $logFolder);
     }

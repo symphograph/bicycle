@@ -40,8 +40,7 @@ class TmpUploadFile
         if(empty($_FILES)){
             throw new EmptyFilesErr();
         }
-        $file = $_FILES[array_key_first($_FILES)];
-        return new static($file);
+        return new static(array_first($_FILES));
     }
 
     protected function validate(): void

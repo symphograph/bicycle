@@ -13,6 +13,7 @@ use Symphograph\Bicycle\Errors\Files\FileTypeUnknownErr;
 use Symphograph\Bicycle\Errors\MyErrors;
 use Symphograph\Bicycle\FileHelper;
 use Symphograph\Bicycle\Helpers\Str;
+use Symphograph\Bicycle\Logs\Log;
 use Throwable;
 
 class FileHDD
@@ -103,6 +104,8 @@ class FileHDD
     public function moveFromTmp(): void
     {
         $fullPath = $this->privatePath();
+        error_log($fullPath);
+        //Log::msg($fullPath);
         FileHelper::fileForceContents($fullPath,'');
         $tmpPath = self::tmpPath($this->hash);
         rename($tmpPath, $fullPath);
@@ -167,6 +170,12 @@ class FileHDD
         $fileName = $this->fileName();
         $relPath = "$folder/$type/$md5Folders/$fileName";
         return FileHelper::fullPath($relPath);
+    }
+
+    public function pathForZip(): string
+    {
+        $md5Folders = FileHelper::getSegmentedFolders($this->hash);
+        return "$md5Folders/{$this->fileName()}";
     }
 
 }

@@ -92,6 +92,25 @@ trait DTOTrait
         return $qwe->fetchObject(self::class) ?: null;
     }
 
+    /**
+     * Возвращает свойства, разрешённые для записи в БД,
+     * исключая поля из списка self::dbExclude (если он определён в классе)
+     */
+    protected function propsForDB(): array
+    {
+        $props = $this->getAllProps();
+        if (!defined(static::class . '::dbExclude')) return $props;
+
+        $exclude = constant(static::class . '::dbExclude');
+
+        $exclude = static::dbExclude;
+        foreach ($exclude as $field) {
+            unset($props[$field]);
+        }
+
+        return $props;
+    }
+
     public function putToDB(PutMode $mode = PutMode::safeReplace): void
     {
         $this->putDTOToDB($mode);
@@ -103,7 +122,7 @@ trait DTOTrait
             $this->beforePut();
         }
 
-        $mode->execute(self::tableName, $this->getAllProps());
+        $mode->execute(self::tableName, $this->propsForDB());
 
         if($mode === PutMode::insertAuto){
             $this->id = DB::lastId();

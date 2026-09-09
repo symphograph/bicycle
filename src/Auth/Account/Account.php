@@ -23,13 +23,6 @@ class Account extends AccountDTO
 
     public ?string       $externalAvaUrl;
     public ?string       $nickName;
-    // public ?Avatar       $Avatar;
-    // public ?TeleUser     $TeleUser;
-    //public ?MailruUser   $MailruUser;
-    //public ?DiscordUser  $DiscordUser;
-    //public ?VkUser       $VkUser;
-    //public AccProfileDTO $socialProfile;
-    //public string        $contactValue;
 
 
     public static function create(AccountType $authType, int $userId): self
@@ -64,6 +57,17 @@ class Account extends AccountDTO
     {
         $accountId = AccessToken::byJwt($jwt,[])->accountId;
         return Account::byId($accountId);
+    }
+
+    public static function cur(array $needPowers = [], $ignoreExpire = false): self
+    {
+        return static::byJwt(AccessToken::byHttp($needPowers, $ignoreExpire)->jwt);
+    }
+
+    public static function curId(array $needPowers = [], $ignoreExpire = false): int
+    {
+        $token = AccessToken::byHttp($needPowers, $ignoreExpire);
+        return $token->accountId;
     }
 
     public function initProfileValues(): static
@@ -159,5 +163,7 @@ class Account extends AccountDTO
     {
         return AccountType::from($this->authType);
     }
+
+
 
 }

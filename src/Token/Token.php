@@ -89,12 +89,14 @@ class Token
 
     public static function validation(
         string  $jwt,
+        bool    $ignoreExpire = false,
         ?string $expectedSubject = null,
-        bool    $ignoreExpire = false
     ): void
     {
         $token = self::parse($jwt);
         $validator = new Validator();
+        $issuer = Env::getJWT()->issuer;
+        $sn = ServerEnv::SERVER_NAME();
 
         match (false) {
             $validator->validate($token, new SignedWith(new Sha256(), self::getKey()))
@@ -106,11 +108,11 @@ class Token
             !self::isExpired($token, $ignoreExpire),
             => throw new AuthErr('Token is Expired'),
 
-            $token->hasBeenIssuedBy(/*Env::getJWT()->issuer*/ $_SERVER['SERVER_NAME'])
-            => throw new AuthErr("Token has an unexpected Issuer: {$_SERVER['SERVER_NAME']}"),
+            //$token->hasBeenIssuedBy($issuer)
+            //=> throw new AuthErr("Token has an unexpected Issuer: $issuer. $sn"),
 
-            $validator->validate($token, new PermittedFor(ServerEnv::SERVER_NAME()))
-            => throw new AuthErr('Invalid token audience'),
+            $validator->validate($token, new PermittedFor($issuer))
+            => throw new AuthErr("Invalid token audience: $issuer"),
 
             default => true
         };

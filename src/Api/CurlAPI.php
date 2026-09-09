@@ -12,17 +12,18 @@ use Symphograph\Bicycle\Token\CurlToken;
 
 class CurlAPI
 {
-    protected string $assessToken = '';
-
-    public function __construct(
-        protected string $url,
-        protected array  $params,
-    )
+    public function __construct(protected string $assessToken = '')
     {
-        $this->assessToken = CurlToken::create([1]);
+        //$this->assessToken = CurlToken::create([1]);
     }
 
-    public function post(): Response
+    public function setToken(string $token): static
+    {
+        $this->assessToken = $token;
+        return $this;
+    }
+
+    public function post(string $url, array $params): Response|ResponseErr
     {
         $curl = new Curl();
 
@@ -37,10 +38,16 @@ class CurlAPI
         $curl->setHeader('Accept', 'application/json');
         $curl->setHeader('Origin', 'https://' . ServerEnv::SERVER_NAME());
         $curl->setHeader('Authorization', Env::getApiKey());
-        $curl->setHeader('Accesstoken', $this->assessToken);
+        if(!empty($this->assessToken)) {
+            $curl->setHeader('Accesstoken', $this->assessToken);
+        }
 
+        $curl->post($url, $params);
 
-        $curl->post($this->url, $this->params);
+        /*
+        $res = new Response();
+        $res->httpStatus = $curl->httpStatusCode;
+        $res->content = $curl->response;
 
         if($curl->httpStatusCode === 406){
             throw new NoContentErr();
@@ -58,9 +65,20 @@ class CurlAPI
         if (empty($curl->response->result)) {
             throw new CurlErr('Invalid Result ');
         }
+         */
+        //echo $curl->response;
+        $response = $curl->error
+            ? ResponseErr::byBind($curl->response)
+            : Response::byBind($curl->response);
 
-        $response = Response::byBind($curl->response);
         $response->httpStatus = $curl->httpStatusCode;
+        if($curl->error) {
+            $response->error = $curl->errorMessage;
+            //vd($response);
+        }
+
+
+
         return $response;
     }
 

@@ -21,11 +21,13 @@ class VkUserApi extends VkUser
             return null;
         }
 
+
         $vkUser = VkUser::byBind($response[0]);
 
         $vkUser->uid = $response[0]['id'];
         $vkUser->domain = $response[0]['domain'];
-        $vkUser->photo_rec = $response[0]['photo_100'];
+        $vkUser->photo_rec = $response[0]['photo_rec'];
+        $vkUser->photo = $response[0]['photo_100'];
         return $vkUser;
     }
 

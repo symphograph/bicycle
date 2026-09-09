@@ -62,42 +62,7 @@ class AccountCTRL
 
         Response::success();
     }
-
-    /**
-     * @throws AuthErr
-     * @throws AccessErr
-     */
-    #[NoReturn] public static function listByDevice(): void
-    {
-        User::auth();
-        $Device = Device::byCookie();
-        $accList = AccountList::byDevice($Device->id)
-            ->excludeDefaults()
-            ->initData();
-
-        $userId = AccessToken::byHTTP([])->userId;
-        if(!$accList->isContainsUser($userId)){
-            throw new AccessErr();
-        }
-
-        Response::data($accList->getList());
-    }
-
-    /**
-     * @throws AuthErr
-     * @throws AccessErr
-     */
-    #[NoReturn] public static function selfList(): void
-    {
-        User::auth();
-
-        $userId = AccessToken::byHTTP([])->userId;
-        $accList = AccountList::byUser($userId)
-            ->excludeDefaults()
-            ->initData();
-
-        Response::data($accList->getList());
-    }
+    
 
     #[NoReturn] public static function transfer(): void
     {
@@ -114,14 +79,19 @@ class AccountCTRL
      */
     #[NoReturn] public static function listByUserId(): void
     {
-        User::auth([1]);
+        $user = User::byAccessToken();
         Request::checkEmpty(['userId']);
 
-        $accList = AccountList::byUser($_POST["userId"])
-            ->excludeDefaults()
-            ->initData();
+        if($user->id !== $_POST["userId"]){
+            User::auth([1]);
+        }
 
-        Response::data($accList->getList());
+        $list = AccountList::byUser($_POST["userId"])
+            //->excludeDefaults()
+            ->initData()
+            ->getList();
+
+        Response::data(['list' => $list]);
     }
 
     #[NoReturn] public static function groupedByUser(): void

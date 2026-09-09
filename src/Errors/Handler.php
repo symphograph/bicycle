@@ -11,6 +11,7 @@ use Symphograph\Bicycle\Auth\User\UserCpuTracker;
 use Symphograph\Bicycle\Env\Config;
 use Symphograph\Bicycle\Env\Env;
 use Symphograph\Bicycle\Logs\ErrorLog;
+use Symphograph\Bicycle\Logs\Log;
 use Symphograph\Bicycle\PDO\DB;
 use Throwable;
 
@@ -35,9 +36,15 @@ class Handler
             return;
         }
 
-        if(Env::isDebugMode() && in_array($error['type'], [E_WARNING, E_NOTICE, E_DEPRECATED])) {
+        if(!Env::isProd() && in_array($error['type'], [E_WARNING, E_NOTICE, E_DEPRECATED])) {
             AppStorage::$warnings[] = $error;
         }
+    }
+
+    protected static function isIgnore(string $msg): bool
+    {
+        return str_contains($msg, 'stream_select(): Unable to select')
+        && str_contains($msg, 'Interrupted system call');
     }
 
     public function myShutdownHandler(): void
@@ -50,10 +57,16 @@ class Handler
             return;
         }
 
+        if (self::isIgnore($error['message'])) return;
+
         $e = new ErrorException(
             $error['message'], 0, $error['type'], $error['file'], $error['line']
         );
+
+
         ErrorLog::writeToLog($e);
+        //vd($e);
+        if(headers_sent()) return;
         http_response_code(500);
     }
 
@@ -83,6 +96,7 @@ class Handler
 
     public static function myExceptionHandler(Throwable $err): void
     {
+
         DB::safeRollback();
 
         $httpStatus = self::getHttpStatus($err);
@@ -125,6 +139,29 @@ class Handler
     {
         $reflectClass = new ReflectionClass($err::class);
         return $reflectClass->hasMethod('getHttpStatus') ? $err->getHttpStatus() : 500;
+    }
+
+    // специально для воркера отдельно
+    public static function workerSet(string $folder): void
+    {
+        set_exception_handler(function(Throwable $e) use ($folder) {
+            DB::safeRollback();
+            ErrorLog::writeToLog($e);
+            Log::msg("UNCAUGHT EXCEPTION: " . $e->getMessage(), [], $folder);
+            Log::msg($e->getTraceAsString(), [], $folder);
+        });
+
+        set_error_handler(function($severity, $message, $file, $line) use ($folder) {
+            if (str_contains($message, 'stream_select(): Unable to select')
+                && str_contains($message, 'Interrupted system call')) {
+                return true; // Полностью игнорируем эту ошибку
+            }
+            DB::safeRollback();
+            $e = new ErrorException($message, 0, $severity, $file, $line);
+            ErrorLog::writeToPHP($e);
+            Log::msg("PHP ERROR [$severity]: $message in $file:$line", [], $folder);
+            return true;
+        });
     }
 
 }

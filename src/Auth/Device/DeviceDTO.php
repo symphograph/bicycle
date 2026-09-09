@@ -16,13 +16,13 @@ class DeviceDTO
     const string cookieName = 'Mozart';
 
     public int    $id;
-    public string $marker;
+    protected string $marker;
     public string $createdAt;
     public string $visitedAt;
     public string $platform;
     public bool   $ismobiledevice;
     public string $browser;
-    public string $fingerPrint;
+    protected string $fingerPrint;
     public string $device_type;
     public string $firstIp;
     public string $lastIp;

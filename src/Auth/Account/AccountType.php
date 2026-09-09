@@ -11,4 +11,5 @@ enum AccountType: string
     case Email = 'email';
     case Default = 'default';
     case Yandex = 'yandex';
+    case Server = 'server';
 }

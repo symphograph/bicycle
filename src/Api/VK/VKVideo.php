@@ -24,7 +24,7 @@ class VKVideo
                 'offset' => $offset
             ];
 
-            $url = "https://api.vk.com/method/video.get?" . http_build_query($params);
+            $url = "https://api.vk.ru/method/video.get?" . http_build_query($params);
             $page = curl($url);
             $data = json_decode($page, true);
 

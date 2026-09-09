@@ -51,12 +51,10 @@ class Math
         return $aspectRatio;
     }
 
-    public static function median(array $arr): int|float|bool
+    public static function median(array $arr): int|float
     {
-
-        if (!($count = count($arr))) {
-            return false;
-        }
+        $count = count($arr);
+        if (!$count) return 0;
 
         sort($arr);
         $middle = floor($count / 2);
@@ -69,5 +67,18 @@ class Math
     public static function isBetween(int $value, int $min, int $max): bool
     {
         return $min <= $value && $value <= $max;
+    }
+
+    /**
+     * ($val1 - $val2 + $len) % $len
+     */
+    public static function difInfinity(int $val1, $val2, int $len): int
+    {
+        return ($val1 - $val2 + $len) % $len;
+    }
+
+    public static function isEven(int $val): bool
+    {
+        return ($val & 1) === 0;
     }
 }

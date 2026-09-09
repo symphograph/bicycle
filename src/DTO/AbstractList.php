@@ -76,6 +76,34 @@ abstract class AbstractList implements ListITF, Iterator
         return empty($this->list);
     }
 
+    public function randomItems(int $limit): array
+    {
+        $items = $this->list;
+        $total = count($items);
+
+        // Если лимит больше или равен количеству элементов, возвращаем все в случайном порядке
+        if ($limit >= $total) {
+            shuffle($items);
+            return $items;
+        }
+
+        // Выбираем случайные уникальные ключи
+        $keys = array_rand($items, $limit);
+
+        // Если выбран только один элемент, array_rand вернёт не массив, а скаляр
+        if (!is_array($keys)) {
+            $keys = [$keys];
+        }
+
+        // Собираем результат по выбранным ключам
+        $result = [];
+        foreach ($keys as $key) {
+            $result[] = $items[$key];
+        }
+
+        return $result;
+    }
+
     /**
      * Количество элементов в порции при вставке в БД
      * @return int
@@ -185,10 +213,6 @@ abstract class AbstractList implements ListITF, Iterator
 
     public function putBatchToDB(): void
     {
-        if(method_exists(static::class, 'beforePut')){
-            $this->beforePut();
-        }
-
         $rows = $this->getProps();
         $className = static::getItemClass();
 
@@ -196,10 +220,6 @@ abstract class AbstractList implements ListITF, Iterator
         for ($i = 0; $i < $cnt; $i += $this->batchSize) {
             $batchRows = array_slice($rows, $i, $this->batchSize);  // Получение порции строк
             DB::replaceRows($className::tableName, $batchRows);     // Вставка порции строк
-        }
-
-        if(method_exists(static::class, 'afterPut')){
-            $this->afterPut();
         }
     }
 

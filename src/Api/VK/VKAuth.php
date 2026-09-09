@@ -30,7 +30,7 @@ class VKAuth
 
     public static function getTokenByCode(string $code): ?array
     {
-        $url = 'https://oauth.vk.com/access_token';
+        $url = 'https://oauth.vk.ru/access_token';
         $vk = Env::getVKSecrets();
         $params = [
             'client_id' => $vk->appId,

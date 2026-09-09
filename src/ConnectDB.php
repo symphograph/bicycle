@@ -2,36 +2,40 @@
 
 namespace Symphograph\Bicycle;
 
-use Symphograph\Bicycle\Env\Server\ServerEnv;
+use Symphograph\Bicycle\Env\Env;
+use Symphograph\Bicycle\PDO\DBType;
 
 class ConnectDB
 {
-    const string envPath = '/includes/env.php';
+    public DBType $dbType;
+    public string $charset;
+
     public function __construct(
         public string $host,
+        public int $port,
         public string $name,
         public string $user,
         public string $pass,
-        public string $charset = 'utf8mb4'
+        string $dbType,
+        ?string $charset = null,
     )
     {
+        $this->dbType = DBType::from($dbType);
+        $this->charset = $charset ?? 'utf8mb4';
     }
 
     public static function byName(?string $connectName): self
     {
-        $env = require dirname(ServerEnv::DOCUMENT_ROOT()) . self::envPath;
+        $connects = Env::dbConnects();
         if(empty($connectName) || $connectName === 'default'){
-            $connectName = array_key_first($env->connects);
+            $connectName = array_key_first($connects);
         }
-        $con = $env->connects[$connectName];
-        return new self(
-            host: $con->host, name: $con->name, user: $con->user, pass: $con->pass, charset: $con->charset ?? 'utf8mb4'
-        );
+        return $connects[$connectName];
     }
 
     public static function getDefaultConnectName(): string
     {
-        $env = require dirname(ServerEnv::DOCUMENT_ROOT()) . self::envPath;
-        return array_key_first($env->connects);
+        $connects = Env::dbConnects();
+        return array_key_first($connects);
     }
 }

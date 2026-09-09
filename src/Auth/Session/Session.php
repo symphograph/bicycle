@@ -28,6 +28,7 @@ class Session extends SessionDTO
         $origin = ServerEnv::HTTP_ORIGIN();
         if(empty($origin)) throw new EmptyOriginErr();
 
+
         try {
             $Session = new self();
             $Session->marker = self::createMarker();
@@ -74,7 +75,7 @@ class Session extends SessionDTO
             ?? throw new AuthErr('Session does not exist', 'Session does not exist');
 
         $accessToken = AccessToken::byHTTP(needPowers: [], ignoreExpire: true);
-        $accessTokenTime = $accessToken->arr()['iat']->getTimestamp();
+        $accessTokenTime = $accessToken->toArray()['iat']->getTimestamp();
         $sessionTokenTime = strtotime($Session->visitedAt);
         $diff = $sessionTokenTime - $accessTokenTime;
         if (abs($diff) > 60 * 15) {

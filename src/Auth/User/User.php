@@ -48,8 +48,11 @@ class User extends UserDTO
     {
         $token = AccessToken::byHTTP([]);
         $account = Account::byId($token->accountId);
-        if(empty($account)) throw new AuthErr();
-        if($account->userId !== $token->userId) throw new AuthErr('userId not correct');
+        if(empty($account)) throw new AccessErr();
+        if($account->userId !== $token->userId) {
+            $msg = "userId {$token->userId} not correct. expected  {$account->userId}";
+            throw new AuthErr($msg);
+        }
         return self::byId($account->userId);
     }
 
@@ -57,9 +60,10 @@ class User extends UserDTO
      * @throws AuthErr
      * @throws AccessErr
      */
-    public static function auth(array $allowedPowers = []): void
+    public static function auth(array $allowedPowers = []): int
     {
-        AccessToken::byHTTP($allowedPowers);
+        $token = AccessToken::byHTTP($allowedPowers);
+        return $token->userId;
     }
 
     public static function merge($fromUserId, int $toUserId): void
@@ -73,4 +77,14 @@ class User extends UserDTO
         DB::qwe($sql, $params);
     }
 
+    public function isDefaultNick(): bool
+    {
+        return $this->publicNick === 'noname';
+    }
+
+    public static function lockForUpdate(int $userId): void
+    {
+        $sql = "SELECT id FROM users WHERE id = :userId FOR UPDATE";
+        DB::qwe($sql, ['userId' => $userId]);
+    }
 }
