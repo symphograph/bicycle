@@ -31,4 +31,9 @@ enum DTF: string implements DTFormat
     {
         return date(DTF::sql->value);
     }
+
+    public static function dtSql(DateTime $dt): string
+    {
+        return $dt->format(DTF::sql->value);
+    }
 }

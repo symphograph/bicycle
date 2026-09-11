@@ -4,6 +4,7 @@ namespace Symphograph\Bicycle\Repo;
 
 use Symphograph\Bicycle\DTO\BindITF;
 use Symphograph\Bicycle\Repo\DB\AnyRepoDB;
+use Symphograph\Bicycle\Repo\DB\DBRepoITF;
 use Symphograph\Bicycle\Repo\Redis\SimpleRedisRepo;
 
 /**
@@ -47,5 +48,5 @@ interface RepoITF extends HasClassITF
     /**
      * @return AnyRepoDB<T>
      */
-    public function db(): AnyRepoDB;
+    public function db(): DBRepoITF;
 }

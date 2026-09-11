@@ -103,12 +103,6 @@ abstract class AnyList implements HasClassITF
         return array_map(fn($item) => $item->toArray(), $this->list);
     }
 
-    public static function ofUpdated(DateTime $fromDate): static
-    {
-        $list = static::class()::repo()->listOfUpdated($fromDate);
-        return new static($list);
-    }
-
     /**
      * @param string $sql
      * @param array $params

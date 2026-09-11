@@ -125,4 +125,49 @@ trait BindTrait
         $arr = json_decode($json, true);
         return static::byArr($arr);
     }
+
+    protected function hashExclude(): array
+    {
+        return [];
+    }
+
+    public function hash(): string
+    {
+        $arr = $this->getAllProps();
+
+        foreach ($this->hashExclude() as $key) {
+            unset($arr[$key]);
+        }
+
+        ksort($arr);
+        return md5(json_encode($this->normalizeForHash($arr)));
+    }
+
+    protected function normalizeForHash(mixed $value): mixed
+    {
+        if (is_object($value) && method_exists($value, 'toArray')) {
+            $a = $value->toArray();
+            ksort($a);
+            return $this->normalizeForHash($a);
+        }
+        if (is_array($value)) {
+            $out = [];
+            foreach ($value as $k => $v) {
+                $out[$k] = $this->normalizeForHash($v);
+            }
+            return $out;
+        }
+        if (is_bool($value)) {
+            return $value ? 1 : 0;
+        }
+        return $value;
+    }
+
+    /** @param static[] $list */
+    public static function hashOfList(array $list, bool $fixOrder = false): string
+    {
+        $hashes = array_map(fn($item) => $item->hash(), $list);
+        if (!$fixOrder) sort($hashes);
+        return md5(implode('|', $hashes));
+    }
 }

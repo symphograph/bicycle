@@ -6,11 +6,10 @@ use InvalidArgumentException;
 use PDO;
 use ReflectionClass;
 use Symphograph\Bicycle\DTO\BindITF;
+use Symphograph\Bicycle\Helpers\DTime\DTF;
 use Symphograph\Bicycle\PDO\DB;
 
-/**
- * @template T of BindITF
- */
+/**@template T of BindITF */
 abstract class AnyRepoDB implements DBRepoITF
 {
     const string storeTable = '';
@@ -144,8 +143,8 @@ abstract class AnyRepoDB implements DBRepoITF
     public function listUpdatedIds(\DateTime $fromDate): array
     {
         $table = static::viewTable;
-        $sql = "SELECT id FROM $table WHERE lastChangedAt > :lastChangedAt";
-        $params = ['lastChangedAt' => $fromDate->format('Y-m-d H:i:s')];
+        $sql = "SELECT id FROM $table WHERE updatedAt > :updatedAt";
+        $params = ['updatedAt' => DTF::dtSql($fromDate)];
         return $this->listIdsBySQL($sql, $params);
     }
 
@@ -153,7 +152,7 @@ abstract class AnyRepoDB implements DBRepoITF
     {
         $table = static::viewTable;
         $sql = "SELECT id FROM $table WHERE updatedAt > :updatedAt AND createdBy = :createdBy";
-        $params = ['updatedAt' => $fromDate->format('Y-m-d H:i:s'), 'createdBy' => $createdBy];
+        $params = ['updatedAt' => DTF::dtSql($fromDate), 'createdBy' => $createdBy];
         return $this->listIdsBySQL($sql, $params);
     }
 

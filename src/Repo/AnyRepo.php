@@ -5,6 +5,7 @@ namespace Symphograph\Bicycle\Repo;
 use RuntimeException;
 use Symphograph\Bicycle\DTO\BindITF;
 use Symphograph\Bicycle\Repo\DB\AnyRepoDB;
+use Symphograph\Bicycle\Repo\DB\DBRepoITF;
 use Symphograph\Bicycle\Repo\MemoRepo\AnyRepoMemo;
 use Symphograph\Bicycle\Repo\MemoRepo\AnyRepoNullMemo;
 use Symphograph\Bicycle\Repo\Redis\NullRedisRepo;
@@ -33,9 +34,9 @@ abstract class AnyRepo implements RepoITF
     }
 
     /**
-     * @return AnyRepoDB<T>
+     * @return DBRepoITF<T>
      */
-    public function db(): AnyRepoDB
+    public function db(): DBRepoITF
     {
         return $this->db;
     }

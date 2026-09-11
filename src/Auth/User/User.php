@@ -66,6 +66,12 @@ class User extends UserDTO
         return $token->userId;
     }
 
+    public static function curId(array $needPowers = [], $ignoreExpire = false): int
+    {
+        $token = AccessToken::byHttp($needPowers, $ignoreExpire);
+        return $token->userId;
+    }
+
     public static function merge($fromUserId, int $toUserId): void
     {
     }

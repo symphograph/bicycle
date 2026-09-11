@@ -8,7 +8,7 @@ use Symphograph\Bicycle\Repo\RepoRegistry;
 /** @template T of BindITF */
 trait HasRepoTrait
 {
-    /** @var ?RepoITF<static> */
+    /** @var ?RepoITF<T> */
     public static ?RepoITF $repo = null;
 
     /** @return RepoITF<T> */
