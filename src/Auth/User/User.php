@@ -7,6 +7,7 @@ use Symphograph\Bicycle\Auth\ModelCookieTrait;
 use Symphograph\Bicycle\DTO\ModelTrait;
 use Symphograph\Bicycle\Errors\Auth\AccessErr;
 use Symphograph\Bicycle\Errors\Auth\AuthErr;
+use Symphograph\Bicycle\Helpers\CpuTracker;
 use Symphograph\Bicycle\PDO\DB;
 use Symphograph\Bicycle\Token\AccessToken;
 use Throwable;
@@ -15,6 +16,8 @@ class User extends UserDTO
 {
     use ModelTrait;
     use ModelCookieTrait;
+
+    private static $curId;
 
     public static function create(): self
     {
@@ -68,8 +71,16 @@ class User extends UserDTO
 
     public static function curId(array $needPowers = [], $ignoreExpire = false): int
     {
+        if(empty($needPowers) && isset(self::$curId)) return self::$curId;
         $token = AccessToken::byHttp($needPowers, $ignoreExpire);
-        return $token->userId;
+        return self::$curId = $token->userId;
+    }
+
+    public static function updateCpu(): void
+    {
+        if(!isset(self::$curId)) return;
+        $sql = "UPDATE users SET cpu = cpu + :cpu WHERE id = :userId";
+        DB::qwe($sql, ["userId" => self::curId(), "cpu" => CpuTracker::cur()]);
     }
 
     public static function merge($fromUserId, int $toUserId): void
@@ -93,4 +104,5 @@ class User extends UserDTO
         $sql = "SELECT id FROM users WHERE id = :userId FOR UPDATE";
         DB::qwe($sql, ['userId' => $userId]);
     }
+
 }

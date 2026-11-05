@@ -32,11 +32,20 @@ class OAuthManager
     public bool     $isNewLinkToUser = false;
     private ?string $mergeToken;
 
+    /** @var callable(int): array */
+    private $extraClaimsResolver = null;
+
     public function __construct(
         public Session $sess,
         public Device $device,
-        private readonly NickGenITF $nickGenerator
-    ){}
+        private readonly NickGenITF $nickGenerator,
+    ) {}
+
+    public function setExtraClaimsResolver(?callable $resolver): static
+    {
+        $this->extraClaimsResolver = $resolver;
+        return $this;
+    }
 
     public function setAccount(Account $account): static
     {
@@ -168,6 +177,10 @@ class OAuthManager
         $sess = $this->sess;
         $account = $this->account;
 
+        $extraClaims = $this->extraClaimsResolver !== null
+            ? ($this->extraClaimsResolver)($account->userId)
+            : [];
+
         return AccessToken::create(
             sessionMark: $sess->marker,
             userId: $account->userId,
@@ -176,6 +189,7 @@ class OAuthManager
             powers: $powers,
             createdAt: $sess->visitedAt,
             authType: AccountType::from($account->authType),
+            extraClaims: $extraClaims,
         );
     }
 

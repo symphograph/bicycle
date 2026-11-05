@@ -4,5 +4,6 @@ namespace Symphograph\Bicycle\Powers;
 
 interface PowEnumITF
 {
-    public function id(): int;
+    function id(): int;
+    function label(): string;
 }
