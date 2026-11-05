@@ -16,7 +16,6 @@
     "ext-gmp": "*",
     "ext-curl": "*",
     "ext-pdo": "*",
-    "ext-calendar" : "*",
     "lcobucci/jwt": "5.6.0.0",
     "php-curl-class/php-curl-class": "^9.17",
     "ext-exif" : "*",

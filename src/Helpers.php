@@ -2,6 +2,7 @@
 
 namespace Symphograph\Bicycle;
 
+use DateTimeImmutable;
 use Exception;
 use Symphograph\Bicycle\Env\Env;
 use Symphograph\Bicycle\Env\Server\ServerEnv;
@@ -60,8 +61,8 @@ class Helpers
 
     public static function monthDaysList(int $year, int $month): array
     {
-        $countMonthDays = cal_days_in_month(CAL_GREGORIAN, $month, $year);
-        return array_fill(1, $countMonthDays - 1 + 1, 0);
+        $date = new DateTimeImmutable(sprintf('%04d-%02d-01', $year, $month));
+        return array_fill(1, (int) $date->format('t'), 0);
     }
 
     public static function weekDaysOfMonth(int $year, int $month): array
