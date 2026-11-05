@@ -5,7 +5,7 @@ namespace Symphograph\Bicycle\WebSocket;
 readonly class SocketMsgPrivate extends SocketMsg
 {
     public function __construct(
-        string $type,
+        WSEventITF $type,
         public int    $userId,
         array  $payload = [],
         string $key = "socket-events"

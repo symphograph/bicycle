@@ -209,12 +209,12 @@ class SocketConnect
 
     public function sendAuthOk(): void
     {
-        $this->send(json_encode(['type' => 'auth_ok']));
+        $this->send(json_encode(['type' => 'auth.ok']));
     }
 
     public function sendAuthFail(): void
     {
-        $this->send(json_encode(['type' => 'auth_fail']));
+        $this->send(json_encode(['type' => 'auth.fail']));
     }
 
     public function close(): void

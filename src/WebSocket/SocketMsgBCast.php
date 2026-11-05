@@ -2,10 +2,10 @@
 
 namespace Symphograph\Bicycle\WebSocket;
 
-readonly class BroadcastSocketMsg extends SocketMsg
+readonly class SocketMsgBCast extends SocketMsg
 {
     public function __construct(
-        string $type,
+        WSEventITF $type,
         array $payload = [],
         string $key = "socket-broadcast-events"
     ) {

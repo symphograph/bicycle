@@ -7,19 +7,19 @@ use Symphograph\Bicycle\Repo\Redis\RedisDB;
 abstract readonly class SocketMsg implements SocketMsgInterface
 {
     public function __construct(
-        public string $type,
+        public WSEventITF $type,
         public array  $payload = [],
         public string $key = "socket-events"
     ) {}
 
-    public static function private(string $type, int $userId, array $payload = []): SocketMsgPrivate
+    public static function private(WSEventITF $type, int $userId, array $payload = []): SocketMsgPrivate
     {
         return new SocketMsgPrivate($type, $userId, $payload);
     }
 
-    public static function broadcast(string $type, array $payload = []): BroadcastSocketMsg
+    public static function broadcast(WSEventITF $type, array $payload = []): SocketMsgBCast
     {
-        return new BroadcastSocketMsg($type, $payload);
+        return new SocketMsgBCast($type, $payload);
     }
 
     /**
@@ -29,7 +29,7 @@ abstract readonly class SocketMsg implements SocketMsgInterface
     public function toArray(): array
     {
         return [
-            'type' => $this->type,
+            'type' => $this->type->key(),
             ...$this->payload,
         ];
     }
