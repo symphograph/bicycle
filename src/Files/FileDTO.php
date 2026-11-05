@@ -66,7 +66,7 @@ class FileDTO
         $sql = "select * from Files where hash = :hash";
         $params = ['hash' => $hash];
         $qwe = DB::qwe($sql, $params);
-        return $qwe->fetchObject(static::class) ?? null;
+        return $qwe->fetchObject(static::class) ?: null;
     }
 
     public function setAsPublic(): void

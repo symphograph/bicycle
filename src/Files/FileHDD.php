@@ -103,18 +103,46 @@ class FileHDD
      */
     public function moveFromTmp(): void
     {
+        $tmpPath  = self::tmpPath($this->hash);
         $fullPath = $this->privatePath();
-        error_log($fullPath);
-        //Log::msg($fullPath);
-        FileHelper::fileForceContents($fullPath,'');
-        $tmpPath = self::tmpPath($this->hash);
-        rename($tmpPath, $fullPath);
+
+        // Кто-то (другой воркер или предыдущий вызов) уже перенёс файл.
+        // Если финальный файл на месте — операция фактически выполнена.
+        if (!is_file($tmpPath)) {
+            if (is_file($fullPath)) {
+                $this->isTmp = false;
+                return;
+            }
+            throw new FileNotExistsInPathErr($tmpPath);
+        }
+
+        // Создаём только директорию. Не пишем в $fullPath ничего —
+        // иначе в гонке перетрём уже готовый файл пустотой.
+        $dir = dirname($fullPath);
+        if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
+            throw new FileErr("cannot create dir: {$dir}");
+        }
+
+        if (!@rename($tmpPath, $fullPath)) {
+            // Микроконкурентный случай: tmp исчез между is_file и rename.
+            if (is_file($fullPath)) {
+                @unlink($tmpPath);
+                $this->isTmp = false;
+                return;
+            }
+            throw new FileErr("rename failed: {$tmpPath} -> {$fullPath}");
+        }
         $this->isTmp = false;
     }
 
     private static function getHash(string $data): string
     {
         return md5($data . Env::salt());
+    }
+
+    public static function hashFor(string $data): string
+    {
+        return self::getHash($data);
     }
 
 

@@ -104,9 +104,25 @@ class FileManager
      */
     public static function create(string $data): static
     {
-        $fileHDD = FileHDD::create($data); // return FileHDD or make error
-        $fileDTO = FileDTO::newInstance($fileHDD);
+        $hash = FileHDD::hashFor($data);
 
+        // Fast path: файл с таким содержимым уже известен.
+        $existingDTO = FileDTO::byHash($hash);
+        if ($existingDTO !== null) {
+            try {
+                $existingHDD = FileHDD::byStorage(
+                    $existingDTO->hash,
+                    FileExt::from($existingDTO->ext),
+                    FileType::from($existingDTO->type),
+                );
+                return new self($existingHDD, $existingDTO);
+            } catch (FileNotExistsErr) {
+                // В БД запись есть, а физически файла нет — пересоздаём.
+            }
+        }
+
+        $fileHDD = FileHDD::create($data);
+        $fileDTO = FileDTO::newInstance($fileHDD);
         $fileDTO->putToDB();
         $fileHDD->moveFromTmp();
 
