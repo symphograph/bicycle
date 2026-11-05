@@ -66,4 +66,9 @@ class DeviceDTO
         $params = ['deviceId' => $this->id, 'accountId' => $accountId];
         DB::qwe($sql, $params);
     }
+
+    public function fingerPrint(): string
+    {
+        return $this->fingerPrint;
+    }
 }

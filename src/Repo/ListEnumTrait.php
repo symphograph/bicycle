@@ -9,8 +9,7 @@ use Symphograph\Bicycle\Repo\Redis\RedisTTL;
  */
 trait ListEnumTrait
 {
-    private const RedisTTL defaultTTL = RedisTTL::_1day;
-
+    private const        defaultTTL = RedisTTL::_1day;
     public function key(array $params = []): string
     {
         if (!defined(static::class . '::keyPrefix')) {

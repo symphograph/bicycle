@@ -14,6 +14,7 @@ class RedisConfig
         public ?string $auth = null,
     ){}
 
+
     /**
      * Создать конфиг из переменных окружения
      */

@@ -4,6 +4,9 @@ namespace Symphograph\Bicycle\Repo\Redis;
 
 enum RedisTTL: int
 {
+    case _5sec = 5;
+    case _10sec = 10;
+    case _30sec = 30;
     case _1min = 60;
     case _5min = 300;
     case _15min = 900;

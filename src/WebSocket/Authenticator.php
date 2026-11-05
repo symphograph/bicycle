@@ -4,14 +4,17 @@ declare(strict_types=1);
 namespace Symphograph\Bicycle\WebSocket;
 
 use Exception;
+use Symphograph\Bicycle\Powers\PowEnumITF;
 use Symphograph\Bicycle\Token\AccessToken;
 use Workerman\Timer;
 use Workerman\Connection\TcpConnection;
 
-class Authenticator
+readonly class Authenticator
 {
+    /**@param PowEnumITF[] $requiredPowers */
     public function __construct(
-        private ConnectionManager $connectionManager
+        private ConnectionManager $connectionManager,
+        private array             $requiredPowers = [],
     )
     {
     }
@@ -25,7 +28,7 @@ class Authenticator
         }
 
         try {
-            $token = AccessToken::byJwt($jwt);
+            $token = AccessToken::byJwt($jwt, $this->requiredPowers);
             $userId = $token->userId;
 
             $this->connectionManager->authenticateConnection($conn->id, $userId);

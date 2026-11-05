@@ -6,6 +6,7 @@ use InvalidArgumentException;
 use PDO;
 use ReflectionClass;
 use Symphograph\Bicycle\DTO\BindITF;
+use Symphograph\Bicycle\Errors\AppErr;
 use Symphograph\Bicycle\Helpers\DTime\DTF;
 use Symphograph\Bicycle\PDO\DB;
 
@@ -14,7 +15,6 @@ abstract class AnyRepoDB implements DBRepoITF
 {
     const string storeTable = '';
     const string viewTable = '';
-
 
     public function classShort(): string
     {
@@ -99,8 +99,6 @@ abstract class AnyRepoDB implements DBRepoITF
         return $this->listIdsBySQL($sql);
     }
 
-
-
     /**
      * @param string $sql
      * @param array $params
@@ -132,9 +130,8 @@ abstract class AnyRepoDB implements DBRepoITF
     {
         if (empty($ids)) return [];
         $table = static::viewTable;
-        //$placeholders = str_repeat('?,', count($ids) - 1) . '?';
-        $str = implode(',', $ids);
-        $sql = "SELECT * FROM $table WHERE id IN ($str)";
+        $in = DB::implodeIntIn($ids);
+        $sql = "SELECT * FROM $table WHERE id IN $in";
 
         return $this->listBySQL($sql);
     }
@@ -144,7 +141,7 @@ abstract class AnyRepoDB implements DBRepoITF
     {
         $table = static::viewTable;
         $sql = "SELECT id FROM $table WHERE updatedAt > :updatedAt";
-        $params = ['updatedAt' => DTF::dtSql($fromDate)];
+        $params = ['updatedAt' => DTF::dtSqlMicro($fromDate)];
         return $this->listIdsBySQL($sql, $params);
     }
 
@@ -152,7 +149,7 @@ abstract class AnyRepoDB implements DBRepoITF
     {
         $table = static::viewTable;
         $sql = "SELECT id FROM $table WHERE updatedAt > :updatedAt AND createdBy = :createdBy";
-        $params = ['updatedAt' => DTF::dtSql($fromDate), 'createdBy' => $createdBy];
+        $params = ['updatedAt' => DTF::dtSqlMicro($fromDate), 'createdBy' => $createdBy];
         return $this->listIdsBySQL($sql, $params);
     }
 
@@ -168,7 +165,11 @@ abstract class AnyRepoDB implements DBRepoITF
         $params = $this->params($data);
         if($auto) unset($params['id']);
         DB::insert(static::storeTable, $this->params($data));
-        if ($auto) $data->id = DB::lastId(); //pdo
+        if (!$auto) return;
+        
+        $lastId = (int) DB::lastId();
+        if(empty($lastId)) throw new AppErr("Last id is empty after insert");
+        $data->id = $lastId; //pdo
     }
 
     /**
@@ -219,6 +220,16 @@ abstract class AnyRepoDB implements DBRepoITF
         $tableName = static::storeTable;
         $sql = "DROP TABLE IF EXISTS $tableName";
         DB::qwe($sql);
+    }
+
+    public function lockById(int $id): bool
+    {
+        $table = static::storeTable;
+        $stmt = DB::qwe(
+            "SELECT id FROM $table WHERE id = :id FOR UPDATE",
+            ['id' => $id]
+        );
+        return $stmt->rowCount() > 0;
     }
 }
 //-------------------------------------------------------------

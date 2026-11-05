@@ -266,6 +266,20 @@ class RedisDB
         return self::client()->incrBy($key, $value);
     }
 
+    public static function setCounter(string $key, int $value): void
+    {
+        self::client()->rawCommand('SET', $key, (string)$value);
+    }
+
+    public static function getCounter(string $key): ?int
+    {
+        $val = self::client()->rawCommand('GET', $key);
+        if ($val === false || $val === null) {
+            return null;
+        }
+        return (int)$val;
+    }
+
     /**
      * Декремент числового значения
      */

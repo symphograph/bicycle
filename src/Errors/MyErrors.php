@@ -53,4 +53,16 @@ class MyErrors extends Exception
         return dirname(ServerEnv::DOCUMENT_ROOT()) . '/logs/errors/' . date('Y-m-d') . '.log';
     }
 
+    public function toWsPayload(): array
+    {
+        $data = [
+            'message' => $this->getResponseMsg(),
+            'type'    => $this->getType(),
+        ];
+        if (!Env::isProd()) {
+            $data['trace'] = $this->getTrace();
+        }
+        return $data;
+    }
+
 }

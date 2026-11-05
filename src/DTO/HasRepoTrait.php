@@ -54,5 +54,18 @@ trait HasRepoTrait
         return static::repo()->all();
     }
 
-    public function broadcast(): void {}
+    public function clearRedis(): void
+    {
+        static::repo()->clearRedis($this);
+    }
+    
+    public static function clearRedisById(int $id): void
+    {
+        static::repo()->clearRedisById($id);
+    }
+
+    public static function lockById(int $id): bool
+    {
+        return static::repo()->db()->lockById($id);
+    }
 }

@@ -22,7 +22,8 @@ readonly class AccessToken
         public int         $accountId,
         public int         $deviceId,
         public array       $powers,
-        public AccountType $authType
+        public AccountType $authType,
+        public array       $extraClaims = [],
     )
     {
     }
@@ -39,19 +40,20 @@ readonly class AccessToken
         int         $deviceId,
         array       $powers,
         string      $createdAt = 'now',
-        AccountType $authType = AccountType::Default
+        AccountType $authType = AccountType::Default,
+        array       $extraClaims = [],
     ): self
     {
         $audience = Env::getJWT()->audience;
         $audience[] = ServerEnv::SERVER_NAME();
 
-        $claims = [
+        $claims = array_merge([
             'accountId'   => $accountId,
             'sessionMark' => $sessionMark,
             'powers'      => $powers,
             'authType'    => $authType->value,
             'deviceId'    => $deviceId,
-        ];
+        ], $extraClaims);
 
         $token = new Token(
             uid: $userId,
@@ -68,8 +70,23 @@ readonly class AccessToken
             accountId: $accountId,
             deviceId: $deviceId,
             powers: $powers,
-            authType: $authType
+            authType: $authType,
+            extraClaims: $extraClaims
         );
+    }
+
+    public function hasPower(array $needPowers): bool
+    {
+        if (empty($needPowers)) {
+            return true;
+        }
+
+        $needPowers = array_map(
+            fn($p) => $p instanceof PowEnumITF ? $p->id() : (int)$p,
+            $needPowers
+        );
+
+        return array_intersect($needPowers, $this->powers) !== [];
     }
 
     /**
@@ -94,7 +111,7 @@ readonly class AccessToken
             authType: $authType
         );
 
-        $token->verifyPowers($needPowers);
+        $token->ensurePowers($needPowers);
         return $token;
     }
 
@@ -106,6 +123,11 @@ readonly class AccessToken
     {
         $jwt = $_SERVER['HTTP_ACCESSTOKEN'] ?? throw new AuthErr('Unauthorized');
         return self::byJwt($jwt, $needPowers, $ignoreExpire);
+    }
+
+    public static function isset(): bool
+    {
+        return isset($_SERVER['HTTP_ACCESSTOKEN']);
     }
 
     /**
@@ -123,7 +145,7 @@ readonly class AccessToken
     /**
      * @throws AccessErr
      */
-    private function verifyPowers(array $needPowers): void
+    private function ensurePowers(array $needPowers): void
     {
 
         //Log::msg('powers', $needPowers);
@@ -149,5 +171,10 @@ readonly class AccessToken
             throw new AccessErr('Powers empty');
         }
 
+    }
+
+    public function claim(string $name): mixed
+    {
+        return $this->extraClaims[$name] ?? null;
     }
 }

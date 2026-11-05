@@ -29,7 +29,7 @@ class WebSocketServer
         $this->config = $config ?? WebSocketConfig::fromEnv();
 
         $this->connectionManager = $connectionManager ?? new ConnectionManager();
-        $this->authenticator     = $authenticator     ?? new Authenticator($this->connectionManager);
+        $this->authenticator     = $authenticator     ?? new Authenticator($this->connectionManager, $config->getRequiredPowers());
         $this->messageHandler    = $messageHandler    ?? new MessageHandler($this->connectionManager, $this->authenticator);
         $this->heartbeatManager  = $heartbeatManager  ?? new HeartbeatManager($this->connectionManager);
     }

@@ -7,6 +7,7 @@ use JetBrains\PhpStorm\NoReturn;
 use ReflectionClass;
 use Symphograph\Bicycle\Api\Response;
 use Symphograph\Bicycle\AppStorage;
+use Symphograph\Bicycle\Auth\User\User;
 use Symphograph\Bicycle\Auth\User\UserCpuTracker;
 use Symphograph\Bicycle\Env\Config;
 use Symphograph\Bicycle\Env\Env;
@@ -51,7 +52,7 @@ class Handler
     {
         $error = error_get_last();
 
-        UserCpuTracker::handleShutdown();
+        User::updateCpu();
 
         if(empty($error)) {
             return;

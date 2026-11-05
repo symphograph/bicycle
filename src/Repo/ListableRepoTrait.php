@@ -168,7 +168,7 @@ trait ListableRepoTrait
         }
 
         // Разбиваем на пачки для избежания больших MGET запросов
-        $chunks = array_chunk($ids, 100000);
+        $chunks = array_chunk($ids, 50000);
         $allObjects = [];
         $allMissingIds = [];
 
@@ -344,17 +344,6 @@ trait ListableRepoTrait
         }
 
         return $this->listRepos[$listName];
-    }
-
-    /**
-     * Возвращает объекты, обновлённые после указанной даты.
-     *
-     * @return T[]
-     */
-    public function listOfUpdated(\DateTime $fromDate): array
-    {
-        $ids = $this->db->listUpdatedIds($fromDate);
-        return $this->listByIds($ids);
     }
 
     /**

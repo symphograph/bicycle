@@ -4,9 +4,13 @@ declare(strict_types=1);
 namespace Symphograph\Bicycle\WebSocket;
 
 use Symphograph\Bicycle\Env\Env;
+use Symphograph\Bicycle\Powers\PowEnumITF;
 
 class WebSocketConfig
 {
+    /**
+     * @param PowEnumITF[] $requiredPowers
+     */
     public function __construct(
         private string $channelHost = '0.0.0.0',
         private int    $channelPort = 2206,
@@ -23,11 +27,24 @@ class WebSocketConfig
         private string $channelClientHost = '127.0.0.1',
         // Новые поля для broadcast
         private string $redisBroadcastQueueName = 'socket-broadcast-events',
-        private string $channelBroadcastEventName = 'broadcastToAll'
+        private string $channelBroadcastEventName = 'broadcastToAll',
+        private array $requiredPowers = []
     )
     {
     }
 
+    /** @return PowEnumITF[] */
+    public function getRequiredPowers(): array
+    {
+        return $this->requiredPowers;
+    }
+
+    /** @param PowEnumITF[] $requiredPowers */
+    public function setRequiredPowers(array $requiredPowers): self
+    {
+        $this->requiredPowers = $requiredPowers;
+        return $this;
+    }
 
     /**
      * Создаёт конфигурацию на основе окружения (prod/dev).
