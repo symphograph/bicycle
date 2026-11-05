@@ -3,28 +3,54 @@
 namespace Symphograph\Bicycle\Worker;
 
 use Symphograph\Bicycle\Env\Env;
+use Symphograph\Bicycle\Errors\MyErrors;
+use Symphograph\Bicycle\Helpers\TaskTimeTrait;
 use Symphograph\Bicycle\Repo\Redis\RedisDB;
 use Symphograph\Bicycle\WebSocket\SocketMsg;
-use Symphograph\Bicycle\WebSocket\SocketMsgPrivate;
+use Symphograph\Bicycle\WebSocket\WSEventITF;
+use Throwable;
 
 abstract class WorkerTask
 {
+    use TaskTimeTrait;
+
     protected const string taskName = 'SomeTask';
 
-    protected ?float $createdAt = null;
-    protected ?float $startedAt = null;
-    protected ?float $finishedAt = null;
     protected int $priority = 0;
+
+    /**
+     * Непрозрачный ключ пакета, к которому принадлежит задача.
+     * Проставляется снаружи (WorkerBatch::push), задача его не создаёт
+     * и не интерпретирует — просто носит с собой. null — задача одиночная.
+     */
+    private ?string $batchKey = null;
+
+
 
     public function __construct(
         protected readonly int $userId,
-        ?int $priority = null
-    ) {
-        $this->createdAt = microtime(true);
+        ?int                   $priority = null,
+    )
+    {
+        $this->setCreatedAt();
         if ($priority !== null) {
             $this->priority = $priority;
         }
     }
+
+    // ---------- Идентификация ----------
+
+    public static function name(): string
+    {
+        return static::taskName;
+    }
+
+    public static function curBatch(): ?WTBatchState
+    {
+        return WorkerBatch::currentStateFor(static::taskName);
+    }
+
+    // ---------- Базовое ----------
 
     public function setPriority(int $priority): static
     {
@@ -37,6 +63,15 @@ abstract class WorkerTask
         return $this->priority;
     }
 
+    /**
+     * @internal Единственный вызов — WorkerBatch::push().
+     * Задача не должна звать это сама.
+     */
+    final public function attachToBatch(string $batchKey): void
+    {
+        $this->batchKey = $batchKey;
+    }
+
     public function toJson(): string
     {
         return json_encode($this->toArray());
@@ -44,12 +79,17 @@ abstract class WorkerTask
 
     protected function toArray(): array
     {
-        return [
+        $data = [
             'task'      => static::taskName,
+            'class'     => static::class,
             'userId'    => $this->userId,
             'priority'  => $this->priority,
             'createdAt' => $this->createdAt,
         ];
+        if ($this->batchKey !== null) {
+            $data['batchKey'] = $this->batchKey;
+        }
+        return $data;
     }
 
     public static function len(): int
@@ -62,119 +102,145 @@ abstract class WorkerTask
         return 'queue:' . static::taskName;
     }
 
+    public static function wakeupKey(): string
+    {
+        return static::redisKey() . ':wakeup';
+    }
+
+    // ---------- Постановка ----------
+
     /**
-     * Извлекает JSON-данные задачи с максимальным приоритетом.
-     * Возвращает декодированный массив или null.
+     * Положить одиночную задачу в очередь своего типа.
+     * Для постановки в составе пакета см. WorkerBatch::push().
+     * Переопределяйте, если у задачи своя механика очереди
+     * (dedup, отдельный payload-ключ и т.п.).
+     */
+    public function push(): void
+    {
+        $added = RedisDB::client()->zAdd(
+            static::redisKey(),
+            $this->priority,
+            $this->toJson(),
+        );
+
+        if ($added) {
+            RedisDB::lPush(static::wakeupKey(), '1');
+        }
+    }
+
+    // ---------- Снятие ----------
+
+    /**
+     * Снять одну задачу с очереди своего типа.
+     *
+     * Базовая реализация: член ZSET — это json задачи.
+     * Переопределяйте, если member хранит что-то другое
+     * (например, идентификатор, а payload лежит в отдельном ключе —
+     * см. ScoreImageWT::rPop).
+     */
+    public static function rPop(): ?static
+    {
+        $data = static::rPopData();
+        return $data ? static::byArr($data) : null;
+    }
+
+    /**
+     * Сырой json из ZSET. Деталь реализации базового rPop.
+     * RedisDB::zPopMax уже применяет unserializeValue к member'у (MSGPACK),
+     * поэтому здесь остаётся только json_decode.
      */
     protected static function rPopData(): ?array
     {
         $result = RedisDB::zPopMax(static::redisKey());
-
         if (!$result) {
             return null;
         }
-
-        // $result[0] — уже десериализованный member (например, строка JSON)
         $data = json_decode($result[0], true);
-        return $data ?: null;
+        return is_array($data) ? $data : null;
     }
 
-    /**
-     * Помещает задачу в ZSET-очередь с текущим приоритетом.
-     */
-    public function push(): void
-    {
-        RedisDB::client()->zAdd(
-            static::redisKey(),
-            $this->priority,
-            $this->toJson()
-        );
-    }
+    abstract public static function byArr(array $data): static;
 
-    /**
-     * Восстанавливает общие поля задачи из массива данных.
-     * Вызывается в наследниках внутри byArr/fromArray после создания объекта.
-     */
+    // ---------- Восстановление ----------
+
     protected function restoreBaseFields(array $data): void
     {
-        if (isset($data['createdAt'])) {
-            $this->createdAt = (float)$data['createdAt'];
-        } else {
-            $this->createdAt = microtime(true);
-            // Логирование при необходимости
-        }
+        $this->createdAt = $data['createdAt'] ?? self::timeMs();
 
         if (isset($data['priority'])) {
-            $this->priority = (int)$data['priority'];
+            $this->priority = $data['priority'];
+        }
+
+        if (!empty($data['batchKey'])) {
+            $this->batchKey = $data['batchKey'];
         }
     }
 
-    // Методы уведомлений и длительностей остаются без изменений
-    abstract function notifyTake(): void;
+    // ---------- Запуск ----------
+
+    /**
+     * Точка входа для воркер-демона: оборачивает run() и в finally
+     * шагает в пакет, если задача состоит в пакете.
+     *
+     * Финальные задачи пакета запускаются напрямую через run()
+     * (WorkerBatch::dispatchFinal) — там счётчик уже удалён,
+     * и шагать некуда, поэтому execute() для них не зовётся.
+     */
+    final public function execute(): void
+    {
+        try {
+            $this->run();
+        } finally {
+            if ($this->batchKey !== null) {
+                WorkerBatch::fromKey($this->batchKey)->step();
+            }
+        }
+    }
+
+    abstract public function run(): void;
+
+    abstract public function notifyTake(): void;
+
+    // ---------- Уведомления ----------
+
+
+    /**
+     * Каждый воркер обязан объявить своё error-событие.
+     * Без реализации класс не скомпилируется.
+     */
+    abstract protected function errorEvent(): WSEventITF;
+
+    /**
+     * Единственная точка отправки WS-сообщения воркером.
+     * Наследник ссылается на конкретный case своего WSEvent напрямую.
+     */
+    final protected function emit(WSEventITF $event, array $payload = []): void
+    {
+        SocketMsg::private($event, $this->userId, $payload)->send();
+    }
 
     public function notifyError(\Throwable $e, $payload = []): void
     {
-        if (!Env::isProd()) {
-            $payload['msg'] = $e->getMessage();
-            $payload['code'] = $e->getCode();
-            $payload['trace'] = $e->getTrace();
+        $payload['error'] = static::errorPayload($e);
+        $this->emit($this->errorEvent(), $payload);
+    }
+
+    private function errorPayload(Throwable $e): array
+    {
+        $isDev = !Env::isProd();
+
+        $message = $e instanceof MyErrors
+            ? $e->getResponseMsg()
+            : ($isDev ? $e->getMessage() : 'Internal error');
+
+        $data = [
+            'message' => $message,
+            'type'    => $e instanceof MyErrors ? $e->getType() : $e::class,
+        ];
+        if ($isDev) {
+            $data['trace'] = $e->getTrace();
         }
-        $msg = $this->createMsg('error', $payload);
-        $msg->send();
+        return $data;
     }
 
-    protected function createMsg(string $suffix, array $payload = []): SocketMsgPrivate
-    {
-        $type = empty($suffix) ? static::taskName : static::taskName . '_' . $suffix;
-        return SocketMsg::private(
-            type: $type,
-            userId: $this->userId,
-            payload: $payload
-        );
-    }
-
-    public function queDur(): float
-    {
-        if (!$this->startedAt || !$this->createdAt) {
-            return 0.0;
-        }
-        return $this->startedAt - $this->createdAt;
-    }
-
-    public function queDurInt(): int
-    {
-        return (int)($this->queDur() * 1_000_000);
-    }
-
-    public function runDur(): float
-    {
-        if (!$this->finishedAt || !$this->startedAt) {
-            return 0.0;
-        }
-        return $this->finishedAt - $this->startedAt;
-    }
-
-    public function runDurInt(): int
-    {
-        return (int)($this->runDur() * 1_000_000);
-    }
-
-    public function setStartedAt(float $startedAt): void
-    {
-        $this->startedAt = $startedAt;
-    }
-
-    public function setFinishedAt(float $finishedAt): void
-    {
-        $this->finishedAt = $finishedAt;
-    }
-
-    protected function curCpu(): int
-    {
-        $usage = getrusage();
-        $mul = 1_000_000;
-        $user = $usage['ru_utime.tv_sec'] * $mul + $usage['ru_utime.tv_usec'];
-        $system = $usage['ru_stime.tv_sec'] * $mul + $usage['ru_stime.tv_usec'];
-        return $user + $system;
-    }
 }
